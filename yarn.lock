@@ -12,9 +12,9 @@
     eslint-plugin-import "^2.7.0"
     eslint-plugin-react "^7.1.0"
 
-"@jetbrains/logos@0.1.2":
-  version "0.1.2"
-  resolved "http://repo.labs.intellij.net/api/npm/npm-all/@jetbrains/logos/-/logos-0.1.2.tgz#917578ad62806b06612f501e7348b2a22ac21e04"
+"@jetbrains/logos@0.1.6":
+  version "0.1.6"
+  resolved "http://repo.labs.intellij.net/api/npm/npm-all/@jetbrains/logos/-/logos-0.1.6.tgz#801a7c88197f1aa4067189f294db9e65cd590a88"
 
 "@jetbrains/ring-ui-license-checker@^1.0.14":
   version "1.0.14"

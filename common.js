@@ -10,7 +10,7 @@ export const supportedLanguages = {
   CoffeeScript: ['webstorm', 'idea'],
   TypeScript: ['webstorm', 'idea'],
   Dart: ['webstorm', 'idea'],
-  Go: ['gogland'],
+  Go: ['goland'],
   CSS: ['webstorm', 'idea'],
   HTML: ['webstorm', 'idea'],
   Python: ['pycharm', 'idea'],
@@ -65,9 +65,9 @@ export const supportedTools = {
     tag: 'rd',
     icon: chrome.extension.getURL(require('@jetbrains/logos/rider/rider.svg'))
   },
-  gogland: {
-    name: 'Gogland',
-    tag: 'gogland',
+  goland: {
+    name: 'GoLand',
+    tag: 'goland',
     icon: chrome.extension.getURL(require('@jetbrains/logos/gogland/gogland.svg'))
   }
 };
