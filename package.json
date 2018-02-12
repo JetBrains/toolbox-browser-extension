@@ -12,7 +12,7 @@
     "file-loader": "0.8.5",
     "github-url-to-object": "2.1.0",
     "imports-loader": "0.6.5",
-    "@jetbrains/logos": "0.1.2",
+    "@jetbrains/logos": "0.1.6",
     "@jetbrains/ring-ui-license-checker": "^1.0.14",
     "webpack": "1.12.11",
     "whatwg-fetch": "0.10.1"
