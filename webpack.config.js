@@ -44,7 +44,8 @@ module.exports = {
     new LicenseChecker({
       format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})
 ${mod.license.name} (${mod.license.url})`).join('\n\n'),
-      filename: 'third-party-licences.txt'
+      filename: 'third-party-licences.txt',
+      exclude: /@jetbrains\/logos/
     })
   ]
 };
