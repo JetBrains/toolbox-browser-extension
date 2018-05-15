@@ -45,6 +45,7 @@ function renderButtons(tools) {
       buttonGroup.appendChild(btn);
     });
 
+  buttonGroup.classList.add('float-right');
   buttonGroup.classList.add('BtnGroup');
   appendNode.appendChild(buttonGroup);
 }
