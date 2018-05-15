@@ -46,8 +46,7 @@ function renderButtons(tools) {
     });
 
   buttonGroup.classList.add('BtnGroup');
-  buttonGroup.classList.add('float-right');
-  appendNode.insertBefore(buttonGroup, appendNode.firstChild);
+  appendNode.appendChild(buttonGroup);
 }
 
 if (appendNode && githubInfo) {
