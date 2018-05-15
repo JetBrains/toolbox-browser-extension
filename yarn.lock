@@ -4,7 +4,7 @@
 
 "@jetbrains/eslint-config@^2.0.0":
   version "2.0.0"
-  resolved "http://repo.labs.intellij.net/api/npm/npm-all/@jetbrains/eslint-config/-/eslint-config-2.0.0.tgz#6e816a43a50e4d8545d6a18420537e06892ce654"
+  resolved "https://registry.yarnpkg.com/@jetbrains/eslint-config/-/eslint-config-2.0.0.tgz#6e816a43a50e4d8545d6a18420537e06892ce654"
   dependencies:
     eslint-import-resolver-webpack "^0.8.3"
     eslint-plugin-angular "^3.0.0"
@@ -14,11 +14,11 @@
 
 "@jetbrains/logos@0.1.6":
   version "0.1.6"
-  resolved "http://repo.labs.intellij.net/api/npm/npm-all/@jetbrains/logos/-/logos-0.1.6.tgz#801a7c88197f1aa4067189f294db9e65cd590a88"
+  resolved "https://registry.yarnpkg.com/@jetbrains/logos/-/logos-0.1.6.tgz#801a7c88197f1aa4067189f294db9e65cd590a88"
 
 "@jetbrains/ring-ui-license-checker@^1.0.14":
   version "1.0.14"
-  resolved "http://repo.labs.intellij.net/api/npm/npm-all/@jetbrains/ring-ui-license-checker/-/ring-ui-license-checker-1.0.14.tgz#55b669b6fae7bb103270ad4f67baf7e7b43a3ac6"
+  resolved "https://registry.yarnpkg.com/@jetbrains/ring-ui-license-checker/-/ring-ui-license-checker-1.0.14.tgz#55b669b6fae7bb103270ad4f67baf7e7b43a3ac6"
   dependencies:
     babel-polyfill "6.16.0"
     nlf "1.4.1"
