@@ -10,6 +10,7 @@ const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
 module.exports = {
   entry: {
     github: './github',
+    gitlab: './gitlab',
     common: ['./common'] // https://github.com/webpack/webpack/issues/300
   },
   output: {
