@@ -31,6 +31,7 @@
   ],
   "permissions": [
     "activeTab",
+    "nativeMessaging",
     "*://*.github.com/*",
     "*://*.gitlab.com/*"
   ]
