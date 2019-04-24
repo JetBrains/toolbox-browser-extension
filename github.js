@@ -1,5 +1,4 @@
 import 'whatwg-fetch';
-import 'core-js/library/modules/es7.object.values';
 
 import gh from 'github-url-to-object';
 
@@ -40,7 +39,7 @@ function renderButtons(tools) {
       btn.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
       btn.setAttribute('href', getToolboxURN(tool.tag, cloneUrl));
       btn.setAttribute('aria-label', `Open in ${tool.name}`);
-      btn.innerHTML = `<img src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+      btn.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
 
       buttonGroup.appendChild(btn);
     });
