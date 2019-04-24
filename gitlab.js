@@ -1,6 +1,5 @@
 /** @author Johannes Tegnér <johannes@jitesoft.com> */
 import 'whatwg-fetch';
-import 'core-js/library/modules/es7.object.values';
 
 import {
   supportedLanguages,
