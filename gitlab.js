@@ -45,7 +45,7 @@ function renderButtons(tools, meta) {
 
 function getMetaData() {
   let element = null;
-  const children = document.querySelector('.project-metadata').children;
+  const children = document.querySelector('.home-panel-metadata').children;
 
   for (let i = children.length; i-- > 0;) {
     // eslint-disable-next-line no-magic-numbers
