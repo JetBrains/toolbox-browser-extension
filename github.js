@@ -18,12 +18,12 @@ function selectTools(langs) {
     reduce((overall, current) => overall + current, 0);
 
   const filterLang = lang =>
-    supportedLanguages[lang] &&
+    supportedLanguages[lang.toLowerCase()] &&
     langs[lang] / overallPoints > USAGE_THRESHOLD;
 
   const selectedToolIds = Object.keys(langs).
     filter(filterLang).
-    reduce((selected, lang) => [...selected, ...supportedLanguages[lang]], []);
+    reduce((selected, lang) => [...selected, ...supportedLanguages[lang.toLowerCase()]], []);
 
   return selectedToolIds.length ? [...new Set(selectedToolIds)] : ['idea'];
 }

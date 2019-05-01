@@ -11,6 +11,7 @@ module.exports = {
   entry: {
     github: './github',
     gitlab: './gitlab',
+    bitbucket: './bitbucket',
     common: ['./common'] // https://github.com/webpack/webpack/issues/300
   },
   output: {

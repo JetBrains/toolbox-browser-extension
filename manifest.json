@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "JetBrains Toolbox Extension",
-  "description": "This extension adds link to open project from GitHub and GitLab in IntelliJ-based IDEs",
+  "description": "This extension adds link to open project from GitHub, GitLab and Bitbucket in IntelliJ-based IDEs",
   "version": "1.0",
   "icons": {
     "128": "icon-128.png"
@@ -24,6 +24,16 @@
         "jetbrains-toolbox-common.js",
         "jetbrains-toolbox-gitlab.js"
       ]
+    },
+    {
+      "matches": [
+        "*://*.bitbucket.org/*"
+      ],
+      "js": [
+        "jetbrains-toolbox-common.js",
+        "jetbrains-toolbox-bitbucket.js"
+      ],
+      "run_at": "document_end"
     }
   ],
   "web_accessible_resources": [
@@ -33,6 +43,7 @@
     "activeTab",
     "nativeMessaging",
     "*://*.github.com/*",
-    "*://*.gitlab.com/*"
+    "*://*.gitlab.com/*",
+    "*://*.bitbucket.org/*"
   ]
 }
