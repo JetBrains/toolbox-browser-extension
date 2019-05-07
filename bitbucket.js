@@ -6,9 +6,6 @@ import {
   supportedTools
 } from './common';
 
-const apiUrlMeta = document.querySelector("meta[name='bb-api-canon-url'][content]");
-const apiUrl = apiUrlMeta ? apiUrlMeta.getAttribute('content') : null;
-
 let styleSheetAdded = false;
 let addingButtons = false;
 
@@ -87,9 +84,9 @@ function handleUiChange() {
   const fullSlug = window.location.pathname.match(/^\/([^/]+\/[^/]+)\/src\//);
   const cloneCheckoutButton = document.querySelector('[data-qa="page-header-wrapper"] [class*="ActionsWrapper"] [type="button"]:not([aria-expanded])');
 
-  if (apiUrl && fullSlug && cloneCheckoutButton) {
+  if (fullSlug && cloneCheckoutButton) {
     addingButtons = true;
-    const metadataUrl = `${apiUrl}/2.0/repositories/${fullSlug[1]}?fields=language,links.clone`;
+    const metadataUrl = `${window.location.origin}/!api/2.0/repositories/${fullSlug[1]}?fields=language,links.clone`;
 
     fetch(metadataUrl)
       .then(response => response.json())
