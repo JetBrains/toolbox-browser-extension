@@ -14,6 +14,7 @@
     "imports-loader": "0.6.5",
     "@jetbrains/logos": "0.1.6",
     "@jetbrains/ring-ui-license-checker": "^1.0.14",
+    "throttle-debounce": "2.1.0",
     "webpack": "1.12.11",
     "whatwg-fetch": "0.10.1"
   },
