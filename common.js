@@ -2,26 +2,26 @@
 /* globals chrome require */
 
 export const supportedLanguages = {
-  Java: ['idea'],
-  Kotlin: ['idea'],
-  Groovy: ['idea'],
-  Scala: ['idea'],
-  JavaScript: ['webstorm', 'phpstorm', 'idea'],
-  CoffeeScript: ['webstorm', 'phpstorm', 'idea'],
-  TypeScript: ['webstorm', 'phpstorm', 'idea'],
-  Dart: ['webstorm', 'phpstorm', 'idea'],
-  Go: ['goland'],
-  CSS: ['webstorm', 'phpstorm', 'idea'],
-  HTML: ['webstorm', 'phpstorm', 'idea'],
-  Python: ['pycharm', 'idea'],
-  PHP: ['phpstorm', 'idea'],
-  'C#': ['rider'],
-  'C++': ['clion'],
-  C: ['clion'],
-  Ruby: ['rubymine', 'idea'],
-  Puppet: ['rubymine', 'idea'],
-  'Objective-C': ['appcode'],
-  Swift: ['appcode']
+  java: ['idea'],
+  kotlin: ['idea'],
+  groovy: ['idea'],
+  scala: ['idea'],
+  javascript: ['webstorm', 'phpstorm', 'idea'],
+  coffeescript: ['webstorm', 'phpstorm', 'idea'],
+  typescript: ['webstorm', 'phpstorm', 'idea'],
+  dart: ['webstorm', 'phpstorm', 'idea'],
+  go: ['goland'],
+  css: ['webstorm', 'phpstorm', 'idea'],
+  html: ['webstorm', 'phpstorm', 'idea'],
+  python: ['pycharm', 'idea'],
+  php: ['phpstorm', 'idea'],
+  'c#': ['rider'],
+  'c++': ['clion'],
+  c: ['clion'],
+  ruby: ['rubymine', 'idea'],
+  puppet: ['rubymine', 'idea'],
+  'objective-c': ['appcode'],
+  swift: ['appcode']
 };
 
 export const supportedTools = {
