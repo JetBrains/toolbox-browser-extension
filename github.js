@@ -23,7 +23,10 @@ function selectTools(langs) {
 
   const selectedToolIds = Object.keys(langs).
     filter(filterLang).
-    reduce((selected, lang) => [...selected, ...supportedLanguages[lang.toLowerCase()]], []);
+    reduce((selected, lang) => [
+      ...selected,
+      ...supportedLanguages[lang.toLowerCase()]
+    ], []);
 
   return selectedToolIds.length ? [...new Set(selectedToolIds)] : ['idea'];
 }
