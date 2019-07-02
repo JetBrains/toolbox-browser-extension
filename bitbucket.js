@@ -27,6 +27,10 @@ function configureStyleSheet() {
   styleSheet.id = styleId;
   // language=CSS
   styleSheet.innerHTML = `
+    .jt-button-group {
+      margin: 0 2px;
+    }
+
     .jt-button {
       margin: 0 2px;
     }
@@ -58,6 +62,7 @@ function renderButtons(tools, cloneCheckoutButton, cloneUrl) {
   configureStyleSheet();
 
   const buttonGroup = document.createElement('div');
+  buttonGroup.setAttribute('class', 'jt-button-group');
 
   tools.
     map(toolId => supportedTools[toolId]).
@@ -90,7 +95,7 @@ const handleUiChange = debounce(MUTATION_DEBOUNCE_DELAY, () => {
   }
 
   const fullSlug = window.location.pathname.match(/^\/([^/]+\/[^/]+)\/src\//);
-  const cloneCheckoutButton = document.querySelector('[data-qa="page-header-wrapper"] [class*="ActionsWrapper"] [type="button"]:not([aria-expanded])');
+  const cloneCheckoutButton = document.querySelector('[data-qa="page-header-wrapper"] button[type="button"]');
 
   if (fullSlug && cloneCheckoutButton) {
     const metadataUrl = `${window.location.origin}/!api/2.0/repositories/${fullSlug[1]}?fields=language,links.clone`;
