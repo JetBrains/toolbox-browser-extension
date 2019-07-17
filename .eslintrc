@@ -3,7 +3,7 @@
   "extends": [
     "@jetbrains",
     "@jetbrains/eslint-config/browser",
-    "@jetbrains/eslint-config/es6",
+    "@jetbrains/eslint-config/es6"
   ],
   "rules": {
     "no-magic-numbers": ["error", { "ignore": [0, 1] }]

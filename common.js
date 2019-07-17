@@ -1,5 +1,5 @@
 /* eslint-disable import/no-commonjs,max-len */
-/* globals chrome require */
+/* globals chrome */
 
 export const supportedLanguages = {
   java: ['idea'],
@@ -68,7 +68,7 @@ export const supportedTools = {
   goland: {
     name: 'GoLand',
     tag: 'goland',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/gogland/gogland.svg'))
+    icon: chrome.extension.getURL(require('@jetbrains/logos/goland/goland.svg'))
   }
 };
 
