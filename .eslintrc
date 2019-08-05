@@ -6,6 +6,10 @@
     "@jetbrains/eslint-config/es6"
   ],
   "rules": {
+    "max-len": ["error", { "code": 120, "tabWidth": 2 }],
     "no-magic-numbers": ["error", { "ignore": [0, 1] }]
+  },
+  "globals": {
+    "chrome": "readonly"
   }
 }

@@ -1,5 +1,4 @@
 /* eslint-disable import/no-commonjs,max-len */
-/* globals chrome */
 
 export const supportedLanguages = {
   java: ['idea'],
@@ -73,6 +72,10 @@ export const supportedTools = {
 };
 
 export const USAGE_THRESHOLD = 0.05;
+export const HUNDRED_PERCENT = 100;
+export const MAX_DECIMALS = 2;
+export const MIN_VALID_HTTP_STATUS = 200;
+export const MAX_VALID_HTTP_STATUS = 299;
 
 export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
