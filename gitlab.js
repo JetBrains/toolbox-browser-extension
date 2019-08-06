@@ -5,7 +5,8 @@ import {
   supportedLanguages,
   supportedTools,
   getToolboxURN,
-  USAGE_THRESHOLD
+  USAGE_THRESHOLD,
+  DEFAULT_LANGUAGE
 } from './common';
 
 const node = document.querySelector('.project-repo-buttons');
@@ -20,29 +21,33 @@ function selectTools(languages) {
     supportedLanguages[lang.toLowerCase()] &&
     languages[lang] / overallPoints > USAGE_THRESHOLD;
 
-  const selectedToolIds = Object.keys(languages).
+  const selectedTools = Object.keys(languages).
     filter(filterLang).
-    reduce((selected, lang) => [
-      ...selected,
-      ...supportedLanguages[lang.toLocaleLowerCase()]
-    ], []);
+    reduce((acc, lang) => {
+      acc.push(...supportedLanguages[lang.toLowerCase()]);
+      return acc;
+    }, []);
 
-  return selectedToolIds.length ? [...new Set(selectedToolIds)] : ['idea'];
+  return selectedTools.length > 0 ? Array.from(new Set(selectedTools)) : supportedLanguages[DEFAULT_LANGUAGE];
 }
 
 function renderButtons(tools, meta) {
   const group = document.createElement('div');
   group.setAttribute('class', 'd-inline-flex');
   group.setAttribute('style', 'margin-top: 16px;');
-  tools.map(id => supportedTools[id]).forEach(tool => {
-    const button = document.createElement('a');
-    button.setAttribute('href', getToolboxURN(tool.tag, meta.ssh));
-    button.setAttribute('class', 'input-group-text btn btn-xs');
-    button.setAttribute('aria-label', `Open in ${tool.name}`);
-    button.innerHTML =
-      `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
-    group.appendChild(button);
-  });
+
+  tools.
+    sort().
+    map(id => supportedTools[id]).
+    forEach(tool => {
+      const button = document.createElement('a');
+      button.setAttribute('href', getToolboxURN(tool.tag, meta.ssh));
+      button.setAttribute('class', 'input-group-text btn btn-xs');
+      button.setAttribute('aria-label', `Open in ${tool.name}`);
+      button.innerHTML =
+        `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+      group.appendChild(button);
+    });
 
   node.appendChild(group);
 }

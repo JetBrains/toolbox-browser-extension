@@ -2,6 +2,7 @@ import {debounce} from 'throttle-debounce';
 import 'whatwg-fetch';
 
 import {
+  DEFAULT_LANGUAGE,
   getToolboxURN,
   supportedLanguages,
   supportedTools
@@ -13,8 +14,8 @@ function selectTools(language) {
   // All languages in Bitbucket match the common list with an exception of HTML
   const lang = language === 'html/css' ? 'html' : language;
 
-  const selectedToolIds = lang && supportedLanguages[lang.toLowerCase()];
-  return selectedToolIds && selectedToolIds.length ? selectedToolIds : ['idea'];
+  const selectedTools = lang && supportedLanguages[lang.toLowerCase()];
+  return selectedTools && selectedTools.length > 0 ? selectedTools : supportedLanguages[DEFAULT_LANGUAGE];
 }
 
 function configureStyleSheet() {
@@ -65,6 +66,7 @@ function renderButtons(tools, cloneCheckoutButton, cloneUrl) {
   buttonGroup.setAttribute('class', 'jt-button-group');
 
   tools.
+    sort().
     map(toolId => supportedTools[toolId]).
     forEach(tool => {
       const btn = document.createElement('a');
