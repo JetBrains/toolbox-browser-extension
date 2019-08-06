@@ -12,7 +12,7 @@
   "scripts": {
     "prebuild": "eslint .",
     "build": "webpack --bail -p",
-    "build-dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
+    "build:dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
     "watch": "webpack -w"
   },
   "devDependencies": {
