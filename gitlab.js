@@ -39,7 +39,8 @@ function renderButtons(tools, meta) {
     button.setAttribute('href', getToolboxURN(tool.tag, meta.ssh));
     button.setAttribute('class', 'input-group-text btn btn-xs');
     button.setAttribute('aria-label', `Open in ${tool.name}`);
-    button.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+    button.innerHTML =
+      `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
     group.appendChild(button);
   });
 
