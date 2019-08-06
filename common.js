@@ -1,7 +1,9 @@
 /* eslint-disable import/no-commonjs,max-len */
 
+export const DEFAULT_LANGUAGE = 'java';
+
 export const supportedLanguages = {
-  java: ['idea'],
+  [DEFAULT_LANGUAGE]: ['idea'],
   kotlin: ['idea'],
   groovy: ['idea'],
   scala: ['idea'],
@@ -76,6 +78,7 @@ export const HUNDRED_PERCENT = 100;
 export const MAX_DECIMALS = 2;
 export const MIN_VALID_HTTP_STATUS = 200;
 export const MAX_VALID_HTTP_STATUS = 299;
+export const DEFAULT_LANGUAGE_SET = {[DEFAULT_LANGUAGE]: HUNDRED_PERCENT};
 
 export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;

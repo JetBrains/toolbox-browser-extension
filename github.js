@@ -1,5 +1,4 @@
 import 'whatwg-fetch';
-
 import gh from 'github-url-to-object';
 
 import {
@@ -10,7 +9,9 @@ import {
   HUNDRED_PERCENT,
   MAX_DECIMALS,
   MIN_VALID_HTTP_STATUS,
-  MAX_VALID_HTTP_STATUS
+  MAX_VALID_HTTP_STATUS,
+  DEFAULT_LANGUAGE,
+  DEFAULT_LANGUAGE_SET
 } from './common';
 
 const appendNode = document.querySelector('.file-navigation');
@@ -22,17 +23,16 @@ function selectTools(langs) {
     reduce((overall, current) => overall + current, 0);
 
   const filterLang = lang =>
-    supportedLanguages[lang.toLowerCase()] &&
-    langs[lang] / overallPoints > USAGE_THRESHOLD;
+    supportedLanguages[lang.toLowerCase()] && langs[lang] / overallPoints > USAGE_THRESHOLD;
 
-  const selectedToolIds = Object.keys(langs).
+  const selectedTools = Object.keys(langs).
     filter(filterLang).
-    reduce((selected, lang) => [
-      ...selected,
-      ...supportedLanguages[lang.toLowerCase()]
-    ], []);
+    reduce((acc, lang) => {
+      acc.push(...supportedLanguages[lang.toLowerCase()]);
+      return acc;
+    }, []);
 
-  return selectedToolIds.length ? [...new Set(selectedToolIds)] : ['idea'];
+  return selectedTools.length > 0 ? Array.from(new Set(selectedTools)) : supportedLanguages[DEFAULT_LANGUAGE];
 }
 
 function renderButtons(tools) {
@@ -40,6 +40,7 @@ function renderButtons(tools) {
   const cloneUrl = `git@github.com:${githubInfo.user}/${githubInfo.repo}.git`;
 
   tools.
+    sort().
     map(toolId => supportedTools[toolId]).
     forEach(tool => {
       const btn = document.createElement('a');
@@ -58,10 +59,10 @@ function renderButtons(tools) {
 }
 
 function extractLanguagesFromPage() {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     const langElements = document.querySelectorAll('.repository-lang-stats-numbers .lang');
     if (langElements.length === 0) {
-      reject(null);
+      resolve(DEFAULT_LANGUAGE_SET);
     } else {
       const allLangs = Array.from(langElements).reduce((acc, langEl) => {
         const percentEl = langEl.nextElementSibling;
@@ -83,6 +84,21 @@ function checkStatus(response) {
   }
 }
 
+function parseResponse(response) {
+  return new Promise((resolve, reject) => {
+    response.json().
+      then(result => {
+        if (Object.keys(result).length > 0) {
+          resolve(result);
+        } else {
+          reject();
+        }
+      }).catch(() => {
+        reject();
+      });
+  });
+}
+
 function convertBytesToPercents(langs) {
   const totalBytes = Object.keys(langs).reduce((acc, lang) => acc + langs[lang], 0);
   Object.keys(langs).forEach(lang => {
@@ -95,21 +111,17 @@ function convertBytesToPercents(langs) {
 
 function fetchLanguages() {
   const languagesUrl = `${githubInfo.api_url}/languages`;
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     fetch(languagesUrl).
       then(checkStatus).
-      then(response => response.json()).
+      then(parseResponse).
       then(convertBytesToPercents).
       then(langs => {
         resolve(langs);
       }).
       catch(() => {
         extractLanguagesFromPage().then(langs => {
-          if (langs) {
-            resolve(langs);
-          } else {
-            reject(null);
-          }
+          resolve(langs);
         });
       });
   });
