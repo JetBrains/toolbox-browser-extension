@@ -11,7 +11,9 @@ module.exports = {
     github: './github',
     gitlab: './gitlab',
     bitbucket: './bitbucket',
-    common: ['./common'] // https://github.com/webpack/webpack/issues/300
+    common: ['./common'], // https://github.com/webpack/webpack/issues/300
+    background: './background',
+    popup: './popup'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
@@ -50,7 +52,8 @@ module.exports = {
   plugins: [
     new CopyWebpackPlugin([
       {from: 'manifest.json'},
-      {from: 'icon-128.png'} // Replace with logo from package after it's generation
+      {from: 'icon-128.png'}, // Replace with logo from package after it's generation
+      {from: 'popup/index.html', to: 'jetbrains-toolbox-popup.html'}
     ]),
     new LicenseChecker({
       format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})

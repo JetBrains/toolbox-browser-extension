@@ -6,6 +6,15 @@
   "icons": {
     "128": "icon-128.png"
   },
+  "page_action": {
+    "default_icon": "icon-128.png",
+    "default_title": "JetBrains Toolbox Extension",
+    "default_popup": "jetbrains-toolbox-popup.html"
+  },
+  "background": {
+    "scripts": ["jetbrains-toolbox-background.js"],
+    "persistent": false
+  },
   "content_scripts": [
     {
       "matches": [
@@ -41,7 +50,9 @@
   ],
   "permissions": [
     "activeTab",
+    "declarativeContent",
     "nativeMessaging",
+    "tabs",
     "*://*.github.com/*",
     "*://*.gitlab.com/*",
     "*://*.bitbucket.org/*"
