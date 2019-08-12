@@ -16,6 +16,14 @@ chrome.runtime.onInstalled.addListener(() => {
           })
         ],
         actions: [new chrome.declarativeContent.ShowPageAction()]
+      },
+      {
+        conditions: [
+          new chrome.declarativeContent.PageStateMatcher({
+            pageUrl: {hostEquals: 'bitbucket.org', schemes: ['https']}
+          })
+        ],
+        actions: [new chrome.declarativeContent.ShowPageAction()]
       }
     ]);
   });
