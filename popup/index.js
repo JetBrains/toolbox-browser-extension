@@ -1,5 +1,9 @@
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
   chrome.tabs.sendMessage(tabs[0].id, {type: 'get-tools'}, tools => {
+    if (tools == null) {
+      return;
+    }
+
     const fragment = document.createDocumentFragment();
     tools.forEach(tool => {
       fragment.appendChild(createOpenToolAction(tool));
