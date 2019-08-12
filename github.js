@@ -17,7 +17,7 @@ import {
 if (!window.hasRun) {
   window.hasRun = true;
 
-  const githubInfo = gh(window.location.toString(), {enterprise: true});
+  const githubMetadata = gh(window.location.toString(), {enterprise: true});
 
   const checkResponseStatus = response => {
     if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
@@ -58,7 +58,7 @@ if (!window.hasRun) {
   };
 
   const extractLanguagesFromPage = () => new Promise(resolve => {
-    fetch(githubInfo.https_url).
+    fetch(githubMetadata.https_url).
       then(response => response.text()).
       then(htmlString => {
         const parser = new DOMParser();
@@ -81,7 +81,7 @@ if (!window.hasRun) {
   });
 
   const fetchLanguages = () => new Promise(resolve => {
-    fetch(`${githubInfo.api_url}/languages`).
+    fetch(`${githubMetadata.api_url}/languages`).
       then(checkResponseStatus).
       then(parseResponse).
       then(convertBytesToPercents).
@@ -118,7 +118,7 @@ if (!window.hasRun) {
   };
 
   const renderButtons = tools => {
-    const cloneUrl = `git@github.com:${githubInfo.user}/${githubInfo.repo}.git`;
+    const cloneUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
     const selectedTools = tools.
       sort().
       map(toolId => {
@@ -139,7 +139,7 @@ if (!window.hasRun) {
     });
   };
 
-  if (githubInfo) {
+  if (githubMetadata) {
     fetchLanguages().
       then(selectTools).
       then(renderButtons);
