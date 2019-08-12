@@ -96,16 +96,16 @@ if (!window.hasRun) {
       });
   });
 
-  const selectTools = langs => {
+  const selectTools = languages => {
     const overallPoints = Object.
-      values(langs).
+      values(languages).
       reduce((overall, current) => overall + current, 0);
 
     const filterLang = lang =>
-      supportedLanguages[lang.toLowerCase()] && langs[lang] / overallPoints > USAGE_THRESHOLD;
+      supportedLanguages[lang.toLowerCase()] && languages[lang] / overallPoints > USAGE_THRESHOLD;
 
     const selectedTools = Object.
-      keys(langs).
+      keys(languages).
       filter(filterLang).
       reduce((acc, lang) => {
         acc.push(...supportedLanguages[lang.toLowerCase()]);
