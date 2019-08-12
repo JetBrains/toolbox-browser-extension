@@ -1,19 +1,3 @@
-chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-  chrome.tabs.sendMessage(tabs[0].id, {type: 'get-tools'}, tools => {
-    if (tools == null) {
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    tools.forEach(tool => {
-      fragment.appendChild(createOpenToolAction(tool));
-    });
-    document.
-      querySelector('.js-tool-actions').
-      appendChild(fragment);
-  });
-});
-
 function createOpenToolAction(tool) {
   const icon = document.createElement('img');
   icon.setAttribute('class', 'tool-action__icon');
@@ -48,3 +32,18 @@ function createOpenToolAction(tool) {
   });
   return action;
 }
+
+chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+  chrome.tabs.sendMessage(tabs[0].id, {type: 'get-tools'}, tools => {
+    if (tools == null) {
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    tools.forEach(tool => {
+      fragment.appendChild(createOpenToolAction(tool));
+    });
+    document.getElementById('tool-action-stub').style.display = 'none';
+    document.querySelector('.js-tool-actions').appendChild(fragment);
+  });
+});
