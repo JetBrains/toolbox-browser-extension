@@ -3,10 +3,9 @@
 <head>
   <title>Open project in IntelliJ-based IDEs</title>
   <style>
-    @keyframes animation-loading {
-      0%,
-      100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    @keyframes placeholder-animation {
+      0% { background-position: -250px 0; }
+      100% { background-position: 250px 0; }
     }
 
     body {
@@ -44,17 +43,14 @@
       border-radius: 50%;
     }
 
-    .tool-action_stub .tool-action__text {
-      border-radius: 999em;
-      line-height: 0.9em;
-    }
-
     .tool-action_stub .tool-action__icon,
     .tool-action_stub .tool-action__text {
-      background-color: #f7f9fa;
-      border: 1px solid #dfe5eb;
       color: transparent;
-      animation: 1.5s ease-in-out 0s infinite normal running animation-loading;
+      animation: placeholder-animation 1.5s infinite forwards linear;
+      background: linear-gradient(to right, #eee 2%, #ddd 18%, #eee 33%);
+      background-size: 500px;
+      -moz-user-select: none;
+      user-select: none;
     }
   </style>
   <meta charset="utf-8">
@@ -64,7 +60,7 @@
 <div id="tool-actions" class="tool-actions js-tool-actions">
   <div id="tool-action-stub" class="tool-action tool-action_stub">
     <div class="tool-action__icon"></div>
-    <div class="tool-action__text">Open in tool</div>
+    <div class="tool-action__text">Open in IDEA</div>
   </div>
 </div>
 <script src="jetbrains-toolbox-popup.js"></script>
