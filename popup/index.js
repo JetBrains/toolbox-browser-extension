@@ -17,6 +17,8 @@ function createOpenToolAction(tool) {
   action.appendChild(text);
 
   action.addEventListener('click', e => {
+    e.preventDefault();
+
     chrome.tabs.executeScript({
       code: `
         (function () {
