@@ -1,5 +1,3 @@
-/* eslint-disable import/no-commonjs,max-len */
-
 export const DEFAULT_LANGUAGE = 'java';
 
 export const supportedLanguages = {
