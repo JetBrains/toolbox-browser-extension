@@ -84,3 +84,6 @@ export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }
 
+(function enablePageActionIIFE() {
+  chrome.runtime.sendMessage({type: 'enable-page-action'});
+}());

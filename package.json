@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@jetbrains/logos": "^1.1.4",
+    "bitbucket-url-to-object": "^0.3.0",
     "github-url-to-object": "^4.0.4",
     "throttle-debounce": "2.1.0",
     "whatwg-fetch": "^3.0.0"

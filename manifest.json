@@ -6,34 +6,35 @@
   "icons": {
     "128": "icon-128.png"
   },
+  "page_action": {
+    "default_icon": "icon-128.png",
+    "default_title": "JetBrains Toolbox Extension",
+    "default_popup": "jetbrains-toolbox-popup.html"
+  },
+  "background": {
+    "scripts": ["jetbrains-toolbox-background.js"],
+    "persistent": false
+  },
   "content_scripts": [
     {
       "matches": [
-        "*://*.github.com/*"
-      ],
-      "js": [
-        "jetbrains-toolbox-common.js",
-        "jetbrains-toolbox-github.js"
-      ]
-    },
-    {
-      "matches": [
-        "*://*.gitlab.com/*"
-      ],
-      "js": [
-        "jetbrains-toolbox-common.js",
-        "jetbrains-toolbox-gitlab.js"
-      ]
-    },
-    {
-      "matches": [
+        "*://*.github.com/*",
+        "*://*.gitlab.com/*",
         "*://*.bitbucket.org/*"
       ],
-      "js": [
-        "jetbrains-toolbox-common.js",
-        "jetbrains-toolbox-bitbucket.js"
-      ],
-      "run_at": "document_end"
+      "js": ["jetbrains-toolbox-common.js"]
+    },
+    {
+      "matches": ["*://*.github.com/*"],
+      "js": ["jetbrains-toolbox-github.js"]
+    },
+    {
+      "matches": ["*://*.gitlab.com/*"],
+      "js": ["jetbrains-toolbox-gitlab.js"]
+    },
+    {
+      "matches": ["*://*.bitbucket.org/*"],
+      "js": ["jetbrains-toolbox-bitbucket.js"]
     }
   ],
   "web_accessible_resources": [
@@ -42,6 +43,7 @@
   "permissions": [
     "activeTab",
     "nativeMessaging",
+    "tabs",
     "*://*.github.com/*",
     "*://*.gitlab.com/*",
     "*://*.bitbucket.org/*"
