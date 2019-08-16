@@ -1,44 +1,39 @@
 function createOpenToolAction(tool) {
+  const toolAction = document.createElement('div');
+  toolAction.setAttribute('class', 'tool-action');
+
   const icon = document.createElement('img');
   icon.setAttribute('class', 'tool-action__icon');
   icon.setAttribute('alt', tool.name);
   icon.setAttribute('src', tool.icon);
 
-  const defaultText = document.createElement('span');
-  defaultText.setAttribute('class', 'tool-action__text');
-  defaultText.textContent = `Open in ${tool.name}`;
+  const actionText = document.createElement('span');
+  actionText.setAttribute('class', 'tool-action__text');
+  actionText.textContent = `Open in ${tool.name} using`;
 
-  const defaultAction = document.createElement('a');
-  defaultAction.setAttribute('class', 'tool-action');
-  defaultAction.setAttribute('href', tool.cloneUrl);
-  defaultAction.setAttribute('aria-label', defaultText.textContent);
+  const httpsLink = document.createElement('a');
+  httpsLink.setAttribute('class', 'tool-action__link');
+  httpsLink.setAttribute('href', tool.cloneUrl);
+  httpsLink.textContent = 'HTTPS';
+  setClickHandler(httpsLink);
 
-  defaultAction.append(icon);
-  defaultAction.append(defaultText);
+  const delimiter = document.createElement('span');
+  delimiter.setAttribute('class', 'tool-action__text');
+  delimiter.textContent = '/';
 
-  setClickHandler(defaultAction);
+  const sshLink = document.createElement('a');
+  sshLink.setAttribute('class', 'tool-action__link');
+  sshLink.setAttribute('href', tool.sshUrl);
+  sshLink.textContent = 'SSH';
+  setClickHandler(sshLink);
 
-  const sshText = document.createElement('span');
-  sshText.setAttribute('class', 'tool-action__text');
-  sshText.textContent = 'using SSH';
+  toolAction.append(icon);
+  toolAction.append(actionText);
+  toolAction.append(httpsLink);
+  toolAction.append(delimiter);
+  toolAction.append(sshLink);
 
-  const sshAction = document.createElement('a');
-  sshAction.setAttribute('class', 'tool-action');
-  sshAction.setAttribute('href', tool.sshUrl);
-  sshAction.setAttribute('aria-label', sshText.textContent);
-
-  sshAction.append(sshText);
-
-  setClickHandler(sshAction);
-
-  const actionContainer = document.createElement('div');
-  actionContainer.setAttribute('class', 'tool-action-container');
-
-  actionContainer.append(defaultAction);
-  actionContainer.append('/');
-  actionContainer.append(sshAction);
-
-  return actionContainer;
+  return toolAction;
 }
 
 function setClickHandler(action) {
