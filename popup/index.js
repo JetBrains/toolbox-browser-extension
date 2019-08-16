@@ -1,21 +1,42 @@
 function createOpenToolAction(tool) {
+  const toolAction = document.createElement('div');
+  toolAction.setAttribute('class', 'tool-action');
+
   const icon = document.createElement('img');
   icon.setAttribute('class', 'tool-action__icon');
   icon.setAttribute('alt', tool.name);
   icon.setAttribute('src', tool.icon);
 
-  const text = document.createElement('span');
-  text.setAttribute('class', 'tool-action__text');
-  text.textContent = `Open in ${tool.name}`;
+  const actionText = document.createElement('span');
+  actionText.setAttribute('class', 'tool-action__text');
+  actionText.textContent = `Open in ${tool.name} using`;
 
-  const action = document.createElement('a');
-  action.setAttribute('class', 'tool-action');
-  action.setAttribute('href', tool.cloneUrl);
-  action.setAttribute('aria-label', text.textContent);
+  const httpsLink = document.createElement('a');
+  httpsLink.setAttribute('class', 'tool-action__link');
+  httpsLink.setAttribute('href', tool.cloneUrl);
+  httpsLink.textContent = 'HTTPS';
+  setClickHandler(httpsLink);
 
-  action.appendChild(icon);
-  action.appendChild(text);
+  const delimiter = document.createElement('span');
+  delimiter.setAttribute('class', 'tool-action__text');
+  delimiter.textContent = '/';
 
+  const sshLink = document.createElement('a');
+  sshLink.setAttribute('class', 'tool-action__link');
+  sshLink.setAttribute('href', tool.sshUrl);
+  sshLink.textContent = 'SSH';
+  setClickHandler(sshLink);
+
+  toolAction.append(icon);
+  toolAction.append(actionText);
+  toolAction.append(httpsLink);
+  toolAction.append(delimiter);
+  toolAction.append(sshLink);
+
+  return toolAction;
+}
+
+function setClickHandler(action) {
   action.addEventListener('click', e => {
     e.preventDefault();
 
@@ -32,7 +53,6 @@ function createOpenToolAction(tool) {
         })();`
     });
   });
-  return action;
 }
 
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
@@ -43,9 +63,9 @@ chrome.tabs.query({active: true, currentWindow: true}, tabs => {
 
     const fragment = document.createDocumentFragment();
     tools.forEach(tool => {
-      fragment.appendChild(createOpenToolAction(tool));
+      fragment.append(createOpenToolAction(tool));
     });
     document.getElementById('tool-action-stub').style.display = 'none';
-    document.querySelector('.js-tool-actions').appendChild(fragment);
+    document.querySelector('.js-tool-actions').append(fragment);
   });
 });

@@ -22,7 +22,10 @@
         "*://*.gitlab.com/*",
         "*://*.bitbucket.org/*"
       ],
-      "js": ["jetbrains-toolbox-common.js"]
+      "js": [
+        "jetbrains-toolbox-common.js",
+        "jetbrains-toolbox-enable-page-action.js"
+      ]
     },
     {
       "matches": ["*://*.github.com/*"],

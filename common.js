@@ -1,5 +1,3 @@
-/* eslint-disable import/no-commonjs,max-len */
-
 export const DEFAULT_LANGUAGE = 'java';
 
 export const supportedLanguages = {
@@ -83,7 +81,3 @@ export const DEFAULT_LANGUAGE_SET = {[DEFAULT_LANGUAGE]: HUNDRED_PERCENT};
 export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }
-
-(function enablePageActionIIFE() {
-  chrome.runtime.sendMessage({type: 'enable-page-action'});
-}());

@@ -26,22 +26,22 @@ if (!window.hasRun) {
         break;
       }
     }
-    if (element === null) {
+    if (element) {
+      const id = element.textContent.replace('Project ID:', '').trim();
+      // noinspection JSUnresolvedVariable
+      fetch(`https://gitlab.com/api/v4/projects/${id}`).
+        then(r => r.json()).
+        then(meta => {
+          resolve({
+            ssh: meta.ssh_url_to_repo,
+            https: meta.http_url_to_repo,
+            id: meta.id
+          });
+        });
+    } else {
       reject();
     }
-
-    const id = element.textContent.replace('Project ID:', '').trim();
-    // noinspection JSUnresolvedVariable
-    fetch(`https://gitlab.com/api/v4/projects/${id}`).
-      then(r => r.json()).
-      then(meta => {
-        resolve({
-          ssh: meta.ssh_url_to_repo,
-          id: meta.id
-        });
-      });
   });
-
 
   const fetchLanguages = meta => new Promise(resolve => {
     fetch(`https://gitlab.com/api/v4/projects/${meta.id}/languages`).then(response => {
@@ -70,7 +70,8 @@ if (!window.hasRun) {
   const renderButtons = (tools, meta) => {
     const selectedTools = tools.sort().map(toolId => {
       const tool = supportedTools[toolId];
-      tool.cloneUrl = getToolboxURN(tool.tag, meta.ssh);
+      tool.cloneUrl = getToolboxURN(tool.tag, meta.https);
+      tool.sshUrl = getToolboxURN(tool.tag, meta.ssh);
       return tool;
     });
 

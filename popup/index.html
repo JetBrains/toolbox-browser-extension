@@ -29,6 +29,7 @@
 
     .tool-action__icon {
       box-sizing: border-box;
+      margin-right: 0.5em;
       width: 24px;
       height: 24px;
     }
@@ -36,7 +37,10 @@
     .tool-action__text {
       font-size: 1em;
       line-height: 1;
-      margin-left: 0.6em;
+    }
+
+    .tool-action__link {
+      margin: 0 0.4em;
     }
 
     .tool-action_stub .tool-action__icon {
@@ -60,7 +64,7 @@
 <div id="tool-actions" class="tool-actions js-tool-actions">
   <div id="tool-action-stub" class="tool-action tool-action_stub">
     <div class="tool-action__icon"></div>
-    <div class="tool-action__text">Open in IDEA</div>
+    <div class="tool-action__text">Open in IDEA using HTTPS / SSH</div>
   </div>
 </div>
 <script src="jetbrains-toolbox-popup.js"></script>

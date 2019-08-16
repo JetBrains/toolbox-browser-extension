@@ -12,6 +12,7 @@ module.exports = {
     gitlab: './gitlab',
     bitbucket: './bitbucket',
     common: ['./common'], // https://github.com/webpack/webpack/issues/300
+    'enable-page-action': './enable-page-action',
     background: './background',
     popup: './popup'
   },

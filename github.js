@@ -118,12 +118,14 @@ if (!window.hasRun) {
   };
 
   const renderButtons = tools => {
-    const cloneUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
+    const cloneUrl = `${githubMetadata.clone_url}.git`;
+    const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
     const selectedTools = tools.
       sort().
       map(toolId => {
         const tool = supportedTools[toolId];
         tool.cloneUrl = getToolboxURN(tool.tag, cloneUrl);
+        tool.sshUrl = getToolboxURN(tool.tag, sshUrl);
         return tool;
       });
 

@@ -23,12 +23,13 @@ if (!window.hasRun) {
       : supportedLanguages[DEFAULT_LANGUAGE];
   };
 
-  const renderButtons = (tools, cloneUrl) => {
+  const renderButtons = (tools, cloneUrl, sshUrl) => {
     const selectedTools = tools.
       sort().
       map(toolId => {
         const tool = supportedTools[toolId];
         tool.cloneUrl = getToolboxURN(tool.tag, cloneUrl);
+        tool.sshUrl = getToolboxURN(tool.tag, sshUrl);
         return tool;
       });
 
@@ -44,15 +45,22 @@ if (!window.hasRun) {
     });
   };
 
-  const getSshCloneUrl = links => links.clone.find(link => link.name === 'ssh') || null;
+  const getLink = (links, which) => {
+    const link = links.clone.find(l => l.name === which);
+    return link ? link.href : '';
+  };
+
+  const getCloneUrl = links => getLink(links, 'https');
+  const getSshCloneUrl = links => getLink(links, 'ssh');
 
   if (bitbucketMetadata) {
     fetch(`${bitbucketMetadata.api_url}?fields=language,links.clone`).
       then(response => response.json()).
       then(parsedResponse => {
         const tools = selectTools(parsedResponse.language);
-        const cloneUrl = getSshCloneUrl(parsedResponse.links);
-        renderButtons(tools, cloneUrl);
+        const cloneUrl = getCloneUrl(parsedResponse.links);
+        const sshUrl = getSshCloneUrl(parsedResponse.links);
+        renderButtons(tools, cloneUrl, sshUrl);
       }).
       catch(() => { /*Do nothing.*/ });
   }
