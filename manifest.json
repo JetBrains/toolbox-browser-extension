@@ -43,6 +43,9 @@
   "permissions": [
     "activeTab",
     "nativeMessaging",
-    "tabs"
+    "tabs",
+    "*://*.github.com/*",
+    "*://*.gitlab.com/*",
+    "*://*.bitbucket.org/*"
   ]
 }
