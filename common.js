@@ -81,3 +81,7 @@ export const DEFAULT_LANGUAGE_SET = {[DEFAULT_LANGUAGE]: HUNDRED_PERCENT};
 export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }
+
+export function getToolboxNavURN(tool, project, filePath, lineNumber) {
+  return `jetbrains://${tool}/navigate/reference?project=${project}&path=${filePath}:${lineNumber}`;
+}

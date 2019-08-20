@@ -5,6 +5,7 @@ import {
   supportedLanguages,
   supportedTools,
   getToolboxURN,
+  getToolboxNavURN,
   USAGE_THRESHOLD,
   HUNDRED_PERCENT,
   MAX_DECIMALS,
@@ -124,6 +125,35 @@ if (!window.hasRun) {
     resolve(result);
   });
 
+  const createContextMenuItem = (githubMetadata, tool, firstItem) => {
+    const {user, repo, branch} = githubMetadata;
+    const normalizedBranch = branch.split('/').shift();
+    const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
+    const lineNumber = location.hash.replace('#L', '');
+    const navUrl = getToolboxNavURN(tool.tag, repo, filePath, lineNumber);
+
+    const menuItem = document.createElement('a');
+    menuItem.setAttribute('class', 'dropdown-item');
+    menuItem.setAttribute('role', 'menu-item');
+    menuItem.setAttribute('href', navUrl);
+    if (firstItem) {
+      menuItem.style.borderTop = '1px solid #eaecef';
+    }
+    menuItem.textContent = `Open in ${tool.name}`;
+
+    menuItem.addEventListener('click', () => {
+      const blobToolbar = document.querySelector('.BlobToolbar');
+      if (blobToolbar) {
+        blobToolbar.removeAttribute('open');
+      }
+    });
+
+    const menuItemContainer = document.createElement('li');
+    menuItemContainer.appendChild(menuItem);
+
+    return menuItemContainer;
+  };
+
   const renderActions = (githubMetadata, tools) => new Promise(resolve => {
     const cloneUrl = `${githubMetadata.clone_url}.git`;
     const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
@@ -142,6 +172,33 @@ if (!window.hasRun) {
           sendResponse(selectedTools);
           break;
         // no default
+      }
+    });
+
+    // eslint-disable-next-line complexity
+    document.body.addEventListener('click', e => {
+      const clickedElement = e.target;
+      if (
+        (clickedElement.tagName === 'path' && clickedElement.parentElement.classList.contains('octicon')) ||
+        (clickedElement.tagName === 'svg' && clickedElement.parentElement.classList.contains('btn-octicon')) ||
+        (clickedElement.tagName === 'SUMMARY' && clickedElement.parentElement.classList.contains('BlobToolbar'))
+      ) {
+        const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
+        const prevItemIndices = blobToolbarDropdown.dataset.toolboxItemIndices
+          ? JSON.parse(blobToolbarDropdown.dataset.toolboxItemIndices)
+          : [];
+        const nextItemIndices = [...prevItemIndices];
+        selectedTools.forEach((tool, toolIndex) => {
+          const menuItem = createContextMenuItem(githubMetadata, tool, toolIndex === 0);
+          const idx = prevItemIndices.length === 0 ? null : prevItemIndices.shift();
+          if (idx === null) {
+            nextItemIndices.push(blobToolbarDropdown.childElementCount);
+            blobToolbarDropdown.appendChild(menuItem);
+          } else {
+            blobToolbarDropdown.replaceChild(menuItem, blobToolbarDropdown.children[idx]);
+          }
+        });
+        blobToolbarDropdown.dataset.toolboxItemIndices = JSON.stringify(nextItemIndices);
       }
     });
 
