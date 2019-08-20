@@ -13,8 +13,6 @@ import {
 if (!window.hasRun) {
   window.hasRun = true;
 
-  const GITLAB_URL_REGEXP = /https:\/\/gitlab.com\/(.+)/;
-
   const fetchMetadata = () => new Promise((resolve, reject) => {
     let element = null;
     const {children} = document.querySelector('.home-panel-metadata') || {children: []};
@@ -43,35 +41,37 @@ if (!window.hasRun) {
     }
   });
 
-  const fetchLanguages = meta => new Promise(resolve => {
-    fetch(`https://gitlab.com/api/v4/projects/${meta.id}/languages`).then(response => {
+  const fetchLanguages = gitlabMetadata => new Promise(resolve => {
+    fetch(`https://gitlab.com/api/v4/projects/${gitlabMetadata.id}/languages`).then(response => {
       resolve(response.json());
     }).catch(() => {
       resolve(DEFAULT_LANGUAGE_SET);
     });
   });
 
-  const selectTools = languages => {
+  const selectTools = languages => new Promise(resolve => {
     const overallPoints = Object.values(languages).reduce((overall, current) => overall + current, 0);
 
-    const filterLang = lang =>
-      supportedLanguages[lang.toLowerCase()] && languages[lang] / overallPoints > USAGE_THRESHOLD;
+    const filterLang = language =>
+      supportedLanguages[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
 
-    const selectedTools = Object.keys(languages).filter(filterLang).reduce((acc, lang) => {
-      acc.push(...supportedLanguages[lang.toLowerCase()]);
+    const selectedTools = Object.keys(languages).filter(filterLang).reduce((acc, key) => {
+      acc.push(...supportedLanguages[key.toLowerCase()]);
       return acc;
     }, []);
 
-    return selectedTools.length > 0
+    const result = selectedTools.length > 0
       ? Array.from(new Set(selectedTools))
       : supportedLanguages[DEFAULT_LANGUAGE];
-  };
 
-  const renderButtons = (tools, meta) => {
+    resolve(result);
+  });
+
+  const renderActions = (gitlabMetadata, tools) => new Promise(resolve => {
     const selectedTools = tools.sort().map(toolId => {
       const tool = supportedTools[toolId];
-      tool.cloneUrl = getToolboxURN(tool.tag, meta.https);
-      tool.sshUrl = getToolboxURN(tool.tag, meta.ssh);
+      tool.cloneUrl = getToolboxURN(tool.tag, gitlabMetadata.https);
+      tool.sshUrl = getToolboxURN(tool.tag, gitlabMetadata.ssh);
       return tool;
     });
 
@@ -80,18 +80,21 @@ if (!window.hasRun) {
         case 'get-tools':
           sendResponse(selectedTools);
           break;
-        default:
-          // unknown message
-          break;
+        // no default
       }
     });
-  };
 
-  if (GITLAB_URL_REGEXP.test(window.location.href)) {
-    fetchMetadata().
-      then(meta => fetchLanguages(meta).
-        then(selectTools).
-        then(tools => renderButtons(tools, meta))).
-      catch(() => { /*Do nothing.*/ });
-  }
+    resolve();
+  });
+
+  fetchMetadata().
+    then(metadata => fetchLanguages(metadata).
+      then(selectTools).
+      then(tools => renderActions(metadata, tools)).
+      then(() => {
+        chrome.runtime.sendMessage({type: 'enable-page-action'});
+      })).
+    catch(() => {
+      chrome.runtime.sendMessage({type: 'disable-page-action'});
+    });
 }

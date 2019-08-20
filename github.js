@@ -17,17 +17,22 @@ import {
 if (!window.hasRun) {
   window.hasRun = true;
 
-  const githubMetadata = gh(window.location.toString(), {enterprise: true});
-
-  const checkResponseStatus = response => {
-    if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
-      return response;
+  const fetchMetadata = () => new Promise((resolve, reject) => {
+    const metadata = gh(window.location.toString(), {enterprise: true});
+    if (metadata) {
+      resolve(metadata);
     } else {
-      const error = new Error(response.statusText);
-      error.response = response;
-      throw error;
+      reject();
     }
-  };
+  });
+
+  const checkResponseStatus = response => new Promise((resolve, reject) => {
+    if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
+      resolve(response);
+    } else {
+      reject();
+    }
+  });
 
   const parseResponse = response => new Promise((resolve, reject) => {
     response.json().then(result => {
@@ -41,38 +46,38 @@ if (!window.hasRun) {
     });
   });
 
-  const convertBytesToPercents = langs => {
+  const convertBytesToPercents = languages => new Promise(resolve => {
     const totalBytes = Object.
-      values(langs).
+      values(languages).
       reduce((total, bytes) => total + bytes, 0);
 
     Object.
-      keys(langs).
-      forEach(lang => {
-        const percentFloat = langs[lang] / totalBytes * HUNDRED_PERCENT;
+      keys(languages).
+      forEach(key => {
+        const percentFloat = languages[key] / totalBytes * HUNDRED_PERCENT;
         const percentString = percentFloat.toFixed(MAX_DECIMALS);
-        langs[lang] = parseFloat(percentString);
+        languages[key] = parseFloat(percentString);
       });
 
-    return langs;
-  };
+    resolve(languages);
+  });
 
-  const extractLanguagesFromPage = () => new Promise(resolve => {
+  const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
     fetch(githubMetadata.https_url).
       then(response => response.text()).
       then(htmlString => {
         const parser = new DOMParser();
         const htmlDocument = parser.parseFromString(htmlString, 'text/html');
-        const langElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
-        if (langElements.length === 0) {
+        const languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
+        if (languageElements.length === 0) {
           resolve(DEFAULT_LANGUAGE_SET);
         } else {
-          const allLangs = Array.from(langElements).reduce((acc, langEl) => {
-            const percentEl = langEl.nextElementSibling;
-            acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
+          const allLanguages = Array.from(languageElements).reduce((acc, el) => {
+            const percentEl = el.nextElementSibling;
+            acc[el.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
             return acc;
           }, {});
-          resolve(allLangs);
+          resolve(allLanguages);
         }
       }).
       catch(() => {
@@ -80,44 +85,46 @@ if (!window.hasRun) {
       });
   });
 
-  const fetchLanguages = () => new Promise(resolve => {
+  const fetchLanguages = githubMetadata => new Promise(resolve => {
     fetch(`${githubMetadata.api_url}/languages`).
       then(checkResponseStatus).
       then(parseResponse).
       then(convertBytesToPercents).
-      then(langs => {
-        resolve(langs);
+      then(languages => {
+        resolve(languages);
       }).
       catch(() => {
         extractLanguagesFromPage().
-          then(langs => {
-            resolve(langs);
+          then(languages => {
+            resolve(languages);
           });
       });
   });
 
-  const selectTools = languages => {
+  const selectTools = languages => new Promise(resolve => {
     const overallPoints = Object.
       values(languages).
       reduce((overall, current) => overall + current, 0);
 
-    const filterLang = lang =>
-      supportedLanguages[lang.toLowerCase()] && languages[lang] / overallPoints > USAGE_THRESHOLD;
+    const filterLang = language =>
+      supportedLanguages[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
 
     const selectedTools = Object.
       keys(languages).
       filter(filterLang).
-      reduce((acc, lang) => {
-        acc.push(...supportedLanguages[lang.toLowerCase()]);
+      reduce((acc, key) => {
+        acc.push(...supportedLanguages[key.toLowerCase()]);
         return acc;
       }, []);
 
-    return selectedTools.length > 0
+    const result = selectedTools.length > 0
       ? Array.from(new Set(selectedTools))
       : supportedLanguages[DEFAULT_LANGUAGE];
-  };
 
-  const renderButtons = tools => {
+    resolve(result);
+  });
+
+  const renderActions = (githubMetadata, tools) => new Promise(resolve => {
     const cloneUrl = `${githubMetadata.clone_url}.git`;
     const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
     const selectedTools = tools.
@@ -134,16 +141,21 @@ if (!window.hasRun) {
         case 'get-tools':
           sendResponse(selectedTools);
           break;
-        default:
-          // unknown message
-          break;
+        // no default
       }
     });
-  };
 
-  if (githubMetadata) {
-    fetchLanguages().
+    resolve();
+  });
+
+  fetchMetadata().
+    then(metadata => fetchLanguages(metadata).
       then(selectTools).
-      then(renderButtons);
-  }
+      then(tools => renderActions(metadata, tools)).
+      then(() => {
+        chrome.runtime.sendMessage({type: 'enable-page-action'});
+      })).
+    catch(() => {
+      chrome.runtime.sendMessage({type: 'disable-page-action'});
+    });
 }

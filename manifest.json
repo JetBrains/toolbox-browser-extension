@@ -6,10 +6,10 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "page_action": {
-    "default_icon": "icon-128.png",
+  "browser_action": {
+    "default_icon": "icon-disabled-128.png",
     "default_title": "JetBrains Toolbox Extension",
-    "default_popup": "jetbrains-toolbox-popup.html"
+    "default_popup": "jetbrains-toolbox-disabled-popup.html"
   },
   "background": {
     "scripts": ["jetbrains-toolbox-background.js"],
@@ -22,10 +22,7 @@
         "*://*.gitlab.com/*",
         "*://*.bitbucket.org/*"
       ],
-      "js": [
-        "jetbrains-toolbox-common.js",
-        "jetbrains-toolbox-enable-page-action.js"
-      ]
+      "js": ["jetbrains-toolbox-common.js"]
     },
     {
       "matches": ["*://*.github.com/*"],
@@ -46,9 +43,6 @@
   "permissions": [
     "activeTab",
     "nativeMessaging",
-    "tabs",
-    "*://*.github.com/*",
-    "*://*.gitlab.com/*",
-    "*://*.bitbucket.org/*"
+    "tabs"
   ]
 }

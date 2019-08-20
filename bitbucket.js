@@ -11,7 +11,14 @@ import {
 if (!window.hasRun) {
   window.hasRun = true;
 
-  const bitbucketMetadata = bb(window.location.toString());
+  const fetchMetadata = () => new Promise((resolve, reject) => {
+    const metadata = bb(window.location.toString());
+    if (metadata) {
+      resolve(metadata);
+    } else {
+      reject();
+    }
+  });
 
   const selectTools = language => {
     // All languages in Bitbucket match the common list with an exception of HTML
@@ -23,7 +30,7 @@ if (!window.hasRun) {
       : supportedLanguages[DEFAULT_LANGUAGE];
   };
 
-  const renderButtons = (tools, cloneUrl, sshUrl) => {
+  const renderActions = (tools, cloneUrl, sshUrl) => new Promise(resolve => {
     const selectedTools = tools.
       sort().
       map(toolId => {
@@ -43,7 +50,9 @@ if (!window.hasRun) {
           break;
       }
     });
-  };
+
+    resolve();
+  });
 
   const getLink = (links, which) => {
     const link = links.clone.find(l => l.name === which);
@@ -53,15 +62,18 @@ if (!window.hasRun) {
   const getCloneUrl = links => getLink(links, 'https');
   const getSshCloneUrl = links => getLink(links, 'ssh');
 
-  if (bitbucketMetadata) {
-    fetch(`${bitbucketMetadata.api_url}?fields=language,links.clone`).
+  fetchMetadata().
+    then(bitbucketMetadata => fetch(`${bitbucketMetadata.api_url}?fields=language,links.clone`).
       then(response => response.json()).
       then(parsedResponse => {
         const tools = selectTools(parsedResponse.language);
         const cloneUrl = getCloneUrl(parsedResponse.links);
         const sshUrl = getSshCloneUrl(parsedResponse.links);
-        renderButtons(tools, cloneUrl, sshUrl);
-      }).
-      catch(() => { /*Do nothing.*/ });
-  }
+        return renderActions(tools, cloneUrl, sshUrl);
+      }).then(() => {
+        chrome.runtime.sendMessage({type: 'enable-page-action'});
+      })).
+    catch(() => {
+      chrome.runtime.sendMessage({type: 'disable-page-action'});
+    });
 }
