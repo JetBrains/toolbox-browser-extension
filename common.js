@@ -82,6 +82,20 @@ export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }
 
-export function getToolboxNavURN(tool, project, filePath, lineNumber) {
-  return `jetbrains://${tool}/navigate/reference?project=${project}&path=${filePath}:${lineNumber}`;
+export function getToolboxNavURN(tool, project, filePath, lineNumber = null) {
+  let openFileUrl = `jetbrains://${tool}/navigate/reference?project=${project}&path=${filePath}`;
+  if (lineNumber != null) {
+    openFileUrl = `${openFileUrl}:${lineNumber}`;
+  }
+  return openFileUrl;
+}
+
+export function callToolbox(action) {
+  const fakeAction = document.createElement('a');
+  fakeAction.style.position = 'absolute';
+  fakeAction.style.left = '-9999em';
+  fakeAction.href = action;
+  document.body.appendChild(fakeAction);
+  fakeAction.click();
+  document.body.removeChild(fakeAction);
 }

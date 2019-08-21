@@ -6,6 +6,7 @@ import {
   supportedTools,
   getToolboxURN,
   getToolboxNavURN,
+  callToolbox,
   USAGE_THRESHOLD,
   HUNDRED_PERCENT,
   MAX_DECIMALS,
@@ -125,22 +126,45 @@ if (!window.hasRun) {
     resolve(result);
   });
 
-  const createContextMenuItem = (githubMetadata, tool, firstItem) => {
-    const {user, repo, branch} = githubMetadata;
-    const normalizedBranch = branch.split('/').shift();
-    const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
-    const lineNumber = location.hash.replace('#L', '');
-    const navUrl = getToolboxNavURN(tool.tag, repo, filePath, lineNumber);
+  const addToolboxActionEventHandler = (domElement, tool, githubMetadata) => {
+    domElement.addEventListener('click', e => {
+      e.preventDefault();
 
+      const {user, repo, branch} = githubMetadata;
+      const normalizedBranch = branch.split('/').shift();
+      const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
+      let lineNumber = location.hash.replace('#L', '');
+      if (lineNumber === '') {
+        lineNumber = null;
+      }
+
+      callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
+    });
+  };
+
+  const createOpenAction = (githubMetadata, tool) => {
+    const openAction = document.createElement('a');
+    openAction.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
+    openAction.setAttribute('aria-label', `Open this file in IntelliJ ${tool.name}`);
+    openAction.setAttribute('href', '#');
+    openAction.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
+
+    addToolboxActionEventHandler(openAction, tool, githubMetadata);
+
+    return openAction;
+  };
+
+  const createOpenMenuItem = (githubMetadata, tool, first) => {
     const menuItem = document.createElement('a');
     menuItem.setAttribute('class', 'dropdown-item');
     menuItem.setAttribute('role', 'menu-item');
-    menuItem.setAttribute('href', navUrl);
-    if (firstItem) {
+    menuItem.setAttribute('href', '#');
+    if (first) {
       menuItem.style.borderTop = '1px solid #eaecef';
     }
     menuItem.textContent = `Open in ${tool.name}`;
 
+    addToolboxActionEventHandler(menuItem, tool, githubMetadata);
     menuItem.addEventListener('click', () => {
       const blobToolbar = document.querySelector('.BlobToolbar');
       if (blobToolbar) {
@@ -157,12 +181,21 @@ if (!window.hasRun) {
   const renderActions = (githubMetadata, tools) => new Promise(resolve => {
     const cloneUrl = `${githubMetadata.clone_url}.git`;
     const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
+    const actionAnchorElement =
+      document.querySelector('.repository-content .Box-header .BtnGroup + div > .btn-octicon');
+
     const selectedTools = tools.
       sort().
       map(toolId => {
         const tool = supportedTools[toolId];
         tool.cloneUrl = getToolboxURN(tool.tag, cloneUrl);
         tool.sshUrl = getToolboxURN(tool.tag, sshUrl);
+
+        if (actionAnchorElement) {
+          const action = createOpenAction(githubMetadata, tool);
+          actionAnchorElement.insertAdjacentElement('beforebegin', action);
+        }
+
         return tool;
       });
 
@@ -171,6 +204,8 @@ if (!window.hasRun) {
         case 'get-tools':
           sendResponse(selectedTools);
           break;
+        case 'perform-action':
+          callToolbox(message.action);
         // no default
       }
     });
@@ -184,21 +219,13 @@ if (!window.hasRun) {
         (clickedElement.tagName === 'SUMMARY' && clickedElement.parentElement.classList.contains('BlobToolbar'))
       ) {
         const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
-        const prevItemIndices = blobToolbarDropdown.dataset.toolboxItemIndices
-          ? JSON.parse(blobToolbarDropdown.dataset.toolboxItemIndices)
-          : [];
-        const nextItemIndices = [...prevItemIndices];
-        selectedTools.forEach((tool, toolIndex) => {
-          const menuItem = createContextMenuItem(githubMetadata, tool, toolIndex === 0);
-          const idx = prevItemIndices.length === 0 ? null : prevItemIndices.shift();
-          if (idx === null) {
-            nextItemIndices.push(blobToolbarDropdown.childElementCount);
+        if (blobToolbarDropdown.dataset.toolboxified == null) {
+          selectedTools.forEach((tool, toolIndex) => {
+            const menuItem = createOpenMenuItem(githubMetadata, tool, toolIndex === 0);
             blobToolbarDropdown.appendChild(menuItem);
-          } else {
-            blobToolbarDropdown.replaceChild(menuItem, blobToolbarDropdown.children[idx]);
-          }
-        });
-        blobToolbarDropdown.dataset.toolboxItemIndices = JSON.stringify(nextItemIndices);
+          });
+        }
+        blobToolbarDropdown.dataset.toolboxified = 'true';
       }
     });
 
