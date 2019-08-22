@@ -232,14 +232,42 @@ if (!window.hasRun) {
     resolve();
   });
 
-  fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
-      then(tools => renderActions(metadata, tools)).
-      then(() => {
-        chrome.runtime.sendMessage({type: 'enable-page-action'});
-      })).
-    catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
-    });
+  const toolboxify = () => {
+    fetchMetadata().
+      then(metadata => fetchLanguages(metadata).
+        then(selectTools).
+        then(tools => renderActions(metadata, tools)).
+        then(() => {
+          chrome.runtime.sendMessage({type: 'enable-page-action'});
+        })).
+      catch(() => {
+        chrome.runtime.sendMessage({type: 'disable-page-action'});
+      });
+  };
+
+  document.addEventListener('readystatechange', function onReadyStateChange() {
+    if (document.readyState === 'complete') {
+      toolboxify();
+
+      const applicationMainElement = document.querySelector('.application-main');
+      if (applicationMainElement) {
+        // trace navigating to repo source files
+        new MutationObserver(mutations => {
+          for (const mutation of mutations) {
+            if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
+              continue;
+            }
+            for (const node of mutation.addedNodes) {
+              if (!(node instanceof HTMLElement)) {
+                continue;
+              }
+              if (node.matches('.new-discussion-timeline')) {
+                toolboxify();
+              }
+            }
+          }
+        }).observe(applicationMainElement, {childList: true, subtree: true});
+      }
+    }
+  }, false);
 }
