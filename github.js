@@ -268,13 +268,16 @@ if (!window.hasRun) {
   const toolboxify = () => {
     fetchMetadata().
       then(metadata => fetchLanguages(metadata).
-        then(languages => selectTools(languages)).
+        then(selectTools).
         then(tools => renderCloneActions(metadata, tools).
-          then(() => renderOpenActions(metadata, tools)).
-          then(() => startTrackingDOMChanges(metadata, tools)).
-          then(() => {
-            chrome.runtime.sendMessage({type: 'enable-page-action'});
-          }))).
+          then(() => renderOpenActions(metadata, tools).
+            then(() => startTrackingDOMChanges(metadata, tools))
+          )
+        )
+      ).
+      then(() => {
+        chrome.runtime.sendMessage({type: 'enable-page-action'});
+      }).
       catch(() => {
         chrome.runtime.sendMessage({type: 'disable-page-action'});
       });
