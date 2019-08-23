@@ -56,7 +56,6 @@ chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     tools.forEach(tool => {
       fragment.append(createOpenToolAction(tool));
     });
-    document.getElementById('tool-action-stub').style.display = 'none';
     document.querySelector('.js-tool-actions').append(fragment);
   });
 });

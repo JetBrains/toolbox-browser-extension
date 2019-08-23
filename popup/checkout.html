@@ -4,11 +4,6 @@
   <meta charset="UTF-8">
   <title>Open project in IntelliJ-based IDEs</title>
   <style>
-    @keyframes placeholder-animation {
-      0% { background-position: -250px 0; }
-      100% { background-position: 250px 0; }
-    }
-
     body {
       font-family: system-ui, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
       font-size: 14px;
@@ -43,30 +38,11 @@
     .tool-action__link {
       margin: 0 0.4em;
     }
-
-    .tool-action_stub .tool-action__icon {
-      border-radius: 50%;
-    }
-
-    .tool-action_stub .tool-action__icon,
-    .tool-action_stub .tool-action__text {
-      color: transparent;
-      animation: placeholder-animation 1.5s infinite forwards linear;
-      background: linear-gradient(to right, #eee 2%, #ddd 18%, #eee 33%);
-      background-size: 500px;
-      -moz-user-select: none;
-      user-select: none;
-    }
   </style>
 </head>
 
 <body>
-<div id="tool-actions" class="tool-actions js-tool-actions">
-  <div id="tool-action-stub" class="tool-action tool-action_stub">
-    <div class="tool-action__icon"></div>
-    <div class="tool-action__text">Open in IDEA using HTTPS / SSH</div>
-  </div>
-</div>
+<div id="tool-actions" class="tool-actions js-tool-actions"></div>
 <script src="jetbrains-toolbox-checkout-popup.js"></script>
 </body>
 
