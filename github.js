@@ -111,7 +111,7 @@ if (!window.hasRun) {
     const filterLang = language =>
       supportedLanguages[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
 
-    const selectedTools = Object.
+    const selectedToolIds = Object.
       keys(languages).
       filter(filterLang).
       reduce((acc, key) => {
@@ -119,11 +119,41 @@ if (!window.hasRun) {
         return acc;
       }, []);
 
-    const result = selectedTools.length > 0
-      ? Array.from(new Set(selectedTools))
+    const normalizedToolIds = selectedToolIds.length > 0
+      ? Array.from(new Set(selectedToolIds))
       : supportedLanguages[DEFAULT_LANGUAGE];
 
-    resolve(result);
+    const tools = normalizedToolIds.
+      sort().
+      map(toolId => supportedTools[toolId]);
+
+    resolve(tools);
+  });
+
+  const renderCloneActions = (githubMetadata, tools) => new Promise(resolve => {
+    const cloneUrl = `${githubMetadata.clone_url}.git`;
+    const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
+
+    const preparedTools = tools.
+      map(tool => ({
+        ...tool,
+        cloneUrl: getToolboxURN(tool.tag, cloneUrl),
+        sshUrl: getToolboxURN(tool.tag, sshUrl)
+      }));
+
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      switch (message.type) {
+        case 'get-tools':
+          sendResponse(preparedTools);
+          break;
+        case 'perform-action':
+          callToolbox(message.action);
+          break;
+        // no default
+      }
+    });
+
+    resolve();
   });
 
   const addToolboxActionEventHandler = (domElement, tool, githubMetadata) => {
@@ -178,35 +208,14 @@ if (!window.hasRun) {
     return menuItemContainer;
   };
 
-  const renderActions = (githubMetadata, tools) => new Promise(resolve => {
-    const cloneUrl = `${githubMetadata.clone_url}.git`;
-    const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
+  const renderOpenActions = (githubMetadata, tools) => new Promise(resolve => {
     const actionAnchorElement =
       document.querySelector('.repository-content .Box-header .BtnGroup + div > .btn-octicon');
 
-    const selectedTools = tools.
-      sort().
-      map(toolId => {
-        const tool = supportedTools[toolId];
-        tool.cloneUrl = getToolboxURN(tool.tag, cloneUrl);
-        tool.sshUrl = getToolboxURN(tool.tag, sshUrl);
-
-        if (actionAnchorElement) {
-          const action = createOpenAction(githubMetadata, tool);
-          actionAnchorElement.insertAdjacentElement('beforebegin', action);
-        }
-
-        return tool;
-      });
-
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-      switch (message.type) {
-        case 'get-tools':
-          sendResponse(selectedTools);
-          break;
-        case 'perform-action':
-          callToolbox(message.action);
-        // no default
+    tools.forEach(tool => {
+      if (actionAnchorElement) {
+        const action = createOpenAction(githubMetadata, tool);
+        actionAnchorElement.insertAdjacentElement('beforebegin', action);
       }
     });
 
@@ -220,7 +229,7 @@ if (!window.hasRun) {
       ) {
         const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
         if (blobToolbarDropdown.dataset.toolboxified == null) {
-          selectedTools.forEach((tool, toolIndex) => {
+          tools.forEach((tool, toolIndex) => {
             const menuItem = createOpenMenuItem(githubMetadata, tool, toolIndex === 0);
             blobToolbarDropdown.appendChild(menuItem);
           });
@@ -232,14 +241,40 @@ if (!window.hasRun) {
     resolve();
   });
 
+  const startTrackingDOMChanges = (githubMetadata, tools) => new Promise(resolve => {
+    const applicationMainElement = document.querySelector('.application-main');
+    if (applicationMainElement) {
+      // trace navigating to repo source files
+      new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
+            continue;
+          }
+          for (const node of mutation.addedNodes) {
+            if (!(node instanceof HTMLElement)) {
+              continue;
+            }
+            if (node.matches('.new-discussion-timeline')) {
+              renderOpenActions(githubMetadata, tools);
+            }
+          }
+        }
+      }).observe(applicationMainElement, {childList: true, subtree: true});
+    }
+
+    resolve();
+  });
+
   const toolboxify = () => {
     fetchMetadata().
       then(metadata => fetchLanguages(metadata).
-        then(selectTools).
-        then(tools => renderActions(metadata, tools)).
-        then(() => {
-          chrome.runtime.sendMessage({type: 'enable-page-action'});
-        })).
+        then(languages => selectTools(languages)).
+        then(tools => renderCloneActions(metadata, tools).
+          then(() => renderOpenActions(metadata, tools)).
+          then(() => startTrackingDOMChanges(metadata, tools)).
+          then(() => {
+            chrome.runtime.sendMessage({type: 'enable-page-action'});
+          }))).
       catch(() => {
         chrome.runtime.sendMessage({type: 'disable-page-action'});
       });
@@ -248,26 +283,6 @@ if (!window.hasRun) {
   document.addEventListener('readystatechange', function onReadyStateChange() {
     if (document.readyState === 'complete') {
       toolboxify();
-
-      const applicationMainElement = document.querySelector('.application-main');
-      if (applicationMainElement) {
-        // trace navigating to repo source files
-        new MutationObserver(mutations => {
-          for (const mutation of mutations) {
-            if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
-              continue;
-            }
-            for (const node of mutation.addedNodes) {
-              if (!(node instanceof HTMLElement)) {
-                continue;
-              }
-              if (node.matches('.new-discussion-timeline')) {
-                toolboxify();
-              }
-            }
-          }
-        }).observe(applicationMainElement, {childList: true, subtree: true});
-      }
     }
   }, false);
 }
