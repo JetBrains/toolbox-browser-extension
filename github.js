@@ -92,14 +92,10 @@ if (!window.hasRun) {
       then(checkResponseStatus).
       then(parseResponse).
       then(convertBytesToPercents).
-      then(languages => {
-        resolve(languages);
-      }).
+      then(resolve).
       catch(() => {
-        extractLanguagesFromPage().
-          then(languages => {
-            resolve(languages);
-          });
+        extractLanguagesFromPage(githubMetadata).
+          then(resolve);
       });
   });
 
