@@ -169,15 +169,15 @@ if (!window.hasRun) {
   };
 
   const createOpenAction = (githubMetadata, tool) => {
-    const openAction = document.createElement('a');
-    openAction.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
-    openAction.setAttribute('aria-label', `Open this file in IntelliJ ${tool.name}`);
-    openAction.setAttribute('href', '#');
-    openAction.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
+    const action = document.createElement('a');
+    action.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
+    action.setAttribute('aria-label', `Open this file in IntelliJ ${tool.name}`);
+    action.setAttribute('href', '#');
+    action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
 
-    addToolboxActionEventHandler(openAction, tool, githubMetadata);
+    addToolboxActionEventHandler(action, tool, githubMetadata);
 
-    return openAction;
+    return action;
   };
 
   const createOpenMenuItem = (githubMetadata, tool, first) => {
@@ -208,12 +208,12 @@ if (!window.hasRun) {
     const actionAnchorElement =
       document.querySelector('.repository-content .Box-header .BtnGroup + div > .btn-octicon');
 
-    tools.forEach(tool => {
-      if (actionAnchorElement) {
+    if (actionAnchorElement) {
+      tools.forEach(tool => {
         const action = createOpenAction(githubMetadata, tool);
         actionAnchorElement.insertAdjacentElement('beforebegin', action);
-      }
-    });
+      });
+    }
 
     // eslint-disable-next-line complexity
     document.body.addEventListener('click', e => {
