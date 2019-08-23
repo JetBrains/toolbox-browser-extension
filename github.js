@@ -130,7 +130,7 @@ if (!window.hasRun) {
     resolve(tools);
   });
 
-  const renderCloneActions = (githubMetadata, tools) => new Promise(resolve => {
+  const renderPopupCloneActions = (githubMetadata, tools) => new Promise(resolve => {
     const cloneUrl = `${githubMetadata.clone_url}.git`;
     const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
 
@@ -269,7 +269,7 @@ if (!window.hasRun) {
     fetchMetadata().
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
-        then(tools => renderCloneActions(metadata, tools).
+        then(tools => renderPopupCloneActions(metadata, tools).
           then(() => renderOpenActions(metadata, tools).
             then(() => startTrackingDOMChanges(metadata, tools))
           )

@@ -5,6 +5,7 @@ import {
   supportedLanguages,
   supportedTools,
   getToolboxURN,
+  callToolbox,
   USAGE_THRESHOLD,
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET
@@ -50,35 +51,46 @@ if (!window.hasRun) {
   });
 
   const selectTools = languages => new Promise(resolve => {
-    const overallPoints = Object.values(languages).reduce((overall, current) => overall + current, 0);
+    const overallPoints = Object.
+      values(languages).
+      reduce((overall, current) => overall + current, 0);
 
     const filterLang = language =>
       supportedLanguages[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
 
-    const selectedTools = Object.keys(languages).filter(filterLang).reduce((acc, key) => {
-      acc.push(...supportedLanguages[key.toLowerCase()]);
-      return acc;
-    }, []);
+    const selectedToolIds = Object.
+      keys(languages).
+      filter(filterLang).
+      reduce((acc, key) => {
+        acc.push(...supportedLanguages[key.toLowerCase()]);
+        return acc;
+      }, []);
 
-    const result = selectedTools.length > 0
-      ? Array.from(new Set(selectedTools))
+    const normalizedToolIds = selectedToolIds.length > 0
+      ? Array.from(new Set(selectedToolIds))
       : supportedLanguages[DEFAULT_LANGUAGE];
 
-    resolve(result);
+    const tools = normalizedToolIds.
+      sort().
+      map(toolId => supportedTools[toolId]);
+
+    resolve(tools);
   });
 
-  const renderActions = (gitlabMetadata, tools) => new Promise(resolve => {
-    const selectedTools = tools.sort().map(toolId => {
-      const tool = supportedTools[toolId];
-      tool.cloneUrl = getToolboxURN(tool.tag, gitlabMetadata.https);
-      tool.sshUrl = getToolboxURN(tool.tag, gitlabMetadata.ssh);
-      return tool;
-    });
+  const renderPopupCloneActions = (gitlabMetadata, tools) => new Promise(resolve => {
+    const preparedTools = tools.map(tool => ({
+      ...tool,
+      cloneUrl: getToolboxURN(tool.tag, gitlabMetadata.https),
+      sshUrl: getToolboxURN(tool.tag, gitlabMetadata.ssh)
+    }));
 
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
         case 'get-tools':
-          sendResponse(selectedTools);
+          sendResponse(preparedTools);
+          break;
+        case 'perform-action':
+          callToolbox(message.action);
           break;
         // no default
       }
@@ -87,14 +99,23 @@ if (!window.hasRun) {
     resolve();
   });
 
-  fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
-      then(tools => renderActions(metadata, tools)).
+  const toolboxify = () => {
+    fetchMetadata().
+      then(metadata => fetchLanguages(metadata).
+        then(selectTools).
+        then(tools => renderPopupCloneActions(metadata, tools))
+      ).
       then(() => {
         chrome.runtime.sendMessage({type: 'enable-page-action'});
-      })).
-    catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
-    });
+      }).
+      catch(() => {
+        chrome.runtime.sendMessage({type: 'disable-page-action'});
+      });
+  };
+
+  document.addEventListener('readystatechange', function onReadyStateChange() {
+    if (document.readyState === 'complete') {
+      toolboxify();
+    }
+  }, false);
 }
