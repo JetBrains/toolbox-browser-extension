@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <title>Open project in IntelliJ-based IDEs</title>
   <style>
+    :root {
+      --icon-size: 24px;
+    }
+
     body {
       font-family: system-ui, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
       font-size: 14px;
@@ -19,6 +23,7 @@
     .tool-action {
       align-items: center;
       display: flex;
+      line-height: var(--icon-size);
       margin: 0.5em;
       white-space: nowrap;
     }
@@ -26,8 +31,8 @@
     .tool-action__icon {
       box-sizing: border-box;
       margin-right: 0.5em;
-      width: 24px;
-      height: 24px;
+      width: var(--icon-size);
+      height: var(--icon-size);
     }
 
     .tool-action__text {

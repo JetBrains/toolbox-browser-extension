@@ -9,7 +9,7 @@ function createOpenToolAction(tool) {
 
   const actionText = document.createElement('span');
   actionText.setAttribute('class', 'tool-action__text');
-  actionText.textContent = tool.name;
+  actionText.textContent = `Clone in ${tool.name}:`;
 
   const httpsLink = document.createElement('a');
   httpsLink.setAttribute('class', 'tool-action__link');
