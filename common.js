@@ -25,7 +25,7 @@ export const supportedLanguages = {
 
 export const supportedTools = {
   idea: {
-    name: 'IDEA',
+    name: 'IntelliJ IDEA',
     tag: 'idea',
     icon: chrome.extension.getURL(require('@jetbrains/logos/intellij-idea/intellij-idea.svg'))
   },
@@ -60,7 +60,7 @@ export const supportedTools = {
     icon: chrome.extension.getURL(require('@jetbrains/logos/webstorm/webstorm.svg'))
   },
   rider: {
-    name: 'Project Rider',
+    name: 'Rider',
     tag: 'rd',
     icon: chrome.extension.getURL(require('@jetbrains/logos/rider/rider.svg'))
   },

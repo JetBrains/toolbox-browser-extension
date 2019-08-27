@@ -116,14 +116,14 @@ if (!window.hasRun) {
     tooltip.setAttribute('style', 'background-color:rgb(23,43,77); border-radius:3px;' +
       'box-sizing: border-box; color:#fff; display:none; font-size: 12px; line-height: 15.6px; max-width: 240px;' +
       'padding:2px 6px; position:absolute; transform:translate3d(calc(-100% - 8px),-130%,0);');
-    tooltip.textContent = `Open this file in IntelliJ ${tool.name}`;
+    tooltip.textContent = `Open this file in ${tool.name}`;
 
     const action = sampleAction.cloneNode(true);
     action.classList.add('js-toolbox-open-action');
 
     const actionButton = action.querySelector('button');
     actionButton.removeAttribute('disabled');
-    actionButton.setAttribute('title', `Open this file in IntelliJ ${tool.name}`);
+
     const TOOLTIP_TIMEOUT = 450;
     actionButton.addEventListener('mouseenter', () => {
       actionButton.setAttribute('style', 'cursor:pointer; background:rgba(9,30,66,0.08);');
@@ -136,8 +136,8 @@ if (!window.hasRun) {
       setTimeout(() => {
         tooltip.style.display = 'none';
       }, TOOLTIP_TIMEOUT);
-
     });
+
     const actionSpan = actionButton.querySelector('span > span');
     actionSpan.innerHTML =
       `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-bottom">`;

@@ -171,7 +171,7 @@ if (!window.hasRun) {
   const createOpenAction = (githubMetadata, tool) => {
     const action = document.createElement('a');
     action.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
-    action.setAttribute('aria-label', `Open this file in IntelliJ ${tool.name}`);
+    action.setAttribute('aria-label', `Open this file in ${tool.name}`);
     action.setAttribute('href', '#');
     action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
 
