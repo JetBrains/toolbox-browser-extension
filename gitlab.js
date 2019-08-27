@@ -150,7 +150,7 @@ if (!window.hasRun) {
     action.dataset.placement = 'bottom';
     action.dataset.container = 'body';
     action.dataset.class = 'btn btn-sm';
-    action.dataset.title = `Open this file in ${tool.name}`;
+    action.dataset.title = `Open this file in IntelliJ ${tool.name}`;
     action.dataset.originalTitle = action.dataset.title;
     action.setAttribute('aria-label', action.dataset.title);
     action.innerHTML =
