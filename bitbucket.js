@@ -214,9 +214,5 @@ if (!window.hasRun) {
       });
   };
 
-  document.addEventListener('readystatechange', function onReadyStateChange() {
-    if (document.readyState === 'complete') {
-      toolboxify();
-    }
-  }, false);
+  toolboxify();
 }
