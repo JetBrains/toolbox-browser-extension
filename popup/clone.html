@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open project in JetBrains IDEs</title>
+  <style>
+    :root {
+      --icon-size: 24px;
+    }
+
+    body {
+      font-family: system-ui, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+      font-size: 14px;
+    }
+
+    .tool-actions {
+      align-items: stretch;
+      display: flex;
+      flex-direction: column;
+      padding: 0.1em;
+    }
+
+    .tool-action {
+      align-items: center;
+      display: flex;
+      line-height: var(--icon-size);
+      margin: 0.5em;
+      white-space: nowrap;
+    }
+
+    .tool-action__icon {
+      box-sizing: border-box;
+      margin-right: 0.5em;
+      width: var(--icon-size);
+      height: var(--icon-size);
+    }
+
+    .tool-action__text {
+      font-size: 1em;
+      line-height: 1;
+    }
+
+    .tool-action__link {
+      margin: 0 0.4em;
+    }
+  </style>
+</head>
+
+<body>
+<div id="tool-actions" class="tool-actions js-tool-actions"></div>
+<script src="jetbrains-toolbox-clone-popup.js"></script>
+</body>
+
+</html>

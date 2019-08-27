@@ -5,6 +5,8 @@ import {
   supportedLanguages,
   supportedTools,
   getToolboxURN,
+  getToolboxNavURN,
+  callToolbox,
   USAGE_THRESHOLD,
   HUNDRED_PERCENT,
   MAX_DECIMALS,
@@ -90,14 +92,10 @@ if (!window.hasRun) {
       then(checkResponseStatus).
       then(parseResponse).
       then(convertBytesToPercents).
-      then(languages => {
-        resolve(languages);
-      }).
+      then(resolve).
       catch(() => {
-        extractLanguagesFromPage().
-          then(languages => {
-            resolve(languages);
-          });
+        extractLanguagesFromPage(githubMetadata).
+          then(resolve);
       });
   });
 
@@ -109,7 +107,7 @@ if (!window.hasRun) {
     const filterLang = language =>
       supportedLanguages[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
 
-    const selectedTools = Object.
+    const selectedToolIds = Object.
       keys(languages).
       filter(filterLang).
       reduce((acc, key) => {
@@ -117,29 +115,35 @@ if (!window.hasRun) {
         return acc;
       }, []);
 
-    const result = selectedTools.length > 0
-      ? Array.from(new Set(selectedTools))
+    const normalizedToolIds = selectedToolIds.length > 0
+      ? Array.from(new Set(selectedToolIds))
       : supportedLanguages[DEFAULT_LANGUAGE];
 
-    resolve(result);
+    const tools = normalizedToolIds.
+      sort().
+      map(toolId => supportedTools[toolId]);
+
+    resolve(tools);
   });
 
-  const renderActions = (githubMetadata, tools) => new Promise(resolve => {
+  const renderPopupCloneActions = (githubMetadata, tools) => new Promise(resolve => {
     const cloneUrl = `${githubMetadata.clone_url}.git`;
     const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
-    const selectedTools = tools.
-      sort().
-      map(toolId => {
-        const tool = supportedTools[toolId];
-        tool.cloneUrl = getToolboxURN(tool.tag, cloneUrl);
-        tool.sshUrl = getToolboxURN(tool.tag, sshUrl);
-        return tool;
-      });
+
+    const preparedTools = tools.
+      map(tool => ({
+        ...tool,
+        cloneUrl: getToolboxURN(tool.tag, cloneUrl),
+        sshUrl: getToolboxURN(tool.tag, sshUrl)
+      }));
 
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
         case 'get-tools':
-          sendResponse(selectedTools);
+          sendResponse(preparedTools);
+          break;
+        case 'perform-action':
+          callToolbox(message.action);
           break;
         // no default
       }
@@ -148,14 +152,132 @@ if (!window.hasRun) {
     resolve();
   });
 
-  fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
-      then(tools => renderActions(metadata, tools)).
+  const addToolboxActionEventHandler = (domElement, tool, githubMetadata) => {
+    domElement.addEventListener('click', e => {
+      e.preventDefault();
+
+      const {user, repo, branch} = githubMetadata;
+      const normalizedBranch = branch.split('/').shift();
+      const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
+      let lineNumber = location.hash.replace('#L', '');
+      if (lineNumber === '') {
+        lineNumber = null;
+      }
+
+      callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
+    });
+  };
+
+  const createOpenAction = (githubMetadata, tool) => {
+    const action = document.createElement('a');
+    action.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
+    action.setAttribute('aria-label', `Open this file in ${tool.name}`);
+    action.setAttribute('href', '#');
+    action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
+
+    addToolboxActionEventHandler(action, tool, githubMetadata);
+
+    return action;
+  };
+
+  const createOpenMenuItem = (githubMetadata, tool, first) => {
+    const menuItem = document.createElement('a');
+    menuItem.setAttribute('class', 'dropdown-item');
+    menuItem.setAttribute('role', 'menu-item');
+    menuItem.setAttribute('href', '#');
+    if (first) {
+      menuItem.style.borderTop = '1px solid #eaecef';
+    }
+    menuItem.textContent = `Open in ${tool.name}`;
+
+    addToolboxActionEventHandler(menuItem, tool, githubMetadata);
+    menuItem.addEventListener('click', () => {
+      const blobToolbar = document.querySelector('.BlobToolbar');
+      if (blobToolbar) {
+        blobToolbar.removeAttribute('open');
+      }
+    });
+
+    const menuItemContainer = document.createElement('li');
+    menuItemContainer.appendChild(menuItem);
+
+    return menuItemContainer;
+  };
+
+  const renderOpenActions = (githubMetadata, tools) => new Promise(resolve => {
+    const actionAnchorElement =
+      document.querySelector('.repository-content .Box-header .BtnGroup + div > .btn-octicon');
+
+    if (actionAnchorElement) {
+      tools.forEach(tool => {
+        const action = createOpenAction(githubMetadata, tool);
+        actionAnchorElement.insertAdjacentElement('beforebegin', action);
+      });
+    }
+
+    // eslint-disable-next-line complexity
+    document.body.addEventListener('click', e => {
+      const clickedElement = e.target;
+      if (
+        (clickedElement.tagName === 'path' && clickedElement.parentElement.classList.contains('octicon')) ||
+        (clickedElement.tagName === 'svg' && clickedElement.parentElement.classList.contains('btn-octicon')) ||
+        (clickedElement.tagName === 'SUMMARY' && clickedElement.parentElement.classList.contains('BlobToolbar'))
+      ) {
+        const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
+        if (blobToolbarDropdown.dataset.toolboxified == null) {
+          tools.forEach((tool, toolIndex) => {
+            const menuItem = createOpenMenuItem(githubMetadata, tool, toolIndex === 0);
+            blobToolbarDropdown.appendChild(menuItem);
+          });
+        }
+        blobToolbarDropdown.dataset.toolboxified = 'true';
+      }
+    });
+
+    resolve();
+  });
+
+  const startTrackingDOMChanges = (githubMetadata, tools) => new Promise(resolve => {
+    const applicationMainElement = document.querySelector('.application-main');
+    if (applicationMainElement) {
+      // trace navigating to repo source files
+      new MutationObserver(mutations => {
+        for (const mutation of mutations) {
+          if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
+            continue;
+          }
+          for (const node of mutation.addedNodes) {
+            if (!(node instanceof HTMLElement)) {
+              continue;
+            }
+            if (node.matches('.new-discussion-timeline')) {
+              renderOpenActions(githubMetadata, tools);
+            }
+          }
+        }
+      }).observe(applicationMainElement, {childList: true, subtree: true});
+    }
+
+    resolve();
+  });
+
+  const toolboxify = () => {
+    fetchMetadata().
+      then(metadata => fetchLanguages(metadata).
+        then(selectTools).
+        then(tools => renderPopupCloneActions(metadata, tools).
+          then(() => renderOpenActions(metadata, tools).
+            then(() => startTrackingDOMChanges(metadata, tools))
+          )
+        )
+      ).
       then(() => {
         chrome.runtime.sendMessage({type: 'enable-page-action'});
-      })).
-    catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
-    });
+      }).
+      catch(() => {
+        chrome.runtime.sendMessage({type: 'disable-page-action'});
+      });
+  };
+
+  toolboxify();
 }

@@ -9,7 +9,7 @@ function createOpenToolAction(tool) {
 
   const actionText = document.createElement('span');
   actionText.setAttribute('class', 'tool-action__text');
-  actionText.textContent = `Open in ${tool.name} using`;
+  actionText.textContent = `Clone in ${tool.name}:`;
 
   const httpsLink = document.createElement('a');
   httpsLink.setAttribute('class', 'tool-action__link');
@@ -40,17 +40,8 @@ function setClickHandler(action) {
   action.addEventListener('click', e => {
     e.preventDefault();
 
-    chrome.tabs.executeScript({
-      code: `
-        (function () {
-          var action = document.createElement('a');
-          action.style.position = 'absolute';
-          action.style.left = '-9999em';
-          action.href = '${e.currentTarget.href}';
-          document.body.appendChild(action);
-          action.click();
-          document.body.removeChild(action);
-        })();`
+    chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+      chrome.tabs.sendMessage(tabs[0].id, {type: 'perform-action', action: e.target.href});
     });
   });
 }
@@ -65,7 +56,6 @@ chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     tools.forEach(tool => {
       fragment.append(createOpenToolAction(tool));
     });
-    document.getElementById('tool-action-stub').style.display = 'none';
     document.querySelector('.js-tool-actions').append(fragment);
   });
 });

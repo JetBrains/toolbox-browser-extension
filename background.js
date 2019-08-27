@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
       chrome.browserAction.setPopup(
         {
           tabId: sender.tab.id,
-          popup: chrome.runtime.getURL('jetbrains-toolbox-popup.html')
+          popup: chrome.runtime.getURL('jetbrains-toolbox-checkout-popup.html')
         }
       );
       break;

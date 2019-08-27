@@ -25,7 +25,7 @@ export const supportedLanguages = {
 
 export const supportedTools = {
   idea: {
-    name: 'IDEA',
+    name: 'IntelliJ IDEA',
     tag: 'idea',
     icon: chrome.extension.getURL(require('@jetbrains/logos/intellij-idea/intellij-idea.svg'))
   },
@@ -60,7 +60,7 @@ export const supportedTools = {
     icon: chrome.extension.getURL(require('@jetbrains/logos/webstorm/webstorm.svg'))
   },
   rider: {
-    name: 'Project Rider',
+    name: 'Rider',
     tag: 'rd',
     icon: chrome.extension.getURL(require('@jetbrains/logos/rider/rider.svg'))
   },
@@ -80,4 +80,22 @@ export const DEFAULT_LANGUAGE_SET = {[DEFAULT_LANGUAGE]: HUNDRED_PERCENT};
 
 export function getToolboxURN(tool, cloneUrl) {
   return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
+}
+
+export function getToolboxNavURN(tool, project, filePath, lineNumber = null) {
+  let openFileUrl = `jetbrains://${tool}/navigate/reference?project=${project}&path=${filePath}`;
+  if (lineNumber != null) {
+    openFileUrl = `${openFileUrl}:${lineNumber}`;
+  }
+  return openFileUrl;
+}
+
+export function callToolbox(action) {
+  const fakeAction = document.createElement('a');
+  fakeAction.style.position = 'absolute';
+  fakeAction.style.left = '-9999em';
+  fakeAction.href = action;
+  document.body.appendChild(fakeAction);
+  fakeAction.click();
+  document.body.removeChild(fakeAction);
 }
