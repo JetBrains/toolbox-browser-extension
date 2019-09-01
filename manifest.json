@@ -19,6 +19,7 @@
     {
       "matches": [
         "*://*.github.com/*",
+        "*://*.gitee.com/*",
         "*://*.gitlab.com/*",
         "*://*.bitbucket.org/*"
       ],
@@ -27,6 +28,10 @@
     {
       "matches": ["*://*.github.com/*"],
       "js": ["jetbrains-toolbox-github.js"]
+    },
+    {
+      "matches": ["*://*.gitee.com/*"],
+      "js": ["jetbrains-toolbox-gitee.js"]
     },
     {
       "matches": ["*://*.gitlab.com/*"],
@@ -45,6 +50,7 @@
     "nativeMessaging",
     "tabs",
     "*://*.github.com/*",
+    "*://*.gitee.com/*",
     "*://*.gitlab.com/*",
     "*://*.bitbucket.org/*"
   ]
