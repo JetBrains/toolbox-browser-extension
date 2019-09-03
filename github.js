@@ -147,11 +147,13 @@ if (!window.hasRun) {
   });
 
   const renderCloneActions = (githubMetadata, tools) => new Promise(resolve => {
-    const buttonGroup = document.createElement('div');
-    buttonGroup.classList.add('BtnGroup');
+    const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
 
-    tools.
-      forEach(tool => {
+    if (getRepoSelectMenu) {
+      const buttonGroup = document.createElement('div');
+      buttonGroup.classList.add('BtnGroup');
+
+      tools.forEach(tool => {
         const btn = document.createElement('a');
         btn.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
         btn.setAttribute('href', '#');
@@ -175,8 +177,8 @@ if (!window.hasRun) {
         buttonGroup.appendChild(btn);
       });
 
-    const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
-    getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
+      getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
+    }
 
     resolve();
   });
@@ -269,7 +271,7 @@ if (!window.hasRun) {
   const startTrackingDOMChanges = (githubMetadata, tools) => new Promise(resolve => {
     const applicationMainElement = document.querySelector('.application-main');
     if (applicationMainElement) {
-      // trace navigating to repo source files
+      // eslint-disable-next-line complexity
       new MutationObserver(mutations => {
         for (const mutation of mutations) {
           if (mutation.type !== 'childList' || mutation.addedNodes.length === 0) {
@@ -280,6 +282,7 @@ if (!window.hasRun) {
               continue;
             }
             if (node.matches('.new-discussion-timeline')) {
+              renderCloneActions(githubMetadata, tools);
               renderOpenActions(githubMetadata, tools);
             }
           }
