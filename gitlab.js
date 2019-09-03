@@ -6,10 +6,12 @@ import {
   supportedTools,
   getToolboxURN,
   getToolboxNavURN,
+  getProtocol,
   callToolbox,
   USAGE_THRESHOLD,
   DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET
+  DEFAULT_LANGUAGE_SET,
+  CLONE_PROTOCOLS
 } from './common';
 
 if (!window.hasRun) {
@@ -123,6 +125,45 @@ if (!window.hasRun) {
     resolve();
   });
 
+  const renderCloneActions = (gitlabMetadata, tools) => new Promise(resolve => {
+    const gitCloneHolder = document.querySelector('.js-git-clone-holder');
+    const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
+    if (gitCloneHolderParent) {
+      const buttonGroup = document.createElement('div');
+      buttonGroup.setAttribute('class', 'd-inline-flex append-right-8');
+      buttonGroup.setAttribute('style', 'margin-top: 16px;');
+      tools.forEach(tool => {
+        const btn = document.createElement('a');
+        btn.setAttribute('class', 'input-group-text btn btn-xs has-tooltip');
+        btn.setAttribute('style', 'cursor:pointer');
+        btn.dataset.title = `Clone in ${tool.name}`;
+        btn.dataset.originalTitle = btn.dataset.title;
+        btn.setAttribute('aria-label', btn.dataset.title);
+        btn.dataset.toolTag = tool.tag;
+        btn.innerHTML =
+          `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-top">`;
+
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+
+          const {toolTag} = e.currentTarget.dataset;
+          getProtocol().then(protocol => {
+            const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
+            const action = getToolboxURN(toolTag, cloneUrl);
+
+            callToolbox(action);
+          });
+        });
+
+        buttonGroup.appendChild(btn);
+      });
+
+      gitCloneHolderParent.insertAdjacentElement('beforebegin', buttonGroup);
+    }
+
+    resolve();
+  });
+
   const addToolboxActionEventHandler = (domElement, tool, gitlabMetadata) => {
     domElement.addEventListener('click', e => {
       e.preventDefault();
@@ -181,6 +222,7 @@ if (!window.hasRun) {
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
         then(tools => renderPopupCloneActions(tools).
+          then(() => renderCloneActions(metadata, tools)).
           then(() => renderOpenActions(metadata, tools))
         ).
         then(() => {

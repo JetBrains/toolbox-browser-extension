@@ -6,6 +6,7 @@ import {
   supportedTools,
   getToolboxURN,
   getToolboxNavURN,
+  getProtocol,
   callToolbox,
   USAGE_THRESHOLD,
   HUNDRED_PERCENT,
@@ -13,7 +14,8 @@ import {
   MIN_VALID_HTTP_STATUS,
   MAX_VALID_HTTP_STATUS,
   DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET, getProtocol, CLONE_PROTOCOLS
+  DEFAULT_LANGUAGE_SET,
+  CLONE_PROTOCOLS
 } from './common';
 
 if (!window.hasRun) {
