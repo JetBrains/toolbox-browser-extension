@@ -13,7 +13,7 @@ import {
   MIN_VALID_HTTP_STATUS,
   MAX_VALID_HTTP_STATUS,
   DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET
+  DEFAULT_LANGUAGE_SET, getProtocol, CLONE_PROTOCOLS
 } from './common';
 
 if (!window.hasRun) {
@@ -126,6 +126,9 @@ if (!window.hasRun) {
     resolve(tools);
   });
 
+  const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
+  const getSshCloneUrl = githubMetadata => `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
+
   const renderPopupCloneActions = tools => new Promise(resolve => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
@@ -139,6 +142,41 @@ if (!window.hasRun) {
         // no default
       }
     });
+
+    resolve();
+  });
+
+  const renderCloneActions = (githubMetadata, tools) => new Promise(resolve => {
+    const buttonGroup = document.createElement('div');
+    buttonGroup.classList.add('BtnGroup');
+
+    tools.
+      forEach(tool => {
+        const btn = document.createElement('a');
+        btn.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
+        btn.setAttribute('href', '#');
+        btn.setAttribute('aria-label', `Clone in ${tool.name}`);
+        btn.dataset.toolTag = tool.tag;
+        btn.innerHTML =
+          `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+        btn.addEventListener('click', e => {
+          e.preventDefault();
+
+          const {toolTag} = e.currentTarget.dataset;
+          getProtocol().then(protocol => {
+            const cloneUrl =
+              protocol === CLONE_PROTOCOLS.HTTPS ? getHttpsCloneUrl(githubMetadata) : getSshCloneUrl(githubMetadata);
+            const action = getToolboxURN(toolTag, cloneUrl);
+
+            callToolbox(action);
+          });
+        });
+
+        buttonGroup.appendChild(btn);
+      });
+
+    const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
+    getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
 
     resolve();
   });
@@ -257,16 +295,16 @@ if (!window.hasRun) {
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
         then(tools => renderPopupCloneActions(tools).
-          then(() => renderOpenActions(metadata, tools).
-            then(() => startTrackingDOMChanges(metadata, tools))
-          )
+          then(() => renderCloneActions(metadata, tools)).
+          then(() => renderOpenActions(metadata, tools)).
+          then(() => startTrackingDOMChanges(metadata, tools))
         ).
         then(() => {
           chrome.runtime.sendMessage({
             type: 'enable-page-action',
             project: metadata.repo,
-            https: `${metadata.clone_url}.git`,
-            ssh: `git@github.com:${metadata.user}/${metadata.repo}.git`
+            https: getHttpsCloneUrl(metadata),
+            ssh: getSshCloneUrl(metadata)
           });
         })
       ).
