@@ -126,24 +126,15 @@ if (!window.hasRun) {
     resolve(tools);
   });
 
-  const renderPopupCloneActions = (githubMetadata, tools) => new Promise(resolve => {
-    const cloneUrl = `${githubMetadata.clone_url}.git`;
-    const sshUrl = `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
-
-    const preparedTools = tools.
-      map(tool => ({
-        ...tool,
-        cloneUrl: getToolboxURN(tool.tag, cloneUrl),
-        sshUrl: getToolboxURN(tool.tag, sshUrl)
-      }));
-
+  const renderPopupCloneActions = tools => new Promise(resolve => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
         case 'get-tools':
-          sendResponse(preparedTools);
+          sendResponse(tools);
           break;
         case 'perform-action':
-          callToolbox(message.action);
+          const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
+          callToolbox(toolboxAction);
           break;
         // no default
       }
@@ -265,15 +256,20 @@ if (!window.hasRun) {
     fetchMetadata().
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
-        then(tools => renderPopupCloneActions(metadata, tools).
+        then(tools => renderPopupCloneActions(tools).
           then(() => renderOpenActions(metadata, tools).
             then(() => startTrackingDOMChanges(metadata, tools))
           )
-        )
+        ).
+        then(() => {
+          chrome.runtime.sendMessage({
+            type: 'enable-page-action',
+            project: metadata.repo,
+            https: `${metadata.clone_url}.git`,
+            ssh: `git@github.com:${metadata.user}/${metadata.repo}.git`
+          });
+        })
       ).
-      then(() => {
-        chrome.runtime.sendMessage({type: 'enable-page-action'});
-      }).
       catch(() => {
         chrome.runtime.sendMessage({type: 'disable-page-action'});
       });

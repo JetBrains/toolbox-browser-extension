@@ -62,31 +62,15 @@ if (!window.hasRun) {
     resolve(tools);
   });
 
-  const getLink = (links, which) => {
-    const link = links.clone.find(l => l.name === which);
-    return link ? link.href : '';
-  };
-
-  const getCloneUrl = links => getLink(links, 'https');
-  const getSshCloneUrl = links => getLink(links, 'ssh');
-
-  const renderPopupCloneActions = (bitbucketMetadata, tools) => new Promise(resolve => {
-    const cloneUrl = getCloneUrl(bitbucketMetadata.links);
-    const sshUrl = getSshCloneUrl(bitbucketMetadata.links);
-
-    const preparedTools = tools.map(tool => ({
-      ...tool,
-      cloneUrl: getToolboxURN(tool.tag, cloneUrl),
-      sshUrl: getToolboxURN(tool.tag, sshUrl)
-    }));
-
+  const renderPopupCloneActions = tools => new Promise(resolve => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
         case 'get-tools':
-          sendResponse(preparedTools);
+          sendResponse(tools);
           break;
         case 'perform-action':
-          callToolbox(message.action);
+          const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
+          callToolbox(toolboxAction);
           break;
         // no default
       }
@@ -196,19 +180,32 @@ if (!window.hasRun) {
     resolve();
   });
 
+  const getCloneUrl = (links, which) => {
+    const link = links.clone.find(l => l.name === which);
+    return link ? link.href : '';
+  };
+
+  const getHttpsCloneUrl = links => getCloneUrl(links, 'https');
+  const getSshCloneUrl = links => getCloneUrl(links, 'ssh');
+
   const toolboxify = () => {
     fetchMetadata().
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
-        then(tools => renderPopupCloneActions(metadata, tools).
+        then(tools => renderPopupCloneActions(tools).
           then(() => renderOpenActions(metadata, tools).
             then(() => startTrackingDOMChanges(metadata, tools))
           )
-        )
+        ).
+        then(() => {
+          chrome.runtime.sendMessage({
+            type: 'enable-page-action',
+            project: metadata.repo,
+            https: getHttpsCloneUrl(metadata.links),
+            ssh: getSshCloneUrl(metadata.links)
+          });
+        })
       ).
-      then(() => {
-        chrome.runtime.sendMessage({type: 'enable-page-action'});
-      }).
       catch(() => {
         chrome.runtime.sendMessage({type: 'disable-page-action'});
       });

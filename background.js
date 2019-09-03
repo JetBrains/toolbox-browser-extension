@@ -1,14 +1,23 @@
-chrome.runtime.onMessage.addListener((message, sender) => {
+import {getProtocol, saveProtocol} from './common';
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case 'enable-page-action':
       chrome.browserAction.setIcon({
         tabId: sender.tab.id,
         path: {128: 'icon-128.png'}
       });
+
+      const {
+        project,
+        https,
+        ssh
+      } = message;
+      const uri = encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
       chrome.browserAction.setPopup(
         {
           tabId: sender.tab.id,
-          popup: chrome.runtime.getURL('jetbrains-toolbox-checkout-popup.html')
+          popup: chrome.runtime.getURL(uri)
         }
       );
       break;
@@ -24,6 +33,16 @@ chrome.runtime.onMessage.addListener((message, sender) => {
         }
       );
       break;
+    case 'get-protocol':
+      getProtocol().then(protocol => {
+        sendResponse({protocol});
+      });
+      return true;
+    case 'save-protocol':
+      saveProtocol(message.protocol);
+      break;
     // no default
   }
+
+  return undefined;
 });

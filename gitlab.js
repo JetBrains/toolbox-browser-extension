@@ -5,10 +5,11 @@ import {
   supportedLanguages,
   supportedTools,
   getToolboxURN,
+  getToolboxNavURN,
   callToolbox,
   USAGE_THRESHOLD,
   DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET, getToolboxNavURN
+  DEFAULT_LANGUAGE_SET
 } from './common';
 
 if (!window.hasRun) {
@@ -62,7 +63,7 @@ if (!window.hasRun) {
               ssh: meta.ssh_url_to_repo,
               https: meta.http_url_to_repo,
               id: meta.id,
-              branch: meta.name
+              repo: meta.name
             });
           });
       }).catch(() => {
@@ -105,20 +106,15 @@ if (!window.hasRun) {
     resolve(tools);
   });
 
-  const renderPopupCloneActions = (gitlabMetadata, tools) => new Promise(resolve => {
-    const preparedTools = tools.map(tool => ({
-      ...tool,
-      cloneUrl: getToolboxURN(tool.tag, gitlabMetadata.https),
-      sshUrl: getToolboxURN(tool.tag, gitlabMetadata.ssh)
-    }));
-
+  const renderPopupCloneActions = tools => new Promise(resolve => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
         case 'get-tools':
-          sendResponse(preparedTools);
+          sendResponse(tools);
           break;
         case 'perform-action':
-          callToolbox(message.action);
+          const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
+          callToolbox(toolboxAction);
           break;
         // no default
       }
@@ -138,7 +134,7 @@ if (!window.hasRun) {
         lineNumber = null;
       }
 
-      callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.branch, filePath, lineNumber));
+      callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
     });
   };
 
@@ -184,13 +180,18 @@ if (!window.hasRun) {
     fetchMetadata().
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
-        then(tools => renderPopupCloneActions(metadata, tools).
+        then(tools => renderPopupCloneActions(tools).
           then(() => renderOpenActions(metadata, tools))
-        )
+        ).
+        then(() => {
+          chrome.runtime.sendMessage({
+            type: 'enable-page-action',
+            project: metadata.repo,
+            https: metadata.https,
+            ssh: metadata.ssh
+          });
+        })
       ).
-      then(() => {
-        chrome.runtime.sendMessage({type: 'enable-page-action'});
-      }).
       catch(() => {
         chrome.runtime.sendMessage({type: 'disable-page-action'});
       });

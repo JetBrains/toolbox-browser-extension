@@ -78,12 +78,17 @@ export const MIN_VALID_HTTP_STATUS = 200;
 export const MAX_VALID_HTTP_STATUS = 299;
 export const DEFAULT_LANGUAGE_SET = {[DEFAULT_LANGUAGE]: HUNDRED_PERCENT};
 
-export function getToolboxURN(tool, cloneUrl) {
-  return `jetbrains://${tool}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
+export const CLONE_PROTOCOLS = {
+  HTTPS: 'HTTPS',
+  SSH: 'SSH'
+};
+
+export function getToolboxURN(toolTag, cloneUrl) {
+  return `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }
 
-export function getToolboxNavURN(tool, project, filePath, lineNumber = null) {
-  let openFileUrl = `jetbrains://${tool}/navigate/reference?project=${project}&path=${filePath}`;
+export function getToolboxNavURN(toolTag, project, filePath, lineNumber = null) {
+  let openFileUrl = `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}`;
   if (lineNumber != null) {
     openFileUrl = `${openFileUrl}:${lineNumber}`;
   }
@@ -98,4 +103,20 @@ export function callToolbox(action) {
   document.body.appendChild(fakeAction);
   fakeAction.click();
   document.body.removeChild(fakeAction);
+}
+
+export function getProtocol() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(['protocol'], result => {
+      resolve(result.protocol || CLONE_PROTOCOLS.HTTPS);
+    });
+  });
+}
+
+export function saveProtocol(value) {
+  return new Promise(resolve => {
+    chrome.storage.local.set({protocol: value}, () => {
+      resolve();
+    });
+  });
 }
