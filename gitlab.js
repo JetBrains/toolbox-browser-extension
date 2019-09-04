@@ -125,7 +125,37 @@ if (!window.hasRun) {
     resolve();
   });
 
-  const renderCloneActions = (gitlabMetadata, tools) => new Promise(resolve => {
+  const addCloneActionEventHandler = (btn, gitlabMetadata) => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+
+      const {toolTag} = e.currentTarget.dataset;
+      getProtocol().then(protocol => {
+        const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
+        const action = getToolboxURN(toolTag, cloneUrl);
+
+        callToolbox(action);
+      });
+    });
+  };
+
+  const createCloneAction = (tool, gitlabMetadata) => {
+    const action = document.createElement('a');
+    action.setAttribute('class', 'input-group-text btn btn-xs has-tooltip');
+    action.setAttribute('style', 'cursor:pointer');
+    action.dataset.title = `Clone in ${tool.name}`;
+    action.dataset.originalTitle = action.dataset.title;
+    action.setAttribute('aria-label', action.dataset.title);
+    action.dataset.toolTag = tool.tag;
+    action.innerHTML =
+      `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-top">`;
+
+    addCloneActionEventHandler(action, gitlabMetadata);
+
+    return action;
+  };
+
+  const renderCloneActions = (tools, gitlabMetadata) => new Promise(resolve => {
     const gitCloneHolder = document.querySelector('.js-git-clone-holder');
     const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
     if (gitCloneHolderParent) {
@@ -133,28 +163,7 @@ if (!window.hasRun) {
       buttonGroup.setAttribute('class', 'd-inline-flex append-right-8');
       buttonGroup.setAttribute('style', 'margin-top: 16px;');
       tools.forEach(tool => {
-        const btn = document.createElement('a');
-        btn.setAttribute('class', 'input-group-text btn btn-xs has-tooltip');
-        btn.setAttribute('style', 'cursor:pointer');
-        btn.dataset.title = `Clone in ${tool.name}`;
-        btn.dataset.originalTitle = btn.dataset.title;
-        btn.setAttribute('aria-label', btn.dataset.title);
-        btn.dataset.toolTag = tool.tag;
-        btn.innerHTML =
-          `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-top">`;
-
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-
-          const {toolTag} = e.currentTarget.dataset;
-          getProtocol().then(protocol => {
-            const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
-            const action = getToolboxURN(toolTag, cloneUrl);
-
-            callToolbox(action);
-          });
-        });
-
+        const btn = createCloneAction(tool, gitlabMetadata);
         buttonGroup.appendChild(btn);
       });
 
@@ -164,7 +173,7 @@ if (!window.hasRun) {
     resolve();
   });
 
-  const addToolboxActionEventHandler = (domElement, tool, gitlabMetadata) => {
+  const addNavigateActionEventHandler = (domElement, tool, gitlabMetadata) => {
     domElement.addEventListener('click', e => {
       e.preventDefault();
 
@@ -179,7 +188,7 @@ if (!window.hasRun) {
     });
   };
 
-  const createOpenAction = (gitlabMetadata, tool) => {
+  const createOpenAction = (tool, gitlabMetadata) => {
     const action = document.createElement('button');
     action.setAttribute('class', 'btn btn-sm');
     action.setAttribute('type', 'button');
@@ -193,12 +202,12 @@ if (!window.hasRun) {
     action.innerHTML =
       `<img alt="${tool.name}" src="${tool.icon}" width="15" height="15" style="position:relative;top:-2px">`;
 
-    addToolboxActionEventHandler(action, tool, gitlabMetadata);
+    addNavigateActionEventHandler(action, tool, gitlabMetadata);
 
     return action;
   };
 
-  const renderOpenActions = (gitlabMetadata, tools) => new Promise(resolve => {
+  const renderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
     const buttonGroupAnchorElement = document.querySelector('.file-holder .file-actions .btn-group:last-child');
     if (buttonGroupAnchorElement) {
       const toolboxButtonGroup = document.createElement('div');
@@ -206,7 +215,7 @@ if (!window.hasRun) {
       toolboxButtonGroup.setAttribute('role', 'group');
 
       tools.forEach(tool => {
-        const action = createOpenAction(gitlabMetadata, tool);
+        const action = createOpenAction(tool, gitlabMetadata);
         toolboxButtonGroup.appendChild(action);
       });
 
@@ -222,8 +231,8 @@ if (!window.hasRun) {
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
         then(tools => renderPopupCloneActions(tools).
-          then(() => renderCloneActions(metadata, tools)).
-          then(() => renderOpenActions(metadata, tools))
+          then(() => renderCloneActions(tools, metadata)).
+          then(() => renderOpenActions(tools, metadata))
         ).
         then(() => {
           chrome.runtime.sendMessage({

@@ -148,7 +148,37 @@ if (!window.hasRun) {
     resolve();
   });
 
-  const renderCloneActions = (githubMetadata, tools) => new Promise(resolve => {
+  const addCloneActionEventHandler = (btn, githubMetadata) => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+
+      const {toolTag} = e.currentTarget.dataset;
+      getProtocol().then(protocol => {
+        const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
+          ? getHttpsCloneUrl(githubMetadata)
+          : getSshCloneUrl(githubMetadata);
+        const action = getToolboxURN(toolTag, cloneUrl);
+
+        callToolbox(action);
+      });
+    });
+  };
+
+  const createCloneAction = (tool, githubMetadata) => {
+    const action = document.createElement('a');
+    action.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
+    action.setAttribute('href', '#');
+    action.setAttribute('aria-label', `Clone in ${tool.name}`);
+    action.dataset.toolTag = tool.tag;
+    action.innerHTML =
+      `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+
+    addCloneActionEventHandler(action, githubMetadata);
+
+    return action;
+  };
+
+  const renderCloneActionsSync = (tools, githubMetadata) => {
     const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
 
     if (getRepoSelectMenu) {
@@ -156,36 +186,20 @@ if (!window.hasRun) {
       buttonGroup.classList.add('BtnGroup');
 
       tools.forEach(tool => {
-        const btn = document.createElement('a');
-        btn.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
-        btn.setAttribute('href', '#');
-        btn.setAttribute('aria-label', `Clone in ${tool.name}`);
-        btn.dataset.toolTag = tool.tag;
-        btn.innerHTML =
-          `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
-        btn.addEventListener('click', e => {
-          e.preventDefault();
-
-          const {toolTag} = e.currentTarget.dataset;
-          getProtocol().then(protocol => {
-            const cloneUrl =
-              protocol === CLONE_PROTOCOLS.HTTPS ? getHttpsCloneUrl(githubMetadata) : getSshCloneUrl(githubMetadata);
-            const action = getToolboxURN(toolTag, cloneUrl);
-
-            callToolbox(action);
-          });
-        });
-
+        const btn = createCloneAction(tool, githubMetadata);
         buttonGroup.appendChild(btn);
       });
 
       getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
     }
+  };
 
+  const renderCloneActions = (tools, githubMetadata) => new Promise(resolve => {
+    renderCloneActionsSync(tools, githubMetadata);
     resolve();
   });
 
-  const addToolboxActionEventHandler = (domElement, tool, githubMetadata) => {
+  const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
     domElement.addEventListener('click', e => {
       e.preventDefault();
 
@@ -201,19 +215,19 @@ if (!window.hasRun) {
     });
   };
 
-  const createOpenAction = (githubMetadata, tool) => {
+  const createOpenAction = (tool, githubMetadata) => {
     const action = document.createElement('a');
     action.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
     action.setAttribute('aria-label', `Open this file in ${tool.name}`);
     action.setAttribute('href', '#');
     action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
 
-    addToolboxActionEventHandler(action, tool, githubMetadata);
+    addNavigateActionEventHandler(action, tool, githubMetadata);
 
     return action;
   };
 
-  const createOpenMenuItem = (githubMetadata, tool, first) => {
+  const createOpenMenuItem = (tool, first, githubMetadata) => {
     const menuItem = document.createElement('a');
     menuItem.setAttribute('class', 'dropdown-item');
     menuItem.setAttribute('role', 'menu-item');
@@ -223,7 +237,7 @@ if (!window.hasRun) {
     }
     menuItem.textContent = `Open in ${tool.name}`;
 
-    addToolboxActionEventHandler(menuItem, tool, githubMetadata);
+    addNavigateActionEventHandler(menuItem, tool, githubMetadata);
     menuItem.addEventListener('click', () => {
       const blobToolbar = document.querySelector('.BlobToolbar');
       if (blobToolbar) {
@@ -237,13 +251,13 @@ if (!window.hasRun) {
     return menuItemContainer;
   };
 
-  const renderOpenActions = (githubMetadata, tools) => new Promise(resolve => {
+  const renderOpenActionsSync = (tools, githubMetadata) => {
     const actionAnchorElement =
       document.querySelector('.repository-content .Box-header .BtnGroup + div > .btn-octicon');
 
     if (actionAnchorElement) {
       tools.forEach(tool => {
-        const action = createOpenAction(githubMetadata, tool);
+        const action = createOpenAction(tool, githubMetadata);
         actionAnchorElement.insertAdjacentElement('beforebegin', action);
       });
     }
@@ -259,18 +273,21 @@ if (!window.hasRun) {
         const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
         if (blobToolbarDropdown.dataset.toolboxified == null) {
           tools.forEach((tool, toolIndex) => {
-            const menuItem = createOpenMenuItem(githubMetadata, tool, toolIndex === 0);
+            const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
             blobToolbarDropdown.appendChild(menuItem);
           });
         }
         blobToolbarDropdown.dataset.toolboxified = 'true';
       }
     });
+  };
 
+  const renderOpenActions = (tools, githubMetadata) => new Promise(resolve => {
+    renderOpenActionsSync(tools, githubMetadata);
     resolve();
   });
 
-  const startTrackingDOMChanges = (githubMetadata, tools) => new Promise(resolve => {
+  const startTrackingDOMChanges = (tools, githubMetadata) => new Promise(resolve => {
     const applicationMainElement = document.querySelector('.application-main');
     if (applicationMainElement) {
       // eslint-disable-next-line complexity
@@ -284,8 +301,8 @@ if (!window.hasRun) {
               continue;
             }
             if (node.matches('.new-discussion-timeline')) {
-              renderCloneActions(githubMetadata, tools);
-              renderOpenActions(githubMetadata, tools);
+              renderCloneActionsSync(tools, githubMetadata);
+              renderOpenActionsSync(tools, githubMetadata);
             }
           }
         }
@@ -300,9 +317,9 @@ if (!window.hasRun) {
       then(metadata => fetchLanguages(metadata).
         then(selectTools).
         then(tools => renderPopupCloneActions(tools).
-          then(() => renderCloneActions(metadata, tools)).
-          then(() => renderOpenActions(metadata, tools)).
-          then(() => startTrackingDOMChanges(metadata, tools))
+          then(() => renderCloneActions(tools, metadata)).
+          then(() => renderOpenActions(tools, metadata)).
+          then(() => startTrackingDOMChanges(tools, metadata))
         ).
         then(() => {
           chrome.runtime.sendMessage({
