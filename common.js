@@ -83,16 +83,16 @@ export const CLONE_PROTOCOLS = {
   SSH: 'SSH'
 };
 
+const convertNumberToIndex = number => number - 1;
+
 export function getToolboxURN(toolTag, cloneUrl) {
   return `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }
 
 export function getToolboxNavURN(toolTag, project, filePath, lineNumber = null) {
-  let openFileUrl = `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}`;
-  if (lineNumber != null) {
-    openFileUrl = `${openFileUrl}:${lineNumber}`;
-  }
-  return openFileUrl;
+  const lineIndex = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
+  const columnIndex = convertNumberToIndex(1);
+  return `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}:${lineIndex}:${columnIndex}`;
 }
 
 export function callToolbox(action) {
