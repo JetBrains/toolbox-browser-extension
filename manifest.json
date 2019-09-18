@@ -48,6 +48,7 @@
   "permissions": [
     "activeTab",
     "nativeMessaging",
+    "storage",
     "tabs",
     "*://*.github.com/*",
     "*://*.gitee.com/*",

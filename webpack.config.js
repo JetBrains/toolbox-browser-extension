@@ -14,7 +14,7 @@ module.exports = {
     bitbucket: './bitbucket',
     common: ['./common'], // https://github.com/webpack/webpack/issues/300
     background: './background',
-    popup: './popup'
+    'clone-popup': './popup/clone'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
@@ -55,7 +55,7 @@ module.exports = {
       {from: 'manifest.json'},
       {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
       {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
-      {from: 'popup/index.html', to: 'jetbrains-toolbox-popup.html'},
+      {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
       {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'}
     ]),
     new LicenseChecker({
