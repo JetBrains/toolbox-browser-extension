@@ -182,15 +182,19 @@ if (!window.hasRun) {
     const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
 
     if (getRepoSelectMenu) {
-      const buttonGroup = document.createElement('div');
-      buttonGroup.classList.add('BtnGroup');
+      const toolboxCloneButtonGroup = document.querySelector('.js-toolbox-clone-button-group');
+      // handling 'Back' button click
+      if (!toolboxCloneButtonGroup) {
+        const buttonGroup = document.createElement('div');
+        buttonGroup.classList.add('BtnGroup', 'js-toolbox-clone-button-group');
 
-      tools.forEach(tool => {
-        const btn = createCloneAction(tool, githubMetadata);
-        buttonGroup.appendChild(btn);
-      });
+        tools.forEach(tool => {
+          const btn = createCloneAction(tool, githubMetadata);
+          buttonGroup.appendChild(btn);
+        });
 
-      getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
+        getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
+      }
     }
   };
 
