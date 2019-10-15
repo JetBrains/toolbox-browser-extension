@@ -10,16 +10,23 @@ import {
 if (!window.hasRun) {
   window.hasRun = true;
 
-  const getDom = (dom, node) => dom.querySelector(node).innerText.replace(/[\r\n]/g, '').trim();
+  const getDom = (dom, node) => {
+    const obj = dom.querySelector(node);
+    return (obj) ? obj.innerText.replace(/[\r\n]/g, '').trim() : '';
+  };
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
     const extension = document.querySelector('.gitee-project-extension');
     const repo = [];
     if (extension) {
-      repo.language = getDom(extension, '.extension.lang') || {language: ''};
-      repo.state = getDom(extension, '.extension.public') || {state: '1'};
-      repo.https = getDom(extension, '.extension.https') || {https: ''};
-      repo.ssh = getDom(extension, '.extension.ssh') || {ssh: ''};
+      repo.language = getDom(extension, '.extension.lang') || '';
+      repo.state = getDom(extension, '.extension.public') || '1';
+      repo.https = getDom(extension, '.extension.https') || '';
+      repo.ssh = getDom(extension, '.extension.ssh') || '';
+      repo.namespace = getDom(extension, '.extension.namespace') || '';
+      repo.repo = getDom(extension, '.extension.repo') || 'Click here to open it in the IDE';
+      repo.name = getDom(extension, '.extension.name') || '';
+      repo.branch = getDom(extension, '.extension.branch') || 'master';
       resolve(repo);
     } else {
       reject();
@@ -62,7 +69,12 @@ if (!window.hasRun) {
     repo => {
       const tools = selectTools(repo.language.toLowerCase());
       renderActions(tools, repo.https, repo.ssh);
-      chrome.runtime.sendMessage({type: 'enable-page-action'});
+      chrome.runtime.sendMessage({
+        type: 'enable-page-action',
+        project: `${repo.name}(${repo.repo})`,
+        https: repo.https,
+        ssh: repo.ssh
+      });
     }
   ).catch(() => {
     chrome.runtime.sendMessage({type: 'disable-page-action'});
