@@ -182,15 +182,20 @@ if (!window.hasRun) {
     const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
 
     if (getRepoSelectMenu) {
-      const buttonGroup = document.createElement('div');
-      buttonGroup.classList.add('BtnGroup');
+      // the buttons still exist on the previous page after clicking on the 'Back' button;
+      // only create them if they are absent
+      let toolboxCloneButtonGroup = document.querySelector('.js-toolbox-clone-button-group');
+      if (!toolboxCloneButtonGroup) {
+        toolboxCloneButtonGroup = document.createElement('div');
+        toolboxCloneButtonGroup.classList.add('BtnGroup', 'js-toolbox-clone-button-group');
 
-      tools.forEach(tool => {
-        const btn = createCloneAction(tool, githubMetadata);
-        buttonGroup.appendChild(btn);
-      });
+        tools.forEach(tool => {
+          const btn = createCloneAction(tool, githubMetadata);
+          toolboxCloneButtonGroup.appendChild(btn);
+        });
 
-      getRepoSelectMenu.insertAdjacentElement('beforebegin', buttonGroup);
+        getRepoSelectMenu.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+      }
     }
   };
 
@@ -262,24 +267,29 @@ if (!window.hasRun) {
       });
     }
 
-    // eslint-disable-next-line complexity
-    document.body.addEventListener('click', e => {
-      const clickedElement = e.target;
-      if (
-        (clickedElement.tagName === 'path' && clickedElement.parentElement.classList.contains('octicon')) ||
-        (clickedElement.tagName === 'svg' && clickedElement.parentElement.classList.contains('btn-octicon')) ||
-        (clickedElement.tagName === 'SUMMARY' && clickedElement.parentElement.classList.contains('BlobToolbar'))
-      ) {
-        const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
-        if (blobToolbarDropdown.dataset.toolboxified == null) {
-          tools.forEach((tool, toolIndex) => {
-            const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
-            blobToolbarDropdown.appendChild(menuItem);
-          });
+    if (document.body.dataset.toolboxified == null) {
+      // eslint-disable-next-line complexity
+      document.body.addEventListener('click', e => {
+        const clickedElement = e.target;
+        if (
+          (clickedElement.tagName === 'path' && clickedElement.parentElement.classList.contains('octicon')) ||
+          (clickedElement.tagName === 'svg' && clickedElement.parentElement.classList.contains('btn-octicon')) ||
+          (clickedElement.tagName === 'SUMMARY' && clickedElement.parentElement.classList.contains('BlobToolbar'))
+        ) {
+          const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
+          if (blobToolbarDropdown.dataset.toolboxified == null) {
+            tools.forEach((tool, toolIndex) => {
+              const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
+              blobToolbarDropdown.appendChild(menuItem);
+            });
+            // to only change element once
+            blobToolbarDropdown.dataset.toolboxified = 'true';
+          }
         }
-        blobToolbarDropdown.dataset.toolboxified = 'true';
-      }
-    });
+      });
+      // to only set click handler once
+      document.body.dataset.toolboxified = 'true';
+    }
   };
 
   const renderOpenActions = (tools, githubMetadata) => new Promise(resolve => {
