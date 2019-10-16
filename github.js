@@ -277,7 +277,7 @@ if (!window.hasRun) {
           (clickedElement.tagName === 'SUMMARY' && clickedElement.parentElement.classList.contains('BlobToolbar'))
         ) {
           const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
-          if (blobToolbarDropdown.dataset.toolboxified == null) {
+          if (blobToolbarDropdown && blobToolbarDropdown.dataset.toolboxified == null) {
             tools.forEach((tool, toolIndex) => {
               const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
               blobToolbarDropdown.appendChild(menuItem);
