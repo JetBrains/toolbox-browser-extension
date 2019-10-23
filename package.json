@@ -17,18 +17,19 @@
     "watch": "webpack -w"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/preset-env": "^7.5.5",
-    "@jetbrains/eslint-config": "^4.0.6",
+    "@babel/core": "^7.6.4",
+    "@babel/preset-env": "^7.6.3",
+    "@jetbrains/eslint-config": "^5.0.0",
     "@jetbrains/ring-ui-license-checker": "^1.5.2",
-    "babel-eslint": "^10.0.2",
+    "babel-eslint": "^10.0.3",
     "babel-loader": "^8.0.6",
     "copy-webpack-plugin": "^5.0.4",
-    "core-js": "^3.1.4",
-    "eslint": "^6.1.0",
-    "file-loader": "^4.1.0",
+    "core-js": "^3.3.3",
+    "eslint": "^6.5.1",
+    "eslint-plugin-import": "^2.18.2",
+    "file-loader": "^4.2.0",
     "imports-loader": "^0.8.0",
-    "webpack": "^4.39.1",
-    "webpack-cli": "^3.3.6"
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
   }
 }
