@@ -44,7 +44,6 @@
     "activeTab",
     "nativeMessaging",
     "storage",
-    "tabs",
     "*://*.github.com/*",
     "*://*.gitlab.com/*",
     "*://*.bitbucket.org/*"
