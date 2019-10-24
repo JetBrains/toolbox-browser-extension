@@ -71,7 +71,7 @@ if (!window.hasRun) {
       renderActions(tools, repo.https, repo.ssh);
       chrome.runtime.sendMessage({
         type: 'enable-page-action',
-        project: repo.name + `(${repo.repo})`,
+        project: `${repo.name} (${repo.repo})`,
         https: repo.https,
         ssh: repo.ssh
       });
