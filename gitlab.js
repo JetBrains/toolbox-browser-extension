@@ -31,13 +31,13 @@ if (!window.hasRun) {
     if (projectId) {
       resolve(projectId);
     } else {
-      const blobContentHolderElement = document.getElementById('blob-content-holder');
-      if (blobContentHolderElement) {
-        const breadcrumbsList = document.querySelector('.js-breadcrumbs-list');
-        // eslint-disable-next-line no-magic-numbers
-        const repoLinkContainerElement = breadcrumbsList.children[breadcrumbsList.childElementCount - 2];
-        const repoLink = repoLinkContainerElement.firstElementChild;
-        fetch(repoLink.href).
+      const {findFile, project} = document.body.dataset;
+      // we treat 'project' as a boolean flag saying
+      // we are able to get the project repo url
+      if (findFile && project) {
+        const [repoPath] = findFile.split('/find_file/');
+        const repoUrl = `${location.origin}${repoPath}`;
+        fetch(repoUrl).
           then(response => response.text()).
           then(htmlString => {
             const parser = new DOMParser();
