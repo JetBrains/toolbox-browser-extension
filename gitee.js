@@ -4,7 +4,7 @@ import {
   supportedLanguages,
   supportedTools,
   getToolboxURN,
-  DEFAULT_LANGUAGE
+  DEFAULT_LANGUAGE, callToolbox
 } from './common';
 
 if (!window.hasRun) {
@@ -50,15 +50,19 @@ if (!window.hasRun) {
       tool.sshUrl = getToolboxURN(tool.tag, sshUrl);
       return tool;
     });
-
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
         case 'get-tools':
           sendResponse(selectedTools);
           break;
+        case 'perform-action':
+          const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
+          callToolbox(toolboxAction);
+          break;
         default:
           // unknown message
           break;
+        // no default
       }
     });
 
