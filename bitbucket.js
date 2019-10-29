@@ -21,6 +21,9 @@ if (!window.hasRun) {
   const fetchMetadata = () => new Promise((resolve, reject) => {
     const metadata = bb(window.location.toString());
     if (metadata) {
+      // api.bitbucket.org intentionally doesn't support session authentication
+      // eslint-disable-next-line camelcase
+      metadata.api_url = metadata.api_url.replace('api.bitbucket.org/2.0', 'bitbucket.org/!api/2.0');
       fetch(`${metadata.api_url}?fields=links.clone`).
         then(response => response.json()).
         then(parsedResponse => {
