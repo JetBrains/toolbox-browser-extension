@@ -22,7 +22,9 @@ if (!window.hasRun) {
   window.hasRun = true;
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
-    const metadata = gh(window.location.toString(), {enterprise: true});
+    // check if the page is a repo page (pages like https://github.com/topics/git cause a false positive)
+    const metadata = document.querySelector('meta[name=go-import]') &&
+      gh(window.location.toString(), {enterprise: true});
     if (metadata) {
       resolve(metadata);
     } else {
