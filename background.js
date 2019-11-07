@@ -1,4 +1,5 @@
 import {getProtocol, saveProtocol} from './common';
+import {createExtensionMenu} from './menu';
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
@@ -46,3 +47,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   return undefined;
 });
+
+createExtensionMenu();

@@ -6,8 +6,10 @@
   "dependencies": {
     "@jetbrains/logos": "^1.1.4",
     "bitbucket-url-to-object": "^0.3.0",
+    "content-scripts-register-polyfill": "^1.0.0",
     "github-url-to-object": "^4.0.4",
     "throttle-debounce": "2.1.0",
+    "webext-additional-permissions": "^0.1.0",
     "whatwg-fetch": "^3.0.0"
   },
   "scripts": {
@@ -33,6 +35,7 @@
     "eslint-plugin-react": "^7.14.3",
     "file-loader": "^4.2.0",
     "imports-loader": "^0.8.0",
+    "regenerator-runtime": "^0.13.3",
     "webpack": "^4.41.2",
     "webpack-cli": "^3.3.9"
   }

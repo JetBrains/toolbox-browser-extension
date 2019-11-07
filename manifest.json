@@ -17,24 +17,16 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "*://*.github.com/*",
-        "*://*.gitlab.com/*",
-        "*://*.bitbucket.org/*"
-      ],
-      "js": ["jetbrains-toolbox-common.js"]
-    },
-    {
-      "matches": ["*://*.github.com/*"],
-      "js": ["jetbrains-toolbox-github.js"]
+      "matches": ["https://github.com/*"],
+      "js": ["jetbrains-toolbox-common.js", "jetbrains-toolbox-github.js"]
     },
     {
       "matches": ["*://*.gitlab.com/*"],
       "js": ["jetbrains-toolbox-gitlab.js"]
     },
     {
-      "matches": ["*://*.bitbucket.org/*"],
-      "js": ["jetbrains-toolbox-bitbucket.js"]
+      "matches": ["https://bitbucket.org/*"],
+      "js": ["jetbrains-toolbox-common.js", "jetbrains-toolbox-bitbucket.js"]
     }
   ],
   "web_accessible_resources": [
@@ -42,10 +34,17 @@
   ],
   "permissions": [
     "activeTab",
+    "contextMenus",
     "nativeMessaging",
     "storage",
-    "*://*.github.com/*",
-    "*://*.gitlab.com/*",
-    "*://*.bitbucket.org/*"
+    "https://github.com/*",
+    "https://api.github.com/*",
+    "https://gitlab.com/*",
+    "https://bitbucket.org/*",
+    "https://api.bitbucket.org/*"
+  ],
+  "optional_permissions": [
+    "http://*/*",
+    "https://*/*"
   ]
 }
