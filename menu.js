@@ -151,25 +151,36 @@ function updateMenu(tabId) {
       if (!manifestPermissionGranted) {
         domainPermissionGranted(tabUrl).
           then(() => {
-            const manifestContentScripts = chrome.runtime.getManifest().content_scripts;
-            const domainMatch = generateDomainMatch(domain);
-            const contentScript = manifestContentScripts.find(s => s.matches.includes(domainMatch));
-            if (contentScript) {
-              if (contentScript.js.includes(CONTENT_SCRIPTS.GITHUB)) {
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: true});
+            getFromStorage(domain).
+              then(contentScript => {
+                switch (contentScript) {
+                  case CONTENT_SCRIPTS.GITHUB:
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: true});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                    break;
+                  case CONTENT_SCRIPTS.GITLAB:
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: true});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                    break;
+                  case CONTENT_SCRIPTS.BITBUCKET:
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: true});
+                    break;
+                  default:
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                    break;
+                }
+              }).
+              catch(() => {
+                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
                 updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
                 updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-              } else if (contentScript.js.includes(CONTENT_SCRIPTS.GITLAB)) {
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: true});
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-              }
-              if (contentScript.js.includes(CONTENT_SCRIPTS.BITBUCKET)) {
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: true});
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
-              }
-            }
+              });
           }).
           catch(() => {
             updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
