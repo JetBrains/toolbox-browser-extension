@@ -131,7 +131,8 @@ if (!window.hasRun) {
   });
 
   const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
-  const getSshCloneUrl = githubMetadata => `git@github.com:${githubMetadata.user}/${githubMetadata.repo}.git`;
+  const getSshCloneUrl =
+    githubMetadata => `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
 
   const renderPopupCloneActions = tools => new Promise(resolve => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
