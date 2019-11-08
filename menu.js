@@ -24,7 +24,7 @@ const CONTENT_SCRIPTS_BY_MENU_ITEM_IDS = {
   [MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID]: CONTENT_SCRIPTS.BITBUCKET
 };
 
-const registeredContentScriptPromises = new Map();
+const contentScriptUnregistrators = new Map();
 
 let activeTabId = null;
 
@@ -221,32 +221,31 @@ function handleMenuItemClick(info, tab) {
     toggleDomainPermissions(requestPermissions, tab.url).
       then(() => {
         const domain = getDomain(tab.url);
-        const domainMatch = generateDomainMatch(domain);
-        const domainContentScripts = [
-          {file: CONTENT_SCRIPTS.COMMON},
-          {file: CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]}
-        ];
         if (requestPermissions) {
-          chrome.contentScripts.register({
+          const domainMatch = generateDomainMatch(domain);
+          const contentScriptOptions = {
             matches: [domainMatch],
-            js: domainContentScripts
-          }).
-            then(scriptPromise => {
-              registeredContentScriptPromises.set(domain, scriptPromise);
+            js: [
+              {file: CONTENT_SCRIPTS.COMMON},
+              {file: CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]}
+            ]
+          };
+          chrome.contentScripts.register(contentScriptOptions).
+            then(newUnregistrator => {
+              const prevUnregistrator = contentScriptUnregistrators.get(domain);
+              if (prevUnregistrator) {
+                prevUnregistrator.unregister();
+              }
+              contentScriptUnregistrators.set(domain, newUnregistrator);
               saveToStorage(domain, CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]).then(() => {
-                updateMenuItem(info.menuItemId, {checked: requestPermissions});
                 reloadTab(tab.id);
               });
             });
         } else {
-          const scriptPromise = registeredContentScriptPromises.get(domain);
-          scriptPromise().then(contentScript => {
-            contentScript.unregister().then(() => {
-              removeFromStorage(domain).then(() => {
-                updateMenuItem(info.menuItemId, {checked: requestPermissions});
-                reloadTab(tab.id);
-              });
-            });
+          const unregistrator = contentScriptUnregistrators.get(domain);
+          unregistrator.unregister();
+          removeFromStorage(domain).then(() => {
+            reloadTab(tab.id);
           });
         }
       }).
@@ -277,14 +276,14 @@ export function createExtensionMenu() {
   getContentScriptsByDomains().then(result => {
     Object.keys(result).forEach(domain => {
       const domainMatch = generateDomainMatch(domain);
-      const scriptPromise = chrome.contentScripts.register({
+      const unregistrator = chrome.contentScripts.register({
         matches: [domainMatch],
         js: [
           {file: CONTENT_SCRIPTS.COMMON},
           {file: result[domain]}
         ]
       });
-      registeredContentScriptPromises.set(domain, scriptPromise);
+      contentScriptUnregistrators.set(domain, unregistrator);
     });
     createMenu();
   });
