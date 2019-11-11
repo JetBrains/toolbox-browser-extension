@@ -230,7 +230,9 @@ function handleMenuItemClick(info, tab) {
               {file: CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]}
             ]
           };
-          chrome.contentScripts.register(contentScriptOptions).
+          // implementation of chrome.contentScripts doesn't work as expected in FF
+          // eslint-disable-next-line no-undef
+          (window.browser || window.chrome).contentScripts.register(contentScriptOptions).
             then(newUnregistrator => {
               const prevUnregistrator = contentScriptUnregistrators.get(domain);
               if (prevUnregistrator) {
@@ -244,6 +246,7 @@ function handleMenuItemClick(info, tab) {
         } else {
           const unregistrator = contentScriptUnregistrators.get(domain);
           unregistrator.unregister();
+          contentScriptUnregistrators.delete(domain);
           removeFromStorage(domain).then(() => {
             reloadTab(tab.id);
           });
