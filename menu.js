@@ -51,7 +51,6 @@ function reloadTab(tabId) {
 
 function createMenu() {
   const contexts = [
-    chrome.contextMenus.ContextType.PAGE,
     chrome.contextMenus.ContextType.BROWSER_ACTION
   ];
   const documentUrlPatterns = [
