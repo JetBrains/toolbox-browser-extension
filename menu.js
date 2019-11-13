@@ -91,7 +91,7 @@ function createMenu() {
     id: MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID,
     type: chrome.contextMenus.ItemType.CHECKBOX,
     checked: false,
-    title: 'Bitbucket.com',
+    title: 'Bitbucket.org',
     contexts,
     documentUrlPatterns
   });

@@ -8,6 +8,7 @@
     "bitbucket-url-to-object": "^0.3.0",
     "content-scripts-register-polyfill": "^1.0.0",
     "github-url-to-object": "^4.0.4",
+    "parse-bitbucket-url": "^0.3.0",
     "throttle-debounce": "2.1.0",
     "webext-additional-permissions": "^0.1.0",
     "whatwg-fetch": "^3.0.0"

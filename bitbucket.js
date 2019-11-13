@@ -1,6 +1,7 @@
 import 'whatwg-fetch';
 import {debounce} from 'throttle-debounce';
 import bb from 'bitbucket-url-to-object';
+import parseBitbucketUrl from 'parse-bitbucket-url';
 
 import {
   supportedLanguages,
@@ -19,7 +20,8 @@ if (!window.hasRun) {
   window.hasRun = true;
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
-    const metadata = bb(window.location.toString());
+    const bitbucketUrl = window.location.toString();
+    let metadata = bb(bitbucketUrl);
     if (metadata) {
       // api.bitbucket.org intentionally doesn't support session authentication
       // eslint-disable-next-line camelcase
@@ -29,26 +31,64 @@ if (!window.hasRun) {
         then(parsedResponse => {
           resolve({
             ...metadata,
-            links: parsedResponse.links
+            links: parsedResponse.links,
+            // eslint-disable-next-line camelcase
+            is_stash: false
           });
         }).
         catch(() => {
           reject();
         });
     } else {
-      reject();
+      // is it stash?
+      const parsedStashUrl = document.querySelector('meta[name=application-name][content=Bitbucket]') &&
+        parseBitbucketUrl(bitbucketUrl);
+      if (!parsedStashUrl) {
+        reject();
+      }
+      // normalize metadata
+      metadata = {
+        // eslint-disable-next-line camelcase
+        api_url: `${location.origin}/rest/api/latest/projects/${parsedStashUrl.owner}/repos/${parsedStashUrl.name}`,
+        branch: parsedStashUrl.branch,
+        repo: parsedStashUrl.name,
+        user: parsedStashUrl.owner,
+        // eslint-disable-next-line camelcase
+        is_stash: true
+      };
+      fetch(metadata.api_url).
+        then(response => response.json()).
+        then(parsedResponse => {
+          metadata.links = {
+            clone: parsedResponse.links.clone
+          };
+          const httpLink = metadata.links.clone.find(l => l.name === 'http');
+          if (httpLink) {
+            // normalize name
+            httpLink.name = 'https';
+          }
+          resolve(metadata);
+        }).
+        catch(() => {
+          reject();
+        });
     }
   });
 
   const fetchLanguages = bitbucketMetadata => new Promise((resolve, reject) => {
-    fetch(`${bitbucketMetadata.api_url}?fields=language`).
-      then(response => response.json()).
-      then(parsedResponse => {
-        resolve(parsedResponse.language);
-      }).
-      catch(() => {
-        reject();
-      });
+    if (bitbucketMetadata.is_stash) {
+      // i have no idea how to obtain repo languages in stash
+      resolve(DEFAULT_LANGUAGE);
+    } else {
+      fetch(`${bitbucketMetadata.api_url}?fields=language`).
+        then(response => response.json()).
+        then(parsedResponse => {
+          resolve(parsedResponse.language);
+        }).
+        catch(() => {
+          reject();
+        });
+    }
   });
 
   const selectTools = language => new Promise(resolve => {

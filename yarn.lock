@@ -3701,6 +3701,11 @@ parse-asn1@^5.0.0:
     pbkdf2 "^3.0.3"
     safe-buffer "^5.1.1"
 
+parse-bitbucket-url@^0.3.0:
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/parse-bitbucket-url/-/parse-bitbucket-url-0.3.0.tgz#facec3beebfcec42265565e49081a10759bbba17"
+  integrity sha1-+s7Dvuv87EImVWXkkIGhB1m7uhc=
+
 parse-json@^2.2.0:
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/parse-json/-/parse-json-2.2.0.tgz#f480f40434ef80741f8469099f8dea18f55a4dc9"
