@@ -15,7 +15,7 @@ const CONTENT_SCRIPTS = {
   COMMON: 'jetbrains-toolbox-common.js',
   GITHUB: 'jetbrains-toolbox-github.js',
   GITLAB: 'jetbrains-toolbox-gitlab.js',
-  BITBUCKET: 'jetbrains-toolbox-bitbucket.js'
+  BITBUCKET: 'jetbrains-toolbox-bitbucket-stash.js'
 };
 
 const CONTENT_SCRIPTS_BY_MENU_ITEM_IDS = {

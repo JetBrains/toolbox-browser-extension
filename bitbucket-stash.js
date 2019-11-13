@@ -1,6 +1,6 @@
 import 'whatwg-fetch';
 import {debounce} from 'throttle-debounce';
-import bb from 'bitbucket-url-to-object';
+import parseBitbucketUrl from 'parse-bitbucket-url';
 
 import {
   supportedLanguages,
@@ -19,36 +19,40 @@ if (!window.hasRun) {
   window.hasRun = true;
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
-    const metadata = bb(window.location.toString());
-    if (metadata) {
-      // api.bitbucket.org intentionally doesn't support session authentication
-      // eslint-disable-next-line camelcase
-      metadata.api_url = metadata.api_url.replace('api.bitbucket.org/2.0', 'bitbucket.org/!api/2.0');
-      fetch(`${metadata.api_url}?fields=links.clone`).
-        then(response => response.json()).
-        then(parsedResponse => {
-          resolve({
-            ...metadata,
-            links: parsedResponse.links
-          });
-        }).
-        catch(() => {
-          reject();
-        });
-    } else {
+    const parsedStashUrl = document.querySelector('meta[name=application-name][content=Bitbucket]') &&
+      parseBitbucketUrl(window.location.toString());
+    if (!parsedStashUrl) {
       reject();
     }
-  });
-
-  const fetchLanguages = bitbucketMetadata => new Promise((resolve, reject) => {
-    fetch(`${bitbucketMetadata.api_url}?fields=language`).
+    // normalize metadata
+    const metadata = {
+      // eslint-disable-next-line camelcase
+      api_url: `${location.origin}/rest/api/latest/projects/${parsedStashUrl.owner}/repos/${parsedStashUrl.name}`,
+      branch: parsedStashUrl.branch,
+      repo: parsedStashUrl.name,
+      user: parsedStashUrl.owner
+    };
+    fetch(metadata.api_url).
       then(response => response.json()).
       then(parsedResponse => {
-        resolve(parsedResponse.language);
+        metadata.links = {
+          clone: parsedResponse.links.clone
+        };
+        const httpLink = metadata.links.clone.find(l => l.name === 'http');
+        if (httpLink) {
+        // normalize name
+          httpLink.name = 'https';
+        }
+        resolve(metadata);
       }).
       catch(() => {
         reject();
       });
+  });
+
+  const fetchLanguages = () => new Promise(resolve => {
+    // don't know how to obtain repo languages in stash
+    resolve(DEFAULT_LANGUAGE);
   });
 
   const selectTools = language => new Promise(resolve => {
@@ -336,7 +340,7 @@ if (!window.hasRun) {
 
   const toolboxify = () => {
     fetchMetadata().
-      then(metadata => fetchLanguages(metadata).
+      then(metadata => fetchLanguages().
         then(selectTools).
         then(tools => renderPopupCloneActions(tools).
           then(() => renderCloneActions(tools, metadata)).
