@@ -40,7 +40,7 @@ if (!window.hasRun) {
         };
         const httpLink = metadata.links.clone.find(l => l.name === 'http');
         if (httpLink) {
-        // normalize name
+          // normalize name
           httpLink.name = 'https';
         }
         resolve(metadata);
@@ -97,35 +97,23 @@ if (!window.hasRun) {
   const getSshCloneUrl = links => getCloneUrl(links, 'ssh');
 
   const addStyleSheet = () => {
-    const sheetId = 'jt-bitbucket-style';
+    const sheetId = 'toolbox-bitbucket-stash-style';
     if (document.getElementById(sheetId)) {
       return;
     }
 
     const styleSheet = document.createElement('style');
     styleSheet.setAttribute('id', sheetId);
-    styleSheet.innerHTML = `
-    .jt-button-group {
-      display: inline-block;
-      margin: 0 2px;
-    }
-    .jt-button {
-      margin: 0 2px;
-    }
-    .jt-button:hover {
-      background: rgba(9, 30, 66, 0.08);
-      cursor: pointer;
-    }
-    .jt-button img {
-      align-self: center;
-      width: 18px;
-      height: 18px;
-    }
-  `;
+    styleSheet.textContent = `
+      .toolbox-aui-icon {
+        background-size: contain;
+      }
+    `;
 
     document.head.appendChild(styleSheet);
   };
 
+  /*
   const createButtonTooltip = (button, text) => {
     const tooltip = document.createElement('div');
 
@@ -150,8 +138,8 @@ if (!window.hasRun) {
 
     return tooltip;
   };
-
-  const cloneActionsRendered = () => document.getElementsByClassName('js-toolbox-clone-action').length > 0;
+  */
+  const cloneActionsRendered = () => document.getElementsByClassName('js-toolbox-clone-repo').length > 0;
 
   const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
     btn.addEventListener('click', e => {
@@ -163,18 +151,29 @@ if (!window.hasRun) {
           ? getHttpsCloneUrl(bitbucketMetadata.links)
           : getSshCloneUrl(bitbucketMetadata.links);
         const action = getToolboxURN(toolTag, cloneUrl);
-
         callToolbox(action);
       });
     });
   };
 
-  const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
+  const createCloneAction = (tool, bitbucketMetadata) => {
+    const title = `Clone in ${tool.name}`;
     const action = document.createElement('a');
-    action.setAttribute('class', `${cloneButton.className} jt-button js-toolbox-clone-action`);
+    action.setAttribute('class', 'aui-nav-item');
     action.setAttribute('href', '#');
+    action.setAttribute('original-title', title);
     action.dataset.toolTag = tool.tag;
-    action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}">`;
+
+    const actionIcon = document.createElement('span');
+    actionIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
+    actionIcon.setAttribute('style', `background-image:url(${tool.icon})`);
+
+    const actionLabel = document.createElement('span');
+    actionLabel.setAttribute('class', 'aui-nav-item-label');
+    actionLabel.textContent = title;
+
+    action.appendChild(actionIcon);
+    action.appendChild(actionLabel);
 
     addCloneActionEventHandler(action, bitbucketMetadata);
 
@@ -187,45 +186,22 @@ if (!window.hasRun) {
       return;
     }
 
-    let cloneButton = document.querySelector('[data-qa="page-header-wrapper"] button[type="button"]');
-    if (!cloneButton) {
-      const commitListContainer = document.querySelector('[data-qa="commit-list-container"]');
-      if (!commitListContainer) {
-        return;
-      }
-      const preHeader = commitListContainer.previousElementSibling;
-      if (!preHeader) {
-        return;
-      }
-      const prePreHeader = preHeader.previousElementSibling;
-      if (!prePreHeader) {
-        return;
-      }
-      cloneButton = prePreHeader.querySelector(':nth-child(2) > :nth-child(2) > button');
-      if (!cloneButton) {
-        return;
-      }
-    }
-
-    if (!cloneButton.textContent.includes('Clone')) {
+    const cloneElement = document.querySelector('.clone-repo');
+    if (!cloneElement) {
       return;
     }
 
     addStyleSheet();
 
-    const buttonGroup = document.createElement('div');
-    buttonGroup.setAttribute('class', 'jt-button-group');
+    tools.forEach(tool => {
+      const toolboxCloneElement = document.createElement('li');
+      toolboxCloneElement.setAttribute('class', 'js-toolbox-clone-repo');
 
-    tools.
-      forEach(tool => {
-        const btn = createCloneAction(tool, cloneButton, bitbucketMetadata);
-        buttonGroup.appendChild(btn);
+      const action = createCloneAction(tool, bitbucketMetadata);
+      toolboxCloneElement.appendChild(action);
 
-        const tooltip = createButtonTooltip(btn, `Clone in ${tool.name}`);
-        buttonGroup.appendChild(tooltip);
-      });
-
-    cloneButton.insertAdjacentElement('beforebegin', buttonGroup);
+      cloneElement.insertAdjacentElement('beforebegin', toolboxCloneElement);
+    });
   });
 
   const removeCloneActions = () => {
@@ -268,8 +244,8 @@ if (!window.hasRun) {
 
     addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
 
-    const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name}`);
-    action.appendChild(tooltip);
+    // const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name}`);
+    // action.appendChild(tooltip);
 
     return action;
   };
