@@ -111,7 +111,10 @@ function domainPermissionGranted(url) {
 }
 
 function getDomain(url) {
-  return new URL(url).origin;
+  const parsedUrl = new URL(url);
+  // domain should not include a port number:
+  // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
+  return `${parsedUrl.protocol}//${parsedUrl.hostname}`;
 }
 
 function generateDomainMatch(url) {
@@ -248,8 +251,8 @@ function handleMenuItemClick(info, tab) {
               {file: CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]}
             ]
           };
-          // implementation of chrome.contentScripts doesn't work as expected in FF
-          // eslint-disable-next-line no-undef
+          // implementation of chrome.contentScripts.register doesn't work as expected in FF
+          // (returns promise which doesn't resolve soon)
           (window.browser || window.chrome).contentScripts.register(contentScriptOptions).
             then(newUnregistrator => {
               getSafeUnregistrator(domain).
@@ -299,14 +302,17 @@ export function createExtensionMenu() {
   getContentScriptsByDomains().then(result => {
     Object.keys(result).forEach(domain => {
       const domainMatch = generateDomainMatch(domain);
-      const unregistrator = chrome.contentScripts.register({
-        matches: [domainMatch],
-        js: [
-          {file: CONTENT_SCRIPTS.COMMON},
-          {file: result[domain]}
-        ]
-      });
-      contentScriptUnregistrators.set(domain, unregistrator);
+      (window.browser || window.chrome).contentScripts.
+        register({
+          matches: [domainMatch],
+          js: [
+            {file: CONTENT_SCRIPTS.COMMON},
+            {file: result[domain]}
+          ]
+        }).
+        then(unregistrator => {
+          contentScriptUnregistrators.set(domain, unregistrator);
+        });
     });
     createMenu();
   });
