@@ -1,5 +1,4 @@
 import 'whatwg-fetch';
-import {debounce} from 'throttle-debounce';
 import parseBitbucketUrl from 'parse-bitbucket-url';
 
 import {
@@ -12,8 +11,6 @@ import {
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
 } from './common';
-
-const MUTATION_DEBOUNCE_DELAY = 150;
 
 if (!window.hasRun) {
   window.hasRun = true;
@@ -51,7 +48,7 @@ if (!window.hasRun) {
   });
 
   const fetchLanguages = () => new Promise(resolve => {
-    // don't know how to obtain repo languages in stash
+    // we don't know how to obtain repo languages in stash
     resolve(DEFAULT_LANGUAGE);
   });
 
@@ -96,51 +93,6 @@ if (!window.hasRun) {
   const getHttpsCloneUrl = links => getCloneUrl(links, 'https');
   const getSshCloneUrl = links => getCloneUrl(links, 'ssh');
 
-  const addStyleSheet = () => {
-    const sheetId = 'toolbox-bitbucket-stash-style';
-    if (document.getElementById(sheetId)) {
-      return;
-    }
-
-    const styleSheet = document.createElement('style');
-    styleSheet.setAttribute('id', sheetId);
-    styleSheet.textContent = `
-      .toolbox-aui-icon {
-        background-size: contain;
-      }
-    `;
-
-    document.head.appendChild(styleSheet);
-  };
-
-  /*
-  const createButtonTooltip = (button, text) => {
-    const tooltip = document.createElement('div');
-
-    tooltip.setAttribute('style', 'background-color:rgb(23,43,77); border-radius:3px;' +
-      'box-sizing: border-box; color:#fff; display:none; font-size: 12px; line-height: 15.6px; max-width: 240px;' +
-      'padding:2px 6px; position:absolute; transform:translate3d(calc(-100% - 8px),-130%,0);');
-    tooltip.textContent = text;
-
-    const TOOLTIP_TIMEOUT = 450;
-    button.addEventListener('mouseenter', () => {
-      button.setAttribute('style', 'cursor:pointer; background:rgba(9,30,66,0.08);');
-      setTimeout(() => {
-        tooltip.style.display = 'block';
-      }, TOOLTIP_TIMEOUT);
-    });
-    button.addEventListener('mouseleave', () => {
-      button.removeAttribute('style');
-      setTimeout(() => {
-        tooltip.style.display = 'none';
-      }, TOOLTIP_TIMEOUT);
-    });
-
-    return tooltip;
-  };
-  */
-  const cloneActionsRendered = () => document.getElementsByClassName('js-toolbox-clone-repo').length > 0;
-
   const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
     btn.addEventListener('click', e => {
       e.preventDefault();
@@ -166,7 +118,7 @@ if (!window.hasRun) {
 
     const actionIcon = document.createElement('span');
     actionIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
-    actionIcon.setAttribute('style', `background-image:url(${tool.icon})`);
+    actionIcon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain`);
 
     const actionLabel = document.createElement('span');
     actionLabel.setAttribute('class', 'aui-nav-item-label');
@@ -181,17 +133,11 @@ if (!window.hasRun) {
   };
 
   // eslint-disable-next-line complexity
-  const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, bitbucketMetadata) => {
-    if (cloneActionsRendered()) {
-      return;
-    }
-
+  const renderCloneActionsSync = (tools, bitbucketMetadata) => {
     const cloneElement = document.querySelector('.clone-repo');
     if (!cloneElement) {
       return;
     }
-
-    addStyleSheet();
 
     tools.forEach(tool => {
       const toolboxCloneElement = document.createElement('li');
@@ -202,13 +148,6 @@ if (!window.hasRun) {
 
       cloneElement.insertAdjacentElement('beforebegin', toolboxCloneElement);
     });
-  });
-
-  const removeCloneActions = () => {
-    const buttonGroup = document.querySelector('.jt-button-group');
-    if (buttonGroup) {
-      buttonGroup.parentElement.removeChild(buttonGroup);
-    }
   };
 
   const renderCloneActions = (tools, bitbucketMetadata) => new Promise(resolve => {
@@ -220,9 +159,9 @@ if (!window.hasRun) {
     domElement.addEventListener('click', e => {
       e.preventDefault();
 
-      const filePathIndex = 5;
+      const filePathIndex = 6;
       const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
-      let lineNumber = location.hash.replace('#lines-', '');
+      let lineNumber = location.hash.replace('#', '');
       if (lineNumber === '') {
         lineNumber = null;
       }
@@ -231,86 +170,41 @@ if (!window.hasRun) {
     });
   };
 
-  const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
-    const action = sampleAction.cloneNode(true);
-    action.classList.add('js-toolbox-open-action');
+  const createOpenAction = (tool, bitbucketMetadata) => {
+    const action = document.createElement('div');
+    action.setAttribute('class', 'aui-buttons js-toolbox-open-action');
 
-    const actionButton = action.querySelector('button');
-    actionButton.removeAttribute('disabled');
-
-    const actionSpan = actionButton.querySelector('span > span');
-    actionSpan.innerHTML =
+    const actionButton = document.createElement('button');
+    actionButton.setAttribute('class', 'aui-button');
+    actionButton.setAttribute('original-title', `Open this file in ${tool.name}`);
+    actionButton.innerHTML =
       `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-bottom">`;
 
+    action.append(actionButton);
     addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
-
-    // const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name}`);
-    // action.appendChild(tooltip);
 
     return action;
   };
 
-  const openActionsRendered = () => document.getElementsByClassName('js-toolbox-open-action').length > 0;
+  const setOpenActionTooltips = () => {
+    const tooltipScript = document.createElement('script');
+    tooltipScript.textContent = 'jQuery(".js-toolbox-open-action > .aui-button:first-child").tipsy();';
+    document.body.appendChild(tooltipScript);
+  };
 
-  const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, bitbucketMetadata) => {
-    if (openActionsRendered()) {
-      return;
-    }
-
-    const actionAnchorElement =
-      document.querySelector('[data-qa="bk-file__actions"] > [data-qa="bk-file__action-button"]');
-
-    if (actionAnchorElement) {
+  const renderOpenActionsSync = (tools, bitbucketMetadata) => {
+    const anchorElement = document.querySelector('.file-toolbar > .secondary > .aui-buttons:first-child');
+    if (anchorElement) {
       tools.forEach(tool => {
-        const action = createOpenAction(tool, actionAnchorElement, bitbucketMetadata);
-        actionAnchorElement.insertAdjacentElement('beforebegin', action);
+        const action = createOpenAction(tool, bitbucketMetadata);
+        anchorElement.insertAdjacentElement('beforebegin', action);
       });
+      setOpenActionTooltips();
     }
-  });
+  };
 
   const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
     renderOpenActionsSync(tools, bitbucketMetadata);
-    resolve();
-  });
-
-  const startTrackingDOMChanges = (tools, bitbucketMetadata) => new Promise(resolve => {
-    const rootElement = document.getElementById('root');
-    if (rootElement) {
-      // trace navigating to repo source files
-      // eslint-disable-next-line complexity
-      new MutationObserver(mutations => {
-        let cloneButtonRemoved = false;
-        for (const mutation of mutations) {
-          if (mutation.type !== 'childList') {
-            continue;
-          }
-          if (mutation.removedNodes.length === 1 &&
-            mutation.previousSibling &&
-            mutation.previousSibling.classList.contains('jt-button-group')) {
-            if (mutation.removedNodes[0].textContent === 'Clone') {
-              cloneButtonRemoved = true;
-            }
-          }
-          if (mutation.addedNodes.length === 0) {
-            continue;
-          }
-          for (const node of mutation.addedNodes) {
-            if (!(node instanceof HTMLElement)) {
-              continue;
-            }
-            if (node.matches('.monaco-builder-hidden')) {
-              renderOpenActionsSync(tools, bitbucketMetadata);
-            }
-          }
-        }
-        if (cloneButtonRemoved) {
-          removeCloneActions();
-        } else {
-          renderCloneActionsSync(tools, bitbucketMetadata);
-        }
-      }).observe(rootElement, {childList: true, subtree: true});
-    }
-
     resolve();
   });
 
@@ -320,8 +214,7 @@ if (!window.hasRun) {
         then(selectTools).
         then(tools => renderPopupCloneActions(tools).
           then(() => renderCloneActions(tools, metadata)).
-          then(() => renderOpenActions(tools, metadata)).
-          then(() => startTrackingDOMChanges(tools, metadata))
+          then(() => renderOpenActions(tools, metadata))
         ).
         then(() => {
           chrome.runtime.sendMessage({
