@@ -212,25 +212,6 @@ function toggleDomainPermissions(request, url) {
   });
 }
 
-function getSafeUnregistrator(domain) {
-  return new Promise(resolve => {
-    const unregistrator = contentScriptUnregistrators.get(domain);
-    if (unregistrator) {
-      // it can be a promise, not an unregistrator; some instability here
-      if (unregistrator.then) {
-        unregistrator.then(resolve);
-      } else {
-        resolve(unregistrator);
-      }
-    } else {
-      const stub = {
-        unregister: () => {}
-      };
-      resolve(stub);
-    }
-  });
-}
-
 function handleMenuItemClick(info, tab) {
   if (!tab) {
     return;
@@ -255,24 +236,22 @@ function handleMenuItemClick(info, tab) {
           // (returns promise which doesn't resolve soon)
           (window.browser || window.chrome).contentScripts.register(contentScriptOptions).
             then(newUnregistrator => {
-              getSafeUnregistrator(domain).
-                then(prevUnregistrator => {
-                  prevUnregistrator.unregister();
-                  contentScriptUnregistrators.set(domain, newUnregistrator);
-                  saveToStorage(domain, CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]).then(() => {
-                    reloadTab(tab.id);
-                  });
-                });
-            });
-        } else {
-          getSafeUnregistrator(domain).
-            then(unregistrator => {
-              unregistrator.unregister();
-              contentScriptUnregistrators.delete(domain);
-              removeFromStorage(domain).then(() => {
+              if (contentScriptUnregistrators.has(domain)) {
+                const prevUnregistrator = contentScriptUnregistrators.get(domain);
+                prevUnregistrator.unregister();
+              }
+              contentScriptUnregistrators.set(domain, newUnregistrator);
+              saveToStorage(domain, CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]).then(() => {
                 reloadTab(tab.id);
               });
             });
+        } else {
+          const unregistrator = contentScriptUnregistrators.get(domain);
+          unregistrator.unregister();
+          contentScriptUnregistrators.delete(domain);
+          removeFromStorage(domain).then(() => {
+            reloadTab(tab.id);
+          });
         }
       }).
       catch(() => {
