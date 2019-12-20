@@ -18,6 +18,7 @@ export const supportedLanguages = {
   'c++': ['clion'],
   c: ['clion'],
   ruby: ['rubymine', 'idea'],
+  rust: ['clion', 'idea'],
   puppet: ['rubymine', 'idea'],
   'objective-c': ['appcode'],
   swift: ['appcode']
