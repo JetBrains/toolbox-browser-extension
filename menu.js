@@ -73,7 +73,7 @@ function createMenu() {
     id: MENU_ITEM_IDS.DOMAIN_GITHUB_ID,
     type: chrome.contextMenus.ItemType.CHECKBOX,
     checked: false,
-    title: 'GitHub.com',
+    title: 'github.com',
     contexts,
     documentUrlPatterns
   });
@@ -82,7 +82,7 @@ function createMenu() {
     id: MENU_ITEM_IDS.DOMAIN_GITLAB_ID,
     type: chrome.contextMenus.ItemType.CHECKBOX,
     checked: false,
-    title: 'GitLab.com',
+    title: 'gitlab.com',
     contexts,
     documentUrlPatterns
   });
@@ -91,7 +91,7 @@ function createMenu() {
     id: MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID,
     type: chrome.contextMenus.ItemType.CHECKBOX,
     checked: false,
-    title: 'Bitbucket.org',
+    title: 'bitbucket.org',
     contexts,
     documentUrlPatterns
   });
