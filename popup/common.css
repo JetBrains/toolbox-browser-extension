@@ -10,6 +10,7 @@
   --body-v-padding: 1rem;
   --body-h-padding: 1rem;
   --icon-size: 3rem;
+  --tool-action-v-padding: 0.5rem;
 }
 
 @media (prefers-color-scheme: dark) {
