@@ -1,25 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <title>Open project in JetBrains IDEs</title>
+  <link rel="stylesheet" href="jetbrains-toolbox-common.css">
   <style>
-    :root {
-      --icon-size: 4em;
-    }
-
     body {
-      color: #1f2326;
-      font-family: system-ui, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-      font-size: 12px;
-      line-height: 1.33;
-      margin: 0;
-      padding: 1.33em 1.33em 2em;
-      width: 27em;
+      padding-left: 0;
+      padding-right: 0;
     }
 
     .protocol {
       display: flex;
       flex-direction: row;
-      width: 100%;
+      padding-left: var(--body-h-padding);
+      padding-right: var(--body-h-padding);
     }
 
     .protocol__input {
@@ -27,8 +22,7 @@
     }
 
     .protocol__text {
-      background-color: #fff;
-      border: solid 1px #b8d1e5;
+      border: solid 1px var(--item-border-color);
       cursor: pointer;
       line-height: 2;
       padding: 0;
@@ -50,9 +44,10 @@
       padding-left: 1px;
     }
 
+    .protocol__input:hover + .protocol__text,
     .protocol__input:checked + .protocol__text {
-      background-color: #d4edff;
-      border-color: #80c6ff;
+      background-color: var(--selected-item-background-color);
+      border-color: var(--selected-item-border-color);
     }
 
     .protocol__input:checked + .protocol__text:first-of-type {
@@ -69,26 +64,29 @@
       align-items: stretch;
       display: flex;
       flex-direction: column;
-      padding: 0.1em;
     }
 
     .tool-action {
       align-items: center;
-      background-color: #fff;
+      background-color: var(--main-background-color);
       border-style: none;
+      color: var(--main-color);
       cursor: pointer;
       display: flex;
-      font-size: 1em;
-      line-height: 1.33;
-      margin-top: 1.33em;
+      font-size: 0.75rem;
+      line-height: 1.334;
       outline-style: none;
-      padding: 0;
+      padding: 0.5rem var(--body-h-padding);
       white-space: nowrap;
+    }
+
+    .tool-action:hover {
+      background-color: var(--list-hover-background-color);
     }
 
     .tool-action__icon {
       box-sizing: border-box;
-      margin-right: 0.67em;
+      margin-right: 0.5rem;
       width: var(--icon-size);
       height: var(--icon-size);
     }
@@ -101,22 +99,23 @@
     }
 
     .tool-action__tool {
-      font-size: 1.17em;
-      line-height: 1.43;
-      letter-spacing: -0.028em;
+      color: var(--title);
+      font-size: 0.875rem;
+      line-height: 1.429;
       font-weight: bold;
     }
 
     .tool-action__project {
-      color: #737577;
       overflow: hidden;
       text-align: left;
       text-overflow: ellipsis;
       width: 100%;
     }
+
+    .protocol + .tool-actions {
+      margin-top: 0.5rem;
+    }
   </style>
-  <meta charset="UTF-8">
-  <title>Open project in JetBrains IDEs</title>
 </head>
 
 <body>
