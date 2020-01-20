@@ -46,7 +46,7 @@ function getTabUrl(tabId) {
 function reloadTab(tabId) {
   chrome.tabs.executeScript(tabId, {
     code: 'window.location.reload()'
-  });
+  }, () => chrome.runtime.lastError);
 }
 
 function createMenu() {
