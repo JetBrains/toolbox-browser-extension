@@ -192,6 +192,7 @@ function updateMenu(tabId) {
       }
     }).
     catch(() => {
+      updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: true});
       updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
       updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
       updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
