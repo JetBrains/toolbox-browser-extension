@@ -58,7 +58,7 @@ if (!window.hasRun) {
   const fetchMetadata = () => new Promise((resolve, reject) => {
     getProjectId().
       then(id => {
-        fetch(`/api/v4/projects/${id}`).
+        fetch(`${location.origin}/api/v4/projects/${id}`).
           then(r => r.json()).
           then(meta => {
             resolve({
@@ -75,7 +75,7 @@ if (!window.hasRun) {
   });
 
   const fetchLanguages = gitlabMetadata => new Promise(resolve => {
-    fetch(`/api/v4/projects/${gitlabMetadata.id}/languages`).then(response => {
+    fetch(`${location.origin}/api/v4/projects/${gitlabMetadata.id}/languages`).then(response => {
       resolve(response.json());
     }).catch(() => {
       resolve(DEFAULT_LANGUAGE_SET);
