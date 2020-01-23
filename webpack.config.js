@@ -12,7 +12,6 @@ module.exports = {
     gitlab: './gitlab',
     bitbucket: './bitbucket',
     'bitbucket-stash': './bitbucket-stash',
-    common: ['./common'], // https://github.com/webpack/webpack/issues/300
     background: './background',
     'clone-popup': './popup/clone'
   },
