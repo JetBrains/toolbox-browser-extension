@@ -66,7 +66,8 @@ function createMenu() {
     type: chrome.contextMenus.ItemType.NORMAL,
     title: 'Treat this domain as',
     contexts,
-    documentUrlPatterns
+    documentUrlPatterns,
+    enabled: false
   });
   chrome.contextMenus.create({
     parentId: MENU_ITEM_IDS.PARENT_ID,
