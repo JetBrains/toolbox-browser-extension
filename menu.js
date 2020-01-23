@@ -12,7 +12,6 @@ const MENU_ITEM_IDS = {
 };
 
 const CONTENT_SCRIPTS = {
-  COMMON: 'jetbrains-toolbox-common.js',
   GITHUB: 'jetbrains-toolbox-github.js',
   GITLAB: 'jetbrains-toolbox-gitlab.js',
   BITBUCKET: 'jetbrains-toolbox-bitbucket-stash.js'
@@ -30,17 +29,21 @@ let activeTabId = null;
 
 function getTabUrl(tabId) {
   return new Promise((resolve, reject) => {
-    chrome.tabs.executeScript(tabId, {
-      code: 'window.location.href'
-    }, result => {
-      if (!chrome.runtime.lastError && result && result.length > 0) {
-        const url = result[0];
-        resolve(url);
-      } else {
+    chrome.tabs.get(tabId, tab => {
+      if (chrome.runtime.lastError || tab == null || tab.url == null) {
         reject();
+      } else {
+        resolve(tab.url);
       }
     });
   });
+}
+
+function getDomain(url) {
+  const parsedUrl = new URL(url);
+  // domain should not include a port number:
+  // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
+  return `${parsedUrl.protocol}//${parsedUrl.hostname}`;
 }
 
 function reloadTab(tabId) {
@@ -98,6 +101,21 @@ function createMenu() {
   });
 }
 
+function manifestPermissionGranted(url) {
+  return new Promise((resolve, reject) => {
+    getManifestPermissions().
+      then(manifestPermissions => {
+        const domain = getDomain(url);
+        const granted = manifestPermissions.origins.some(p => p.startsWith(domain));
+        if (granted) {
+          resolve();
+        } else {
+          reject();
+        }
+      });
+  });
+}
+
 function domainPermissionGranted(url) {
   return new Promise((resolve, reject) => {
     const permissions = generateDomainPermissions(url);
@@ -109,13 +127,6 @@ function domainPermissionGranted(url) {
       }
     });
   });
-}
-
-function getDomain(url) {
-  const parsedUrl = new URL(url);
-  // domain should not include a port number:
-  // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Match_patterns
-  return `${parsedUrl.protocol}//${parsedUrl.hostname}`;
 }
 
 function generateDomainMatch(url) {
@@ -145,52 +156,56 @@ function updateMenuItem(id, updateProperties) {
 }
 
 function updateMenu(tabId) {
-  Promise.all([getTabUrl(tabId), getManifestPermissions()]).
-    then(([tabUrl, manifestPermissions]) => {
-      const domain = getDomain(tabUrl);
-      const manifestPermissionGranted = manifestPermissions.origins.some(p => p.startsWith(domain));
-      updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: !manifestPermissionGranted});
-
-      if (!manifestPermissionGranted) {
-        domainPermissionGranted(tabUrl).
-          then(() => {
-            getFromStorage(domain).
-              then(contentScript => {
-                switch (contentScript) {
-                  case CONTENT_SCRIPTS.GITHUB:
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: true});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-                    break;
-                  case CONTENT_SCRIPTS.GITLAB:
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: true});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-                    break;
-                  case CONTENT_SCRIPTS.BITBUCKET:
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: true});
-                    break;
-                  default:
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
-                    updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-                    break;
-                }
-              }).
-              catch(() => {
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
-                updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-              });
-          }).
-          catch(() => {
-            updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
-            updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
-            updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
-          });
-      }
+  getTabUrl(tabId).
+    then(tabUrl => {
+      manifestPermissionGranted(tabUrl).
+        then(() => {
+          updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: false});
+        }).
+        catch(() => {
+          domainPermissionGranted(tabUrl).
+            then(() => {
+              const domain = getDomain(tabUrl);
+              getFromStorage(domain).
+                then(contentScript => {
+                  updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: true});
+                  switch (contentScript) {
+                    case CONTENT_SCRIPTS.GITHUB:
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: true});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                      break;
+                    case CONTENT_SCRIPTS.GITLAB:
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: true});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                      break;
+                    case CONTENT_SCRIPTS.BITBUCKET:
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: true});
+                      break;
+                    default:
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                      updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                      break;
+                  }
+                }).
+                catch(() => {
+                  updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: true});
+                  updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+                  updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+                  updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+                });
+            }).
+            catch(() => {
+              updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: true});
+              updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITHUB_ID, {checked: false});
+              updateMenuItem(MENU_ITEM_IDS.DOMAIN_GITLAB_ID, {checked: false});
+              updateMenuItem(MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID, {checked: false});
+            });
+        });
     }).
     catch(() => {
       updateMenuItem(MENU_ITEM_IDS.PARENT_ID, {enabled: true});
@@ -215,51 +230,61 @@ function toggleDomainPermissions(request, url) {
 }
 
 function handleMenuItemClick(info, tab) {
-  if (!tab) {
+  if (info.menuItemId !== MENU_ITEM_IDS.DOMAIN_GITHUB_ID &&
+    info.menuItemId !== MENU_ITEM_IDS.DOMAIN_GITLAB_ID &&
+    info.menuItemId !== MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID) {
     return;
   }
-  if (info.menuItemId === MENU_ITEM_IDS.DOMAIN_GITHUB_ID ||
-    info.menuItemId === MENU_ITEM_IDS.DOMAIN_GITLAB_ID ||
-    info.menuItemId === MENU_ITEM_IDS.DOMAIN_BITBUCKET_ID) {
-    const requestPermissions = info.checked;
-    toggleDomainPermissions(requestPermissions, tab.url).
-      then(() => {
-        const domain = getDomain(tab.url);
-        if (requestPermissions) {
-          const domainMatch = generateDomainMatch(domain);
-          const contentScriptOptions = {
-            matches: [domainMatch],
-            js: [
-              {file: CONTENT_SCRIPTS.COMMON},
-              {file: CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]}
-            ]
-          };
-          // implementation of chrome.contentScripts.register doesn't work as expected in FF
-          // (returns promise which doesn't resolve soon)
-          (window.browser || window.chrome).contentScripts.register(contentScriptOptions).
-            then(newUnregistrator => {
-              if (contentScriptUnregistrators.has(domain)) {
-                const prevUnregistrator = contentScriptUnregistrators.get(domain);
-                prevUnregistrator.unregister();
-              }
-              contentScriptUnregistrators.set(domain, newUnregistrator);
-              saveToStorage(domain, CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]).then(() => {
-                reloadTab(tab.id);
-              });
-            });
-        } else {
-          const unregistrator = contentScriptUnregistrators.get(domain);
-          unregistrator.unregister();
-          contentScriptUnregistrators.delete(domain);
-          removeFromStorage(domain).then(() => {
-            reloadTab(tab.id);
-          });
-        }
-      }).
-      catch(() => {
-        updateMenuItem(info.menuItemId, {checked: !requestPermissions});
-      });
+  if (tab.url.startsWith('chrome://')) {
+    updateMenu(tab.id);
+    return;
   }
+  manifestPermissionGranted(tab.url).
+    then(() => {
+      // if manifest permissions for domain are granted then the extension menu must be disabled.
+      // if it's enabled then it could be the case when extension is disabled until it/its menu is clicked.
+      // if this is the case then the extension is enabled at the moment, let's try to update the menu.
+      updateMenu(tab.id);
+    }).
+    catch(() => {
+      const requestPermissions = info.checked;
+      toggleDomainPermissions(requestPermissions, tab.url).
+        then(() => {
+          const domain = getDomain(tab.url);
+          if (requestPermissions) {
+            const domainMatch = generateDomainMatch(domain);
+            const contentScriptOptions = {
+              matches: [domainMatch],
+              js: [
+                {file: CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]}
+              ]
+            };
+            // implementation of chrome.contentScripts.register doesn't work as expected in FF
+            // (returns promise which doesn't resolve soon)
+            (window.browser || window.chrome).contentScripts.register(contentScriptOptions).
+              then(newUnregistrator => {
+                if (contentScriptUnregistrators.has(domain)) {
+                  const prevUnregistrator = contentScriptUnregistrators.get(domain);
+                  prevUnregistrator.unregister();
+                }
+                contentScriptUnregistrators.set(domain, newUnregistrator);
+                saveToStorage(domain, CONTENT_SCRIPTS_BY_MENU_ITEM_IDS[info.menuItemId]).then(() => {
+                  reloadTab(tab.id);
+                });
+              });
+          } else {
+            const unregistrator = contentScriptUnregistrators.get(domain);
+            unregistrator.unregister();
+            contentScriptUnregistrators.delete(domain);
+            removeFromStorage(domain).then(() => {
+              reloadTab(tab.id);
+            });
+          }
+        }).
+        catch(() => {
+          updateMenuItem(info.menuItemId, {checked: !requestPermissions});
+        });
+    });
 }
 
 function handleTabActivated(activeInfo) {
@@ -287,7 +312,6 @@ export function createExtensionMenu() {
         register({
           matches: [domainMatch],
           js: [
-            {file: CONTENT_SCRIPTS.COMMON},
             {file: result[domain]}
           ]
         }).
