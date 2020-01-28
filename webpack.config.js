@@ -13,7 +13,8 @@ module.exports = {
     bitbucket: './bitbucket',
     'bitbucket-stash': './bitbucket-stash',
     background: './background',
-    'clone-popup': './popup/clone'
+    'clone-popup': './popup/clone',
+    'detect-enterprise': './detect-enterprise'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
