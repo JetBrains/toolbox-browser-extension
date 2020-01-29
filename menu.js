@@ -8,6 +8,11 @@ const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js
 const contentScriptUnregistrators = new Map();
 
 let activeTabId = null;
+function consolelog(what) {
+  chrome.tabs.executeScript(null, {
+    code: `console.log("${what}")`
+  }, () => {void chrome.runtime.lastError});
+}
 
 function getTabUrl(tabId) {
   return new Promise((resolve, reject) => {
@@ -37,7 +42,7 @@ function reloadTab(tabId) {
   }, () => chrome.runtime.lastError);
 }
 
-function createMenu() {
+function createMenu(createProperties = {}) {
   return new Promise((resolve) => {
     const contexts = [
       chrome.contextMenus.ContextType.BROWSER_ACTION
@@ -52,6 +57,7 @@ function createMenu() {
         id: MENU_ITEM_ID,
         type: chrome.contextMenus.ItemType.CHECKBOX,
         title: 'Enable on this domain',
+        ...createProperties,
         contexts,
         documentUrlPatterns
       }, () => {
@@ -100,32 +106,39 @@ function generateDomainPermissions(url) {
   };
 }
 
-function updateMenuItem(id, updateProperties) {
-  chrome.contextMenus.update(id, updateProperties);
-}
+// function updateMenuItem(id, updateProperties) {
+//   chrome.contextMenus.update(id, updateProperties, () => {void chrome.runtime.lastError});
+// }
 
 function updateMenu(tabId) {
-  createMenu().then(() => {
-    getTabUrl(tabId).
-      then(tabUrl => {
-        manifestPermissionGranted(tabUrl).
-          then(() => {
-            updateMenuItem(MENU_ITEM_ID, {enabled: false, checked: true});
-          }).
-          catch(() => {
-            additionalPermissionGranted(tabUrl).
-              then(() => {
-                updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: true});
-              }).
-              catch(() => {
-                updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: false});
-              });
-          });
-      }).
-      catch(() => {
-        updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: false});
-      });
-  });
+  consolelog('updateMenu');
+  getTabUrl(tabId).
+    then(tabUrl => {
+      manifestPermissionGranted(tabUrl).
+        then(() => {
+          consolelog('manifestPermissionGranted: enabled: false, checked: true');
+          createMenu({enabled: false, checked: true});
+          // updateMenuItem(MENU_ITEM_ID, {enabled: false, checked: true});
+        }).
+        catch(() => {
+          additionalPermissionGranted(tabUrl).
+            then(() => {
+              consolelog('additionalPermissionGranted: enabled: true, checked: true');
+              createMenu({enabled: true, checked: true});
+              // updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: true});
+            }).
+            catch(() => {
+              consolelog('noPermissionGranted: enabled: true, checked: false');
+              createMenu({enabled: true, checked: false});
+              // updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: false});
+            });
+        });
+    }).
+    catch(() => {
+      consolelog('failedToGetTabUrl: enabled: true, checked: false');
+      createMenu({enabled: true, checked: false});
+      // updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: false});
+    });
 }
 
 function toggleDomainPermissions(request, url) {
@@ -170,12 +183,14 @@ function handleMenuItemClick(info, tab) {
 }
 
 function handleTabActivated(activeInfo) {
+  consolelog('handleTabActivated');
   activeTabId = activeInfo.tabId;
   updateMenu(activeInfo.tabId);
 }
 
 function handleTabUpdated(tabId, changeInfo) {
   if (activeTabId === tabId && changeInfo.status === 'complete') {
+    consolelog('handleTabUpdated');
     updateMenu(tabId);
   }
 }
