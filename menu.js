@@ -8,6 +8,7 @@ const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js
 const contentScriptUnregistrators = new Map();
 
 let activeTabId = null;
+
 function consolelog(what) {
   chrome.tabs.executeScript(null, {
     code: `console.log("${what}")`
@@ -106,38 +107,29 @@ function generateDomainPermissions(url) {
   };
 }
 
-// function updateMenuItem(id, updateProperties) {
-//   chrome.contextMenus.update(id, updateProperties, () => {void chrome.runtime.lastError});
-// }
+function updateMenuItem(updateProperties) {
+  chrome.contextMenus.update(MENU_ITEM_ID, updateProperties, () => {void chrome.runtime.lastError});
+}
 
 function updateMenu(tabId) {
-  consolelog('updateMenu');
   getTabUrl(tabId).
     then(tabUrl => {
       manifestPermissionGranted(tabUrl).
         then(() => {
-          consolelog('manifestPermissionGranted: enabled: false, checked: true');
           createMenu({enabled: false, checked: true});
-          // updateMenuItem(MENU_ITEM_ID, {enabled: false, checked: true});
         }).
         catch(() => {
           additionalPermissionGranted(tabUrl).
             then(() => {
-              consolelog('additionalPermissionGranted: enabled: true, checked: true');
               createMenu({enabled: true, checked: true});
-              // updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: true});
             }).
             catch(() => {
-              consolelog('noPermissionGranted: enabled: true, checked: false');
               createMenu({enabled: true, checked: false});
-              // updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: false});
             });
         });
     }).
     catch(() => {
-      consolelog('failedToGetTabUrl: enabled: true, checked: false');
       createMenu({enabled: true, checked: false});
-      // updateMenuItem(MENU_ITEM_ID, {enabled: true, checked: false});
     });
 }
 
@@ -183,14 +175,12 @@ function handleMenuItemClick(info, tab) {
 }
 
 function handleTabActivated(activeInfo) {
-  consolelog('handleTabActivated');
   activeTabId = activeInfo.tabId;
   updateMenu(activeInfo.tabId);
 }
 
 function handleTabUpdated(tabId, changeInfo) {
   if (activeTabId === tabId && changeInfo.status === 'complete') {
-    consolelog('handleTabUpdated');
     updateMenu(tabId);
   }
 }
