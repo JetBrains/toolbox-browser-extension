@@ -1,7 +1,7 @@
 import {ENTERPRISE_CONTENT_SCRIPTS} from './common';
 import toolboxifyGithub from './github';
 import toolboxifyGitlab from './gitlab';
-import toolboxifyBitbucket from './bitbucket';
+import toolboxifyBitbucket from './bitbucket-stash';
 
 (function detectEnterprise() {
   const nameMeta = document.querySelector('meta[property="og:site_name"]') ||
