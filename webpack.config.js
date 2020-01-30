@@ -8,10 +8,10 @@ const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
 
 module.exports = {
   entry: {
-    github: './github',
-    gitlab: './gitlab',
-    bitbucket: './bitbucket',
-    'bitbucket-stash': './bitbucket-stash',
+    'github-public': './github-public',
+    'gitlab-public': './gitlab-public',
+    'bitbucket-public': './bitbucket-public',
+    // 'bitbucket-stash': './bitbucket-stash',
     background: './background',
     'clone-popup': './popup/clone',
     'detect-enterprise': './detect-enterprise'

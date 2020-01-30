@@ -12,8 +12,8 @@ import {
   CLONE_PROTOCOLS
 } from './common';
 
-if (!window.hasRun) {
-  window.hasRun = true;
+// if (!window.hasRun) {
+//   window.hasRun = true;
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
     const parsedStashUrl = document.querySelector('meta[name=application-name][content=Bitbucket]') &&
@@ -230,5 +230,6 @@ if (!window.hasRun) {
       });
   };
 
-  toolboxify();
-}
+  export default toolboxify;
+//   toolboxify();
+// }

@@ -18,15 +18,15 @@
   "content_scripts": [
     {
       "matches": ["https://github.com/*"],
-      "js": ["jetbrains-toolbox-github.js"]
+      "js": ["jetbrains-toolbox-github-public.js"]
     },
     {
       "matches": ["https://gitlab.com/*"],
-      "js": ["jetbrains-toolbox-gitlab.js"]
+      "js": ["jetbrains-toolbox-gitlab-public.js"]
     },
     {
       "matches": ["https://bitbucket.org/*"],
-      "js": ["jetbrains-toolbox-bitbucket.js"]
+      "js": ["jetbrains-toolbox-bitbucket-public.js"]
     }
   ],
   "web_accessible_resources": [

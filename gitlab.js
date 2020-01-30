@@ -14,8 +14,8 @@ import {
   CLONE_PROTOCOLS
 } from './common';
 
-if (!window.hasRun) {
-  window.hasRun = true;
+// if (!window.hasRun) {
+//   window.hasRun = true;
 
   const extractProjectIdFromPage = document => {
     const homePanelMetadataElement = document.querySelector('.home-panel-metadata') || {children: []};
@@ -249,5 +249,6 @@ if (!window.hasRun) {
       });
   };
 
-  toolboxify();
-}
+  export default toolboxify;
+//   toolboxify();
+// }

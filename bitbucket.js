@@ -15,8 +15,8 @@ import {
 
 const MUTATION_DEBOUNCE_DELAY = 150;
 
-if (!window.hasRun) {
-  window.hasRun = true;
+// if (!window.hasRun) {
+//   window.hasRun = true;
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
     const metadata = bb(window.location.toString());
@@ -357,5 +357,6 @@ if (!window.hasRun) {
       });
   };
 
-  toolboxify();
-}
+  export default toolboxify;
+//   toolboxify();
+// }

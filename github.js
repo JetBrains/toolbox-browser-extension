@@ -18,8 +18,8 @@ import {
   CLONE_PROTOCOLS
 } from './common';
 
-if (!window.hasRun) {
-  window.hasRun = true;
+// if (!window.hasRun) {
+//   window.hasRun = true;
 
   const fetchMetadata = () => new Promise((resolve, reject) => {
     // check if the page is a repo page (pages like https://github.com/topics/git cause a false positive)
@@ -348,5 +348,6 @@ if (!window.hasRun) {
       });
   };
 
-  toolboxify();
-}
+  export default toolboxify;
+//   toolboxify();
+// }

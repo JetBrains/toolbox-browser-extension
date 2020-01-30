@@ -1,4 +1,7 @@
 import {ENTERPRISE_CONTENT_SCRIPTS} from './common';
+import toolboxifyGithub from './github';
+import toolboxifyGitlab from './gitlab';
+import toolboxifyBitbucket from './bitbucket';
 
 (function detectEnterprise() {
   const nameMeta = document.querySelector('meta[property="og:site_name"]') ||
@@ -6,11 +9,11 @@ import {ENTERPRISE_CONTENT_SCRIPTS} from './common';
   if (nameMeta) {
     const siteName = nameMeta.content;
     if (siteName.startsWith('GitHub')) {
-      sendEmitScriptMessage(ENTERPRISE_CONTENT_SCRIPTS.GITHUB);
+      toolboxifyGithub();
     } else if (siteName.startsWith('GitLab')) {
-      sendEmitScriptMessage(ENTERPRISE_CONTENT_SCRIPTS.GITLAB);
+      toolboxifyGitlab();
     } else if (siteName.startsWith('Bitbucket')) {
-      sendEmitScriptMessage(ENTERPRISE_CONTENT_SCRIPTS.BITBUCKET_STASH);
+      toolboxifyBitbucket();
     }
   }
 }());

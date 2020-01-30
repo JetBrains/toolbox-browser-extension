@@ -108,7 +108,10 @@ function generateDomainPermissions(url) {
 }
 
 function updateMenuItem(updateProperties) {
-  chrome.contextMenus.update(MENU_ITEM_ID, updateProperties, () => {void chrome.runtime.lastError});
+  chrome.contextMenus.update(MENU_ITEM_ID, {
+    type: chrome.contextMenus.ItemType.CHECKBOX,
+    ...updateProperties
+  }, () => {void chrome.runtime.lastError});
 }
 
 function updateMenu(tabId) {
@@ -116,20 +119,20 @@ function updateMenu(tabId) {
     then(tabUrl => {
       manifestPermissionGranted(tabUrl).
         then(() => {
-          createMenu({enabled: false, checked: true});
+          updateMenuItem({enabled: false, checked: true});
         }).
         catch(() => {
           additionalPermissionGranted(tabUrl).
             then(() => {
-              createMenu({enabled: true, checked: true});
+              updateMenuItem({enabled: true, checked: true});
             }).
             catch(() => {
-              createMenu({enabled: true, checked: false});
+              updateMenuItem({enabled: true, checked: false});
             });
         });
     }).
     catch(() => {
-      createMenu({enabled: true, checked: false});
+      updateMenuItem({enabled: true, checked: false});
     });
 }
 
@@ -222,9 +225,9 @@ function registerContentScripts() {
 
 export function createExtensionMenu() {
   registerContentScripts();
-  createMenu().then(() => {
-    chrome.contextMenus.onClicked.addListener(handleMenuItemClick);
-    chrome.tabs.onActivated.addListener(handleTabActivated);
-    chrome.tabs.onUpdated.addListener(handleTabUpdated);
-  });
+  createMenu();
+  
+  chrome.contextMenus.onClicked.addListener(handleMenuItemClick);
+  chrome.tabs.onActivated.addListener(handleTabActivated);
+  chrome.tabs.onUpdated.addListener(handleTabUpdated);
 }
