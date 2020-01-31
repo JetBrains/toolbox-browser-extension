@@ -83,12 +83,6 @@ export const CLONE_PROTOCOLS = {
   SSH: 'SSH'
 };
 
-export const ENTERPRISE_CONTENT_SCRIPTS = {
-  GITHUB: 'jetbrains-toolbox-github.js',
-  GITLAB: 'jetbrains-toolbox-gitlab.js',
-  BITBUCKET_STASH: 'jetbrains-toolbox-bitbucket-stash.js'
-};
-
 const convertNumberToIndex = number => number - 1;
 
 export function getToolboxURN(toolTag, cloneUrl) {

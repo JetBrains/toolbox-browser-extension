@@ -3,11 +3,6 @@ import {createExtensionMenu} from './menu';
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
-    case 'emit-content-script':
-      chrome.tabs.executeScript(sender.tab.id, {
-        file: message.contentScript
-      });
-      break;
     case 'enable-page-action':
       chrome.browserAction.setIcon({
         tabId: sender.tab.id,

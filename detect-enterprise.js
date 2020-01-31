@@ -1,4 +1,3 @@
-import {ENTERPRISE_CONTENT_SCRIPTS} from './common';
 import toolboxifyGithub from './github';
 import toolboxifyGitlab from './gitlab';
 import toolboxifyBitbucket from './bitbucket-stash';
@@ -17,10 +16,3 @@ import toolboxifyBitbucket from './bitbucket-stash';
     }
   }
 }());
-
-function sendEmitScriptMessage(contentScript) {
-  chrome.runtime.sendMessage({
-    type: 'emit-content-script',
-    contentScript
-  });
-}
