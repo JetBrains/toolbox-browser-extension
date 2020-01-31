@@ -137,10 +137,14 @@ const addCloneActionEventHandler = (btn, gitlabMetadata) => {
   });
 };
 
-const createCloneAction = (tool, gitlabMetadata) => {
+const createCloneAction = (tool, gitlabMetadata, isLast) => {
   const action = document.createElement('a');
   action.setAttribute('class', 'input-group-text btn btn-xs has-tooltip');
-  action.setAttribute('style', 'cursor:pointer');
+  let actionStyle = 'cursor:pointer';
+  if (isLast) {
+    actionStyle += ';margin-left:-1px!important;';
+  }
+  action.setAttribute('style', actionStyle);
   action.dataset.title = `Clone in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
   action.setAttribute('aria-label', action.dataset.title);
@@ -158,10 +162,11 @@ const renderCloneActions = (tools, gitlabMetadata) => new Promise(resolve => {
   const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
   if (gitCloneHolderParent) {
     const buttonGroup = document.createElement('div');
-    buttonGroup.setAttribute('class', 'd-inline-flex append-right-8');
+    buttonGroup.setAttribute('class', 'd-inline-flex append-right-8 btn-group');
     buttonGroup.setAttribute('style', 'margin-top: 16px;');
-    tools.forEach(tool => {
-      const btn = createCloneAction(tool, gitlabMetadata);
+    tools.forEach((tool, idx) => {
+      const isLast = idx === (tools.length - 1);
+      const btn = createCloneAction(tool, gitlabMetadata, isLast);
       buttonGroup.appendChild(btn);
     });
 
