@@ -62,7 +62,7 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
             ssh: meta.ssh_url_to_repo,
             https: meta.http_url_to_repo,
             id: meta.id,
-            repo: meta.name
+            repo: meta.path
           });
         });
     }).
