@@ -3,8 +3,8 @@ import {debounce} from 'throttle-debounce';
 import bb from 'bitbucket-url-to-object';
 
 import {
-  supportedLanguages,
-  supportedTools,
+  SUPPORTED_LANGUAGES,
+  SUPPORTED_TOOLS,
   getToolboxURN,
   getToolboxNavURN,
   getProtocol,
@@ -52,14 +52,14 @@ const selectTools = language => new Promise(resolve => {
   // All languages in Bitbucket match the common list with an exception of HTML
   const normalizedLanguage = language === 'html/css' ? 'html' : language;
 
-    const toolIds = normalizedLanguage && supportedLanguages[normalizedLanguage.toLowerCase()];
-    const normalizedToolIds = toolIds && toolIds.length > 0
-      ? toolIds
-      : supportedLanguages[DEFAULT_LANGUAGE];
+  const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
+  const normalizedToolIds = toolIds && toolIds.length > 0
+    ? toolIds
+    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-    const tools = normalizedToolIds.
-      sort().
-      map(toolId => supportedTools[toolId]);
+  const tools = normalizedToolIds.
+    sort().
+    map(toolId => SUPPORTED_TOOLS[toolId]);
 
   resolve(tools);
 });

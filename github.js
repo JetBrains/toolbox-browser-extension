@@ -2,8 +2,8 @@ import 'whatwg-fetch';
 import gh from 'github-url-to-object';
 
 import {
-  supportedLanguages,
-  supportedTools,
+  SUPPORTED_LANGUAGES,
+  SUPPORTED_TOOLS,
   getToolboxURN,
   getToolboxNavURN,
   getProtocol,
@@ -105,24 +105,24 @@ const selectTools = languages => new Promise(resolve => {
     values(languages).
     reduce((overall, current) => overall + current, 0);
 
-    const filterLang = language =>
-      supportedLanguages[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
+  const filterLang = language =>
+    SUPPORTED_LANGUAGES[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
 
-    const selectedToolIds = Object.
-      keys(languages).
-      filter(filterLang).
-      reduce((acc, key) => {
-        acc.push(...supportedLanguages[key.toLowerCase()]);
-        return acc;
-      }, []);
+  const selectedToolIds = Object.
+    keys(languages).
+    filter(filterLang).
+    reduce((acc, key) => {
+      acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
+      return acc;
+    }, []);
 
-    const normalizedToolIds = selectedToolIds.length > 0
-      ? Array.from(new Set(selectedToolIds))
-      : supportedLanguages[DEFAULT_LANGUAGE];
+  const normalizedToolIds = selectedToolIds.length > 0
+    ? Array.from(new Set(selectedToolIds))
+    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-    const tools = normalizedToolIds.
-      sort().
-      map(toolId => supportedTools[toolId]);
+  const tools = normalizedToolIds.
+    sort().
+    map(toolId => SUPPORTED_TOOLS[toolId]);
 
   resolve(tools);
 });
