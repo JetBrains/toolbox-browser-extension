@@ -315,7 +315,7 @@ const startTrackingDOMChanges = (tools, bitbucketMetadata) => new Promise(resolv
           if (!(node instanceof HTMLElement)) {
             continue;
           }
-          if (node.matches('.monaco-builder-hidden')) {
+          if (node.querySelector('[data-qa="bk-file__header"]')) {
             renderOpenActionsSync(tools, bitbucketMetadata);
           }
         }
