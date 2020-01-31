@@ -220,9 +220,18 @@ const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
   });
 };
 
+// when navigating with back and forward buttons
+// we have to re-create open actions b/c their click handlers got lost somehow
+const removeOpenActions = actionAnchorElement => {
+  const openActions = actionAnchorElement.querySelectorAll('.js-toolbox-open-action');
+  openActions.forEach(action => {
+    actionAnchorElement.removeChild(action);
+  });
+};
+
 const createOpenAction = (tool, githubMetadata) => {
   const action = document.createElement('a');
-  action.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw');
+  action.setAttribute('class', 'btn-octicon tooltipped tooltipped-nw js-toolbox-open-action');
   action.setAttribute('aria-label', `Open this file in ${tool.name}`);
   action.setAttribute('href', '#');
   action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
@@ -260,12 +269,12 @@ const renderOpenActionsSync = (tools, githubMetadata) => {
   const actionAnchorElement =
     document.querySelector('.repository-content .Box-header .BtnGroup + div');
 
-  if (actionAnchorElement && actionAnchorElement.dataset.toolboxified == null) {
+  if (actionAnchorElement) {
+    removeOpenActions(actionAnchorElement);
     tools.forEach(tool => {
       const action = createOpenAction(tool, githubMetadata);
       actionAnchorElement.insertAdjacentElement('afterbegin', action);
     });
-    actionAnchorElement.dataset.toolboxified = 'true';
   }
 
   if (document.body.dataset.toolboxified == null) {
