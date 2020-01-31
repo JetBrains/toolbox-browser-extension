@@ -258,13 +258,14 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 
 const renderOpenActionsSync = (tools, githubMetadata) => {
   const actionAnchorElement =
-    document.querySelector('.repository-content .Box-header .BtnGroup + div > .btn-octicon');
+    document.querySelector('.repository-content .Box-header .BtnGroup + div');
 
-  if (actionAnchorElement) {
+  if (actionAnchorElement && actionAnchorElement.dataset.toolboxified == null) {
     tools.forEach(tool => {
       const action = createOpenAction(tool, githubMetadata);
-      actionAnchorElement.insertAdjacentElement('beforebegin', action);
+      actionAnchorElement.insertAdjacentElement('afterbegin', action);
     });
+    actionAnchorElement.dataset.toolboxified = 'true';
   }
 
   if (document.body.dataset.toolboxified == null) {
