@@ -1,3 +1,13 @@
+import ideaIcon from '@jetbrains/logos/intellij-idea/intellij-idea.svg';
+import appcodeIcon from '@jetbrains/logos/appcode/appcode.svg';
+import clionIcon from '@jetbrains/logos/clion/clion.svg';
+import pycharmIcon from '@jetbrains/logos/pycharm/pycharm.svg';
+import phpstormIcon from '@jetbrains/logos/phpstorm/phpstorm.svg';
+import rubymineIcon from '@jetbrains/logos/rubymine/rubymine.svg';
+import webstormIcon from '@jetbrains/logos/webstorm/webstorm.svg';
+import riderIcon from '@jetbrains/logos/rider/rider.svg';
+import golandIcon from '@jetbrains/logos/goland/goland.svg';
+
 export const DEFAULT_LANGUAGE = 'java';
 
 export const supportedLanguages = {
@@ -28,47 +38,47 @@ export const supportedTools = {
   idea: {
     name: 'IntelliJ IDEA',
     tag: 'idea',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/intellij-idea/intellij-idea.svg'))
+    icon: chrome.extension.getURL(ideaIcon)
   },
   appcode: {
     name: 'AppCode',
     tag: 'appcode',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/appcode/appcode.svg'))
+    icon: chrome.extension.getURL(appcodeIcon)
   },
   clion: {
     name: 'CLion',
     tag: 'clion',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/clion/clion.svg'))
+    icon: chrome.extension.getURL(clionIcon)
   },
   pycharm: {
     name: 'PyCharm',
     tag: 'pycharm',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/pycharm/pycharm.svg'))
+    icon: chrome.extension.getURL(pycharmIcon)
   },
   phpstorm: {
     name: 'PhpStorm',
     tag: 'php-storm',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/phpstorm/phpstorm.svg'))
+    icon: chrome.extension.getURL(phpstormIcon)
   },
   rubymine: {
     name: 'RubyMine',
     tag: 'rubymine',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/rubymine/rubymine.svg'))
+    icon: chrome.extension.getURL(rubymineIcon)
   },
   webstorm: {
     name: 'WebStorm',
     tag: 'web-storm',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/webstorm/webstorm.svg'))
+    icon: chrome.extension.getURL(webstormIcon)
   },
   rider: {
     name: 'Rider',
     tag: 'rd',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/rider/rider.svg'))
+    icon: chrome.extension.getURL(riderIcon)
   },
   goland: {
     name: 'GoLand',
     tag: 'goland',
-    icon: chrome.extension.getURL(require('@jetbrains/logos/goland/goland.svg'))
+    icon: chrome.extension.getURL(golandIcon)
   }
 };
 
