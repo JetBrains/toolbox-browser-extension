@@ -38,47 +38,47 @@ export const supportedTools = {
   idea: {
     name: 'IntelliJ IDEA',
     tag: 'idea',
-    icon: chrome.extension.getURL(ideaIcon)
+    icon: chrome.runtime.getURL(ideaIcon)
   },
   appcode: {
     name: 'AppCode',
     tag: 'appcode',
-    icon: chrome.extension.getURL(appcodeIcon)
+    icon: chrome.runtime.getURL(appcodeIcon)
   },
   clion: {
     name: 'CLion',
     tag: 'clion',
-    icon: chrome.extension.getURL(clionIcon)
+    icon: chrome.runtime.getURL(clionIcon)
   },
   pycharm: {
     name: 'PyCharm',
     tag: 'pycharm',
-    icon: chrome.extension.getURL(pycharmIcon)
+    icon: chrome.runtime.getURL(pycharmIcon)
   },
   phpstorm: {
     name: 'PhpStorm',
     tag: 'php-storm',
-    icon: chrome.extension.getURL(phpstormIcon)
+    icon: chrome.runtime.getURL(phpstormIcon)
   },
   rubymine: {
     name: 'RubyMine',
     tag: 'rubymine',
-    icon: chrome.extension.getURL(rubymineIcon)
+    icon: chrome.runtime.getURL(rubymineIcon)
   },
   webstorm: {
     name: 'WebStorm',
     tag: 'web-storm',
-    icon: chrome.extension.getURL(webstormIcon)
+    icon: chrome.runtime.getURL(webstormIcon)
   },
   rider: {
     name: 'Rider',
     tag: 'rd',
-    icon: chrome.extension.getURL(riderIcon)
+    icon: chrome.runtime.getURL(riderIcon)
   },
   goland: {
     name: 'GoLand',
     tag: 'goland',
-    icon: chrome.extension.getURL(golandIcon)
+    icon: chrome.runtime.getURL(golandIcon)
   }
 };
 
