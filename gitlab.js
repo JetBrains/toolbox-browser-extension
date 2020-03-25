@@ -141,7 +141,7 @@ if (!window.hasRun) {
 
   const createCloneAction = (tool, gitlabMetadata) => {
     const action = document.createElement('a');
-    action.setAttribute('class', 'input-group-text btn btn-xs has-tooltip');
+    action.setAttribute('class', 'gl-link btn has-tooltip');
     action.setAttribute('style', 'cursor:pointer');
     action.dataset.title = `Clone in ${tool.name}`;
     action.dataset.originalTitle = action.dataset.title;
@@ -159,15 +159,10 @@ if (!window.hasRun) {
     const gitCloneHolder = document.querySelector('.js-git-clone-holder');
     const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
     if (gitCloneHolderParent) {
-      const buttonGroup = document.createElement('div');
-      buttonGroup.setAttribute('class', 'd-inline-flex append-right-8');
-      buttonGroup.setAttribute('style', 'margin-top: 16px;');
       tools.forEach(tool => {
         const btn = createCloneAction(tool, gitlabMetadata);
-        buttonGroup.appendChild(btn);
+        gitCloneHolderParent.insertAdjacentElement('beforebegin', btn);
       });
-
-      gitCloneHolderParent.insertAdjacentElement('beforebegin', buttonGroup);
     }
 
     resolve();
