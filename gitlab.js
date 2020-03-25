@@ -18,6 +18,10 @@ if (!window.hasRun) {
   window.hasRun = true;
 
   const extractProjectIdFromPage = document => {
+    const dataProjectId = document.body.dataset.projectId;
+    if (dataProjectId) {
+      return dataProjectId;
+    }
     const homePanelMetadataElement = document.querySelector('.home-panel-metadata') || {children: []};
     const projectIdElement =
       Array.prototype.find.call(homePanelMetadataElement.children, c => c.textContent.includes('Project ID'));
@@ -35,7 +39,7 @@ if (!window.hasRun) {
       // we treat 'project' as a boolean flag saying
       // we are able to get the project repo url
       if (findFile && project) {
-        const [repoPath] = findFile.split('/find_file/');
+        const [repoPath] = findFile.split('/-/find_file/');
         const repoUrl = `${location.origin}${repoPath}`;
         fetch(repoUrl).
           then(response => response.text()).
