@@ -137,14 +137,10 @@ const addCloneActionEventHandler = (btn, gitlabMetadata) => {
   });
 };
 
-const createCloneAction = (tool, gitlabMetadata, isLast) => {
+const createCloneAction = (tool, gitlabMetadata) => {
   const action = document.createElement('a');
-  action.setAttribute('class', 'input-group-text btn btn-xs has-tooltip');
-  let actionStyle = 'cursor:pointer';
-  if (isLast) {
-    actionStyle += ';margin-left:-1px!important;';
-  }
-  action.setAttribute('style', actionStyle);
+  action.setAttribute('class', 'gl-link btn has-tooltip');
+  action.setAttribute('style', 'cursor:pointer');
   action.dataset.title = `Clone in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
   action.setAttribute('aria-label', action.dataset.title);
@@ -161,16 +157,10 @@ const renderCloneActions = (tools, gitlabMetadata) => new Promise(resolve => {
   const gitCloneHolder = document.querySelector('.js-git-clone-holder');
   const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
   if (gitCloneHolderParent) {
-    const buttonGroup = document.createElement('div');
-    buttonGroup.setAttribute('class', 'd-inline-flex append-right-8 btn-group');
-    buttonGroup.setAttribute('style', 'margin-top: 16px;');
-    tools.forEach((tool, idx) => {
-      const isLast = idx === (tools.length - 1);
-      const btn = createCloneAction(tool, gitlabMetadata, isLast);
-      buttonGroup.appendChild(btn);
+    tools.forEach(tool => {
+      const btn = createCloneAction(tool, gitlabMetadata);
+      gitCloneHolderParent.insertAdjacentElement('beforebegin', btn);
     });
-
-    gitCloneHolderParent.insertAdjacentElement('beforebegin', buttonGroup);
   }
 
   resolve();
