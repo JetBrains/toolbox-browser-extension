@@ -9,12 +9,6 @@ const contentScriptUnregistrators = new Map();
 
 let activeTabId = null;
 
-function consolelog(what) {
-  chrome.tabs.executeScript(null, {
-    code: `console.log("${what}")`
-  }, () => {void chrome.runtime.lastError});
-}
-
 function getTabUrl(tabId) {
   return new Promise((resolve, reject) => {
     chrome.tabs.executeScript(tabId, {
@@ -44,7 +38,7 @@ function reloadTab(tabId) {
 }
 
 function createMenu(createProperties = {}) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const contexts = [
       chrome.contextMenus.ContextType.BROWSER_ACTION
     ];
@@ -53,6 +47,7 @@ function createMenu(createProperties = {}) {
       'https://*/*'
     ];
     chrome.contextMenus.removeAll(() => {
+      // eslint-disable-next-line no-void
       void chrome.runtime.lastError;
       chrome.contextMenus.create({
         id: MENU_ITEM_ID,
@@ -111,7 +106,10 @@ function updateMenuItem(updateProperties) {
   chrome.contextMenus.update(MENU_ITEM_ID, {
     type: chrome.contextMenus.ItemType.CHECKBOX,
     ...updateProperties
-  }, () => {void chrome.runtime.lastError});
+  }, () => {
+    // eslint-disable-next-line no-void
+    void chrome.runtime.lastError;
+  });
 }
 
 function updateMenu(tabId) {
@@ -165,7 +163,7 @@ function handleMenuItemClick(info, tab) {
     if (requestPermissions) {
       registerEnterpriseContentScripts(domainMatch).then(() => {
         reloadTab(tab.id);
-      })
+      });
     } else {
       const unregistrator = contentScriptUnregistrators.get(domainMatch);
       unregistrator.unregister();
@@ -208,6 +206,7 @@ function registerEnterpriseContentScripts(domainMatch) {
         resolve();
       }).
       catch(() => {
+        // eslint-disable-next-line no-void
         void chrome.runtime.lastError;
         reject();
       });
@@ -226,7 +225,7 @@ function registerContentScripts() {
 export function createExtensionMenu() {
   registerContentScripts();
   createMenu();
-  
+
   chrome.contextMenus.onClicked.addListener(handleMenuItemClick);
   chrome.tabs.onActivated.addListener(handleTabActivated);
   chrome.tabs.onUpdated.addListener(handleTabUpdated);
