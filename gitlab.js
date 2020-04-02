@@ -208,7 +208,7 @@ const renderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
   const buttonGroupAnchorElement = document.querySelector('.file-holder .file-actions .btn-group:last-child');
   if (buttonGroupAnchorElement) {
     const toolboxButtonGroup = document.createElement('div');
-    toolboxButtonGroup.setAttribute('class', 'btn-group');
+    toolboxButtonGroup.setAttribute('class', 'btn-group ml-2');
     toolboxButtonGroup.setAttribute('role', 'group');
 
     tools.forEach(tool => {
