@@ -8,12 +8,13 @@ const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
 
 module.exports = {
   entry: {
-    github: './github',
-    gitlab: './gitlab',
-    bitbucket: './bitbucket',
-    common: ['./common'], // https://github.com/webpack/webpack/issues/300
+    'github-public': './github-public',
+    'gitlab-public': './gitlab-public',
+    'bitbucket-public': './bitbucket-public',
+    // 'bitbucket-stash': './bitbucket-stash',
     background: './background',
-    'clone-popup': './popup/clone'
+    'clone-popup': './popup/clone',
+    'detect-enterprise': './detect-enterprise'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
@@ -54,6 +55,7 @@ module.exports = {
       {from: 'manifest.json'},
       {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
       {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
+      {from: 'popup/common.css', to: 'jetbrains-toolbox-common.css'},
       {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
       {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'}
     ]),

@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "JetBrains Toolbox Extension",
-  "description": "This extension adds link to open project from GitHub, GitLab and Bitbucket in IntelliJ-based IDEs",
+  "description": "This extension adds link to open project from GitHub, GitLab, and Bitbucket in IntelliJ-based IDEs",
   "version": "1.0",
   "icons": {
     "128": "icon-128.png"
@@ -17,24 +17,16 @@
   },
   "content_scripts": [
     {
-      "matches": [
-        "*://*.github.com/*",
-        "*://*.gitlab.com/*",
-        "*://*.bitbucket.org/*"
-      ],
-      "js": ["jetbrains-toolbox-common.js"]
+      "matches": ["https://github.com/*"],
+      "js": ["jetbrains-toolbox-github-public.js"]
     },
     {
-      "matches": ["*://*.github.com/*"],
-      "js": ["jetbrains-toolbox-github.js"]
+      "matches": ["https://gitlab.com/*"],
+      "js": ["jetbrains-toolbox-gitlab-public.js"]
     },
     {
-      "matches": ["*://*.gitlab.com/*"],
-      "js": ["jetbrains-toolbox-gitlab.js"]
-    },
-    {
-      "matches": ["*://*.bitbucket.org/*"],
-      "js": ["jetbrains-toolbox-bitbucket.js"]
+      "matches": ["https://bitbucket.org/*"],
+      "js": ["jetbrains-toolbox-bitbucket-public.js"]
     }
   ],
   "web_accessible_resources": [
@@ -42,10 +34,17 @@
   ],
   "permissions": [
     "activeTab",
+    "contextMenus",
     "nativeMessaging",
     "storage",
-    "*://*.github.com/*",
-    "*://*.gitlab.com/*",
-    "*://*.bitbucket.org/*"
+    "https://github.com/*",
+    "https://api.github.com/*",
+    "https://gitlab.com/*",
+    "https://bitbucket.org/*",
+    "https://api.bitbucket.org/*"
+  ],
+  "optional_permissions": [
+    "http://*/*",
+    "https://*/*"
   ]
 }

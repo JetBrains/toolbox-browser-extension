@@ -10,7 +10,7 @@ import golandIcon from '@jetbrains/logos/goland/goland.svg';
 
 export const DEFAULT_LANGUAGE = 'java';
 
-export const supportedLanguages = {
+export const SUPPORTED_LANGUAGES = {
   [DEFAULT_LANGUAGE]: ['idea'],
   kotlin: ['idea'],
   groovy: ['idea'],
@@ -34,7 +34,7 @@ export const supportedLanguages = {
   swift: ['appcode']
 };
 
-export const supportedTools = {
+export const SUPPORTED_TOOLS = {
   idea: {
     name: 'IntelliJ IDEA',
     tag: 'idea',
