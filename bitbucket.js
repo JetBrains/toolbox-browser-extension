@@ -297,28 +297,6 @@ const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
   resolve();
 });
 
-const toolboxifyInternal = debounce(MUTATION_DEBOUNCE_DELAY_LEADING, true, () => {
-  fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
-      then(tools => renderPopupCloneActions(tools).
-        then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata))
-      ).
-      then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: getHttpsCloneUrl(metadata.links),
-          ssh: getSshCloneUrl(metadata.links)
-        });
-      })
-    ).
-    catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
-    });
-});
-
 const startTrackingDOMChanges = () => {
   const rootElement = document.getElementById('root');
   if (rootElement) {
@@ -361,5 +339,27 @@ const startTrackingDOMChanges = () => {
 const toolboxify = () => {
   startTrackingDOMChanges();
 };
+
+const toolboxifyInternal = debounce(MUTATION_DEBOUNCE_DELAY_LEADING, true, () => {
+  fetchMetadata().
+    then(metadata => fetchLanguages(metadata).
+      then(selectTools).
+      then(tools => renderPopupCloneActions(tools).
+        then(() => renderCloneActions(tools, metadata)).
+        then(() => renderOpenActions(tools, metadata))
+      ).
+      then(() => {
+        chrome.runtime.sendMessage({
+          type: 'enable-page-action',
+          project: metadata.repo,
+          https: getHttpsCloneUrl(metadata.links),
+          ssh: getSshCloneUrl(metadata.links)
+        });
+      })
+    ).
+    catch(() => {
+      chrome.runtime.sendMessage({type: 'disable-page-action'});
+    });
+});
 
 export default toolboxify;
