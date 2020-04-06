@@ -224,6 +224,13 @@ const renderCloneActionsSync = (tools, bitbucketMetadata, cloneButton = null) =>
   cloneButton.insertAdjacentElement('beforebegin', buttonGroup);
 };
 
+const removeCloneActions = () => {
+  const buttonGroup = document.querySelector('.jt-button-group');
+  if (buttonGroup) {
+    buttonGroup.parentElement.removeChild(buttonGroup);
+  }
+};
+
 const renderCloneActions = (tools, bitbucketMetadata, cloneButton = null) => new Promise(resolve => {
   renderCloneActionsSync(tools, bitbucketMetadata, cloneButton);
   resolve();
@@ -329,6 +336,9 @@ const trackDOMChanges = () => {
             // do nothing
           });
       }
+    },
+    remove(/*el*/) {
+      removeCloneActions();
     }
   });
   observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
