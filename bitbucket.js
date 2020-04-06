@@ -13,8 +13,7 @@ import {
   CLONE_PROTOCOLS
 } from './common';
 
-const MUTATION_DEBOUNCE_DELAY_LEADING = 2000;
-const MUTATION_DEBOUNCE_DELAY_TRAILING = 750;
+const MUTATION_DEBOUNCE_DELAY = 450;
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const metadata = bb(window.location.toString());
@@ -65,13 +64,8 @@ const selectTools = language => new Promise(resolve => {
   resolve(tools);
 });
 
-let messageHandler = null;
-
 const renderPopupCloneActions = tools => new Promise(resolve => {
-  if (messageHandler && chrome.runtime.onMessage.hasListener(messageHandler)) {
-    chrome.runtime.onMessage.removeListener(messageHandler);
-  }
-  messageHandler = (message, sender, sendResponse) => {
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case 'get-tools':
         sendResponse(tools);
@@ -82,8 +76,7 @@ const renderPopupCloneActions = tools => new Promise(resolve => {
         break;
       // no default
     }
-  };
-  chrome.runtime.onMessage.addListener(messageHandler);
+  });
 
   resolve();
 });
@@ -182,7 +175,7 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
 };
 
 // eslint-disable-next-line complexity
-const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY_TRAILING, false, (tools, bitbucketMetadata) => {
+const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, true, (tools, bitbucketMetadata) => {
   if (cloneActionsRendered()) {
     return;
   }
@@ -276,7 +269,7 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
 
 const openActionsRendered = () => document.getElementsByClassName('js-toolbox-open-action').length > 0;
 
-const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY_TRAILING, false, (tools, bitbucketMetadata) => {
+const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, true, (tools, bitbucketMetadata) => {
   if (openActionsRendered()) {
     return;
   }
@@ -301,7 +294,7 @@ const startTrackingDOMChanges = () => {
   const rootElement = document.getElementById('root');
   if (rootElement) {
     // eslint-disable-next-line complexity
-    const observer = new MutationObserver(mutations => {
+    new MutationObserver(mutations => {
       let cloneButtonRemoved = false;
       for (const mutation of mutations) {
         if (mutation.type !== 'childList') {
@@ -331,8 +324,7 @@ const startTrackingDOMChanges = () => {
       } else {
         toolboxifyInternal();
       }
-    });
-    observer.observe(rootElement, {childList: true, subtree: true});
+    }).observe(rootElement, {childList: true, subtree: true});
   }
 };
 
@@ -340,7 +332,7 @@ const toolboxify = () => {
   startTrackingDOMChanges();
 };
 
-const toolboxifyInternal = debounce(MUTATION_DEBOUNCE_DELAY_LEADING, true, () => {
+const toolboxifyInternal = debounce(MUTATION_DEBOUNCE_DELAY, false, () => {
   fetchMetadata().
     then(metadata => fetchLanguages(metadata).
       then(selectTools).
