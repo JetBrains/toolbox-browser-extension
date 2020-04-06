@@ -1,5 +1,5 @@
 import 'whatwg-fetch';
-import {debounce} from 'throttle-debounce';
+import {observe} from 'selector-observer';
 import bb from 'bitbucket-url-to-object';
 
 import {
@@ -13,7 +13,19 @@ import {
   CLONE_PROTOCOLS
 } from './common';
 
-const MUTATION_DEBOUNCE_DELAY = 150;
+/* eslint-disable max-len */
+const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > div > button:last-child';
+const CLONE_BUTTON_CONTENT_SELECTOR = '#root [data-testid="Content"] > div > div > div > div > div > div > div > div + div > div:last-child > button:last-child';
+const CLONE_BUTTON_NARROW_PAGE_SELECTOR = '#root > div > div > div > header + div + div + div > div > div > div > div + div > div + div > button:last-child';
+const CLONE_BUTTON_NARROW_PAGE_SIDE_PANEL_OPEN = '#root > div > div > div > div:last-child > div > div > div > div + div > div:last-child > button:last-child';
+/* eslint-enable max-len */
+
+const cloneButtonSelectors = [
+  CLONE_BUTTON_CONTENT_SELECTOR,
+  CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR,
+  CLONE_BUTTON_NARROW_PAGE_SELECTOR,
+  CLONE_BUTTON_NARROW_PAGE_SIDE_PANEL_OPEN
+];
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const metadata = bb(window.location.toString());
@@ -24,10 +36,11 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
     fetch(`${metadata.api_url}?fields=links.clone`).
       then(response => response.json()).
       then(parsedResponse => {
-        resolve({
+        const extendedMetadata = {
           ...metadata,
           links: parsedResponse.links
-        });
+        };
+        resolve(extendedMetadata);
       }).
       catch(() => {
         reject();
@@ -64,8 +77,13 @@ const selectTools = language => new Promise(resolve => {
   resolve(tools);
 });
 
+let onMessageHandler = null;
+
 const renderPopupCloneActions = tools => new Promise(resolve => {
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
+    chrome.runtime.onMessage.removeListener(onMessageHandler);
+  }
+  onMessageHandler = (message, sender, sendResponse) => {
     switch (message.type) {
       case 'get-tools':
         sendResponse(tools);
@@ -76,7 +94,8 @@ const renderPopupCloneActions = tools => new Promise(resolve => {
         break;
       // no default
     }
-  });
+  };
+  chrome.runtime.onMessage.addListener(onMessageHandler);
 
   resolve();
 });
@@ -175,32 +194,16 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
 };
 
 // eslint-disable-next-line complexity
-const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, bitbucketMetadata) => {
+const renderCloneActionsSync = (tools, bitbucketMetadata, cloneButton = null) => {
   if (cloneActionsRendered()) {
     return;
   }
 
-  let cloneButton = document.querySelector('[data-qa="page-header-wrapper"] button[type="button"]');
   if (!cloneButton) {
-    const commitListContainer = document.querySelector('[data-qa="commit-list-container"]');
-    if (!commitListContainer) {
-      return;
-    }
-    const preHeader = commitListContainer.previousElementSibling;
-    if (!preHeader) {
-      return;
-    }
-    const prePreHeader = preHeader.previousElementSibling;
-    if (!prePreHeader) {
-      return;
-    }
-    cloneButton = prePreHeader.querySelector(':nth-child(2) > :nth-child(2) > button');
-    if (!cloneButton) {
-      return;
-    }
+    // eslint-disable-next-line no-param-reassign
+    cloneButton = document.querySelector(cloneButtonSelectors.join(', '));
   }
-
-  if (!cloneButton.textContent.includes('Clone')) {
+  if (!cloneButton || !cloneButton.textContent.includes('Clone')) {
     return;
   }
 
@@ -219,17 +222,10 @@ const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, 
     });
 
   cloneButton.insertAdjacentElement('beforebegin', buttonGroup);
-});
-
-const removeCloneActions = () => {
-  const buttonGroup = document.querySelector('.jt-button-group');
-  if (buttonGroup) {
-    buttonGroup.parentElement.removeChild(buttonGroup);
-  }
 };
 
-const renderCloneActions = (tools, bitbucketMetadata) => new Promise(resolve => {
-  renderCloneActionsSync(tools, bitbucketMetadata);
+const renderCloneActions = (tools, bitbucketMetadata, cloneButton = null) => new Promise(resolve => {
+  renderCloneActionsSync(tools, bitbucketMetadata, cloneButton);
   resolve();
 });
 
@@ -269,7 +265,7 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
 
 const openActionsRendered = () => document.getElementsByClassName('js-toolbox-open-action').length > 0;
 
-const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, bitbucketMetadata) => {
+const renderOpenActionsSync = (tools, bitbucketMetadata) => {
   if (openActionsRendered()) {
     return;
   }
@@ -283,74 +279,91 @@ const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, b
       actionAnchorElement.insertAdjacentElement('beforebegin', action);
     });
   }
-});
+};
 
 const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
   renderOpenActionsSync(tools, bitbucketMetadata);
   resolve();
 });
 
-const startTrackingDOMChanges = (tools, bitbucketMetadata) => new Promise(resolve => {
-  const rootElement = document.getElementById('root');
-  if (rootElement) {
-    // trace navigating to repo source files
-    // eslint-disable-next-line complexity
-    new MutationObserver(mutations => {
-      let cloneButtonRemoved = false;
-      for (const mutation of mutations) {
-        if (mutation.type !== 'childList') {
-          continue;
-        }
-        if (mutation.removedNodes.length === 1 &&
-          mutation.previousSibling &&
-          mutation.previousSibling.classList.contains('jt-button-group')) {
-          if (mutation.removedNodes[0].textContent === 'Clone') {
-            cloneButtonRemoved = true;
-          }
-        }
-        if (mutation.addedNodes.length === 0) {
-          continue;
-        }
-        for (const node of mutation.addedNodes) {
-          if (!(node instanceof HTMLElement)) {
-            continue;
-          }
-          if (node.querySelector('[data-qa="bk-file__header"]')) {
-            renderOpenActionsSync(tools, bitbucketMetadata);
-          }
-        }
-      }
-      if (cloneButtonRemoved) {
-        removeCloneActions();
-      } else {
-        renderCloneActionsSync(tools, bitbucketMetadata);
-      }
-    }).observe(rootElement, {childList: true, subtree: true});
-  }
-
-  resolve();
-});
-
-const toolboxify = () => {
+const init = () => new Promise((resolve, reject) => {
   fetchMetadata().
     then(metadata => fetchLanguages(metadata).
       then(selectTools).
-      then(tools => renderPopupCloneActions(tools).
-        then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata)).
-        then(() => startTrackingDOMChanges(tools, metadata))
-      ).
-      then(() => {
+      then(tools => renderPopupCloneActions(tools).then(() => {
         chrome.runtime.sendMessage({
           type: 'enable-page-action',
           project: metadata.repo,
           https: getHttpsCloneUrl(metadata.links),
           ssh: getSshCloneUrl(metadata.links)
         });
-      })
+        resolve({tools, metadata});
+      }))
     ).
     catch(() => {
       chrome.runtime.sendMessage({type: 'disable-page-action'});
+      reject();
+    });
+});
+
+const trackUserNavigation = () => {
+  const titleObserver = new MutationObserver((/*mutations*/) => {
+    // re-init on client navigation
+    init().catch(() => {
+      // do nothing
+    });
+  });
+  titleObserver.observe(document.querySelector('title'), {childList: true});
+  window.addEventListener('beforeunload', () => {
+    titleObserver.disconnect();
+  });
+};
+
+const trackDOMChanges = () => {
+  observe(cloneButtonSelectors.join(', '), {
+    add(el) {
+      if (el.textContent.includes('Clone')) {
+        init().
+          then(({tools, metadata}) => renderCloneActions(tools, metadata, el)).
+          catch(() => {
+            // do nothing
+          });
+      }
+    }
+  });
+  observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
+    add(/*el*/) {
+      init().
+        then(({tools, metadata}) => renderOpenActions(tools, metadata)).
+        catch(() => {
+          // do nothing
+        });
+    }
+  });
+};
+
+const renderPageActions = (tools, metadata) => new Promise((resolve, reject) => {
+  Promise.
+    all([
+      renderCloneActions(tools, metadata),
+      renderOpenActions(tools, metadata)
+    ]).then(() => {
+      resolve();
+    }).catch(() => {
+      reject();
+    });
+});
+
+const toolboxify = () => {
+  // initial page load
+  init().
+    then(({tools, metadata}) => renderPageActions(tools, metadata)).
+    catch(() => {
+      // do nothing
+    }).
+    then(() => {
+      trackUserNavigation();
+      trackDOMChanges();
     });
 };
 
