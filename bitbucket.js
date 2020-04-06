@@ -13,7 +13,7 @@ import {
   CLONE_PROTOCOLS
 } from './common';
 
-const MUTATION_DEBOUNCE_DELAY = 450;
+const MUTATION_DEBOUNCE_DELAY = 150;
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const metadata = bb(window.location.toString());
@@ -175,7 +175,7 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
 };
 
 // eslint-disable-next-line complexity
-const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, true, (tools, bitbucketMetadata) => {
+const renderCloneActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, bitbucketMetadata) => {
   if (cloneActionsRendered()) {
     return;
   }
@@ -269,7 +269,7 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
 
 const openActionsRendered = () => document.getElementsByClassName('js-toolbox-open-action').length > 0;
 
-const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, true, (tools, bitbucketMetadata) => {
+const renderOpenActionsSync = debounce(MUTATION_DEBOUNCE_DELAY, false, (tools, bitbucketMetadata) => {
   if (openActionsRendered()) {
     return;
   }
@@ -290,9 +290,10 @@ const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
   resolve();
 });
 
-const startTrackingDOMChanges = () => {
+const startTrackingDOMChanges = (tools, bitbucketMetadata) => new Promise(resolve => {
   const rootElement = document.getElementById('root');
   if (rootElement) {
+    // trace navigating to repo source files
     // eslint-disable-next-line complexity
     new MutationObserver(mutations => {
       let cloneButtonRemoved = false;
@@ -315,30 +316,29 @@ const startTrackingDOMChanges = () => {
             continue;
           }
           if (node.querySelector('[data-qa="bk-file__header"]')) {
-            toolboxifyInternal();
+            renderOpenActionsSync(tools, bitbucketMetadata);
           }
         }
       }
       if (cloneButtonRemoved) {
         removeCloneActions();
       } else {
-        toolboxifyInternal();
+        renderCloneActionsSync(tools, bitbucketMetadata);
       }
     }).observe(rootElement, {childList: true, subtree: true});
   }
-};
+
+  resolve();
+});
 
 const toolboxify = () => {
-  startTrackingDOMChanges();
-};
-
-const toolboxifyInternal = debounce(MUTATION_DEBOUNCE_DELAY, false, () => {
   fetchMetadata().
     then(metadata => fetchLanguages(metadata).
       then(selectTools).
       then(tools => renderPopupCloneActions(tools).
         then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata))
+        then(() => renderOpenActions(tools, metadata)).
+        then(() => startTrackingDOMChanges(tools, metadata))
       ).
       then(() => {
         chrome.runtime.sendMessage({
@@ -352,6 +352,6 @@ const toolboxifyInternal = debounce(MUTATION_DEBOUNCE_DELAY, false, () => {
     catch(() => {
       chrome.runtime.sendMessage({type: 'disable-page-action'});
     });
-});
+};
 
 export default toolboxify;
