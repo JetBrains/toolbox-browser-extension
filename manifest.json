@@ -1,7 +1,8 @@
 {
   "manifest_version": 2,
   "name": "JetBrains Toolbox Extension",
-  "description": "This extension adds link to open project from GitHub, GitLab, and Bitbucket in IntelliJ-based IDEs",
+  "short_name": "Toolbox",
+  "description": "Clone and open projects from GitHub, GitLab, and Bitbucket in JetBrains IDEs right from your browser",
   "version": "1.0",
   "icons": {
     "128": "icon-128.png"
