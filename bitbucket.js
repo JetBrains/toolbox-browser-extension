@@ -27,6 +27,9 @@ const cloneButtonSelectors = [
   CLONE_BUTTON_NARROW_PAGE_SIDE_PANEL_OPEN
 ];
 
+const CLONE_ACTION_JS_CSS_CLASS = 'js-toolbox-clone-action';
+const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
+
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const metadata = bb(window.location.toString());
   if (metadata) {
@@ -163,7 +166,7 @@ const createButtonTooltip = (button, text) => {
   return tooltip;
 };
 
-const cloneActionsRendered = () => document.getElementsByClassName('js-toolbox-clone-action').length > 0;
+const cloneActionsRendered = () => document.getElementsByClassName(CLONE_ACTION_JS_CSS_CLASS).length > 0;
 
 const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
   btn.addEventListener('click', e => {
@@ -183,7 +186,7 @@ const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
 
 const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
   const action = document.createElement('a');
-  action.setAttribute('class', `${cloneButton.className} jt-button js-toolbox-clone-action`);
+  action.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('href', '#');
   action.dataset.toolTag = tool.tag;
   action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}">`;
@@ -253,7 +256,7 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
 
 const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
   const action = sampleAction.cloneNode(true);
-  action.classList.add('js-toolbox-open-action');
+  action.classList.add(OPEN_ACTION_JS_CSS_CLASS);
 
   const actionButton = action.querySelector('button');
   actionButton.removeAttribute('disabled');
@@ -270,7 +273,7 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
   return action;
 };
 
-const openActionsRendered = () => document.getElementsByClassName('js-toolbox-open-action').length > 0;
+const openActionsRendered = () => document.getElementsByClassName(OPEN_ACTION_JS_CSS_CLASS).length > 0;
 
 const renderOpenActionsSync = (tools, bitbucketMetadata) => {
   if (openActionsRendered()) {
@@ -321,9 +324,6 @@ const trackUserNavigation = () => {
     });
   });
   titleObserver.observe(document.querySelector('title'), {childList: true});
-  window.addEventListener('beforeunload', () => {
-    titleObserver.disconnect();
-  });
 };
 
 const trackDOMChanges = () => {
