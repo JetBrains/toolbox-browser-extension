@@ -1,4 +1,5 @@
 import 'whatwg-fetch';
+import {observe} from 'selector-observer';
 import parseBitbucketUrl from 'parse-bitbucket-url';
 
 import {
@@ -11,6 +12,8 @@ import {
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
 } from './common';
+
+const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const parsedStashUrl = document.querySelector('meta[name=application-name][content=Bitbucket]') &&
@@ -169,7 +172,7 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
 
 const createOpenAction = (tool, bitbucketMetadata) => {
   const action = document.createElement('div');
-  action.setAttribute('class', 'aui-buttons js-toolbox-open-action');
+  action.setAttribute('class', `aui-buttons ${OPEN_ACTION_JS_CSS_CLASS}`);
 
   const actionButton = document.createElement('button');
   actionButton.setAttribute('class', 'aui-button');
@@ -185,11 +188,16 @@ const createOpenAction = (tool, bitbucketMetadata) => {
 
 const setOpenActionTooltips = () => {
   const tooltipScript = document.createElement('script');
-  tooltipScript.textContent = 'jQuery(".js-toolbox-open-action > .aui-button:first-child").tipsy();';
+  tooltipScript.textContent = `jQuery('.${OPEN_ACTION_JS_CSS_CLASS} > .aui-button:first-child').tipsy();`;
   document.body.appendChild(tooltipScript);
 };
 
+const openActionsRendered = () => document.getElementsByClassName(OPEN_ACTION_JS_CSS_CLASS).length > 0;
+
 const renderOpenActionsSync = (tools, bitbucketMetadata) => {
+  if (openActionsRendered()) {
+    return;
+  }
   const anchorElement = document.querySelector('.file-toolbar > .secondary > .aui-buttons:first-child');
   if (anchorElement) {
     tools.forEach(tool => {
@@ -205,13 +213,22 @@ const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
   resolve();
 });
 
+const trackDOMChanges = (tools, bitbucketMetadata) => {
+  observe('#file-content > .file-toolbar > .secondary > .aui-buttons > .file-blame', {
+    add(/*el*/) {
+      renderOpenActions(tools, bitbucketMetadata);
+    }
+  });
+};
+
 const toolboxify = () => {
   fetchMetadata().
     then(metadata => fetchLanguages().
       then(selectTools).
       then(tools => renderPopupCloneActions(tools).
         then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata))
+        then(() => renderOpenActions(tools, metadata)).
+        then(() => trackDOMChanges(tools, metadata))
       ).
       then(() => {
         chrome.runtime.sendMessage({
