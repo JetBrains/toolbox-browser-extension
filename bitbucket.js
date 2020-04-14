@@ -352,11 +352,11 @@ const trackDOMChanges = () => {
   });
 };
 
-const renderPageActions = (tools, metadata) => new Promise((resolve, reject) => {
+const renderPageActions = (tools, bitbucketMetadata) => new Promise((resolve, reject) => {
   Promise.
     all([
-      renderCloneActions(tools, metadata),
-      renderOpenActions(tools, metadata)
+      renderCloneActions(tools, bitbucketMetadata),
+      renderOpenActions(tools, bitbucketMetadata)
     ]).then(() => {
       resolve();
     }).catch(() => {
