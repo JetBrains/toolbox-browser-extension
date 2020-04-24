@@ -197,7 +197,7 @@ const createCloneAction = (tool, githubMetadata) => {
 };
 
 const renderCloneActionsSync = (tools, githubMetadata) => {
-  const getRepoSelectMenu = document.querySelector('.js-get-repo-select-menu');
+  const getRepoSelectMenu = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
 
   if (getRepoSelectMenu) {
     // the buttons still exist on the previous page after clicking on the 'Back' button;
@@ -212,7 +212,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
         toolboxCloneButtonGroup.appendChild(btn);
       });
 
-      getRepoSelectMenu.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+      getRepoSelectMenu.parentElement.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
     }
   }
 };
