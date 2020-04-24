@@ -197,9 +197,12 @@ const createCloneAction = (tool, githubMetadata) => {
 };
 
 const renderCloneActionsSync = (tools, githubMetadata) => {
-  const getRepoSelectMenu = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
+  let getRepoController = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
+  getRepoController = getRepoController
+    ? getRepoController.parentElement
+    : document.querySelector('.js-get-repo-select-menu');
 
-  if (getRepoSelectMenu) {
+  if (getRepoController) {
     // the buttons still exist on the previous page after clicking on the 'Back' button;
     // only create them if they are absent
     let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
@@ -212,7 +215,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
         toolboxCloneButtonGroup.appendChild(btn);
       });
 
-      getRepoSelectMenu.parentElement.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+      getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
     }
   }
 };
