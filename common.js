@@ -19,7 +19,7 @@ export const SUPPORTED_LANGUAGES = {
   coffeescript: ['webstorm', 'phpstorm', 'idea'],
   typescript: ['webstorm', 'phpstorm', 'idea'],
   dart: ['webstorm', 'phpstorm', 'idea'],
-  go: ['goland'],
+  go: ['goland', 'idea'],
   css: ['webstorm', 'phpstorm', 'idea'],
   html: ['webstorm', 'phpstorm', 'idea'],
   python: ['pycharm', 'idea'],
