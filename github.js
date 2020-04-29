@@ -24,9 +24,7 @@ const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
 const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
-  // check if the page is a repo page (pages like https://github.com/topics/git cause a false positive)
-  const metadata = document.querySelector('meta[name=go-import]') &&
-    gh(window.location.toString(), {enterprise: true});
+  const metadata = gh(window.location.toString(), {enterprise: true});
   if (metadata) {
     resolve(metadata);
   } else {
