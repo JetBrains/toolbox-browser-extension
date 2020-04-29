@@ -69,7 +69,8 @@ const convertBytesToPercents = languages => new Promise(resolve => {
 });
 
 const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
-  fetch(githubMetadata.https_url).
+  // TBX-4762: private repos don't let use API, load root page and scrape languages off it
+  fetch(githubMetadata.clone_url).
     then(response => response.text()).
     then(htmlString => {
       const parser = new DOMParser();
