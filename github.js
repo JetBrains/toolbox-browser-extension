@@ -298,18 +298,22 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 
 const renderOpenActionsSync = (tools, githubMetadata) => {
   const actionAnchorElement = document.querySelector('.repository-content .Box-header .BtnGroup + div');
+  const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
 
   tools.forEach((tool, toolIndex) => {
     if (actionAnchorElement) {
       const action = createOpenAction(tool, githubMetadata);
-      actionAnchorElement.insertAdjacentElement('afterbegin', action);
+      actionAnchorFragment.appendChild(action);
     }
     if (blobToolbarDropdown) {
       const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
       blobToolbarDropdown.appendChild(menuItem);
     }
   });
+  if (actionAnchorElement) {
+    actionAnchorElement.prepend(actionAnchorFragment);
+  }
 };
 
 const renderOpenActions = (tools, githubMetadata) => new Promise(resolve => {
