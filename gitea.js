@@ -8,11 +8,13 @@ import {
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const repo = [];
-  if (document.getElementById('repo-clone-https') === null) {
+  const https = document.getElementById('repo-clone-https');
+  const ssh = document.getElementById('repo-clone-ssh');
+  if (https === null && ssh === null) {
     reject();
   }
-  repo.https = document.getElementById('repo-clone-https').getAttribute('data-link');
-  repo.ssh = document.getElementById('repo-clone-ssh').getAttribute('data-link');
+  repo.https = https !== null ? https.getAttribute('data-link') : '';
+  repo.ssh = ssh !== null ? ssh.getAttribute('data-link') : '';
   repo.name = window.location.pathname.split('/').pop();
   resolve(repo);
 });
