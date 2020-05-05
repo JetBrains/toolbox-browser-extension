@@ -1,6 +1,7 @@
 import toolboxifyGithub from './github';
 import toolboxifyGitlab from './gitlab';
 import toolboxifyBitbucket from './bitbucket-server';
+import toolboxifyGitea from './gitea';
 
 (function detectEnterprise() {
   const nameMeta = document.querySelector('meta[property="og:site_name"]') ||
@@ -13,6 +14,8 @@ import toolboxifyBitbucket from './bitbucket-server';
       toolboxifyGitlab();
     } else if (siteName.startsWith('Bitbucket')) {
       toolboxifyBitbucket();
+    } else if (siteName.includes('Gitea')) {
+      toolboxifyGitea();
     }
   }
 }());
