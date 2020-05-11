@@ -56,7 +56,8 @@ module.exports = {
       {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
       {from: 'popup/common.css', to: 'jetbrains-toolbox-common.css'},
       {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
-      {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'}
+      {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
+      {from: 'popup/install.html', to: 'jetbrains-toolbox-install-popup.html'}
     ]),
     new LicenseChecker({
       format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})

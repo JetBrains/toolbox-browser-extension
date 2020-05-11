@@ -6,6 +6,8 @@
   --selected-item-background-color: #d4edff;
   --selected-item-border-color: #80c6ff;
   --item-border-color: #b8d1e5;
+  --link-color: #0f5b99;
+  --link-hover-color: #ff008c;
 
   --body-v-padding: 1rem;
   --body-h-padding: 1rem;
@@ -22,6 +24,8 @@
     --selected-item-background-color: #062640;
     --selected-item-border-color: #70b1e6;
     --item-border-color: #406380;
+    --link-color: #70b1e6;
+    --link-hover-color: #ff008c;
   }
 }
 
@@ -35,4 +39,13 @@ body {
   margin: 0;
   padding: var(--body-v-padding) var(--body-h-padding);
   width: 22rem;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover-color);
 }
