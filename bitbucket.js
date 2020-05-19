@@ -3,13 +3,10 @@ import {observe} from 'selector-observer';
 import bb from 'bitbucket-url-to-object';
 
 import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
   getToolboxURN,
   getToolboxNavURN,
   getProtocol,
   callToolbox,
-  DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
 } from './common';
 
@@ -53,31 +50,17 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   }
 });
 
-const fetchLanguages = bitbucketMetadata => new Promise((resolve, reject) => {
-  fetch(`${bitbucketMetadata.api_url}?fields=language`).
-    then(response => response.json()).
-    then(parsedResponse => {
-      resolve(parsedResponse.language);
-    }).
-    catch(() => {
-      reject();
+let installedTools = null;
+
+const selectTools = () => new Promise(resolve => {
+  if (installedTools) {
+    resolve(installedTools);
+  } else {
+    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
+      installedTools = response.tools;
+      resolve(installedTools);
     });
-});
-
-const selectTools = language => new Promise(resolve => {
-  // All languages in Bitbucket match the common list with an exception of HTML
-  const normalizedLanguage = language === 'html/css' ? 'html' : language;
-
-  const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
-  const normalizedToolIds = toolIds && toolIds.length > 0
-    ? toolIds
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  resolve(tools);
+  }
 });
 
 let onMessageHandler = null;
@@ -188,8 +171,8 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
   const action = document.createElement('a');
   action.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('href', '#');
-  action.dataset.toolTag = tool.tag;
-  action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}">`;
+  action.dataset.toolTag = tool.type;
+  action.innerHTML = `<img alt="${tool.name}" src="${tool.icon_url}">`;
 
   addCloneActionEventHandler(action, bitbucketMetadata);
 
@@ -250,7 +233,7 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavURN(tool.type, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 
@@ -263,7 +246,7 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
 
   const actionSpan = actionButton.querySelector('span > span');
   actionSpan.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-bottom">`;
+    `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16" style="vertical-align:text-bottom">`;
 
   addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
 
@@ -298,8 +281,7 @@ const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
 
 const init = () => new Promise((resolve, reject) => {
   fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
+    then(metadata => selectTools().
       then(tools => renderPopupCloneActions(tools).then(() => {
         chrome.runtime.sendMessage({
           type: 'enable-page-action',

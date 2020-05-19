@@ -3,13 +3,10 @@ import {observe} from 'selector-observer';
 import parseBitbucketUrl from 'parse-bitbucket-url';
 
 import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
   getToolboxURN,
   getToolboxNavURN,
   getProtocol,
   callToolbox,
-  DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
 } from './common';
 
@@ -47,25 +44,17 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
     });
 });
 
-const fetchLanguages = () => new Promise(resolve => {
-  // we don't know how to obtain repo languages in stash
-  resolve(DEFAULT_LANGUAGE);
-});
+let installedTools = null;
 
-const selectTools = language => new Promise(resolve => {
-  // All languages in Bitbucket match the common list with an exception of HTML
-  const normalizedLanguage = language === 'html/css' ? 'html' : language;
-
-  const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
-  const normalizedToolIds = toolIds && toolIds.length > 0
-    ? toolIds
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  resolve(tools);
+const selectTools = () => new Promise(resolve => {
+  if (installedTools) {
+    resolve(installedTools);
+  } else {
+    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
+      installedTools = response.tools;
+      resolve(installedTools);
+    });
+  }
 });
 
 const renderPopupCloneActions = tools => new Promise(resolve => {
@@ -114,11 +103,11 @@ const createCloneAction = (tool, bitbucketMetadata) => {
   action.setAttribute('class', 'aui-nav-item');
   action.setAttribute('href', '#');
   action.setAttribute('original-title', title);
-  action.dataset.toolTag = tool.tag;
+  action.dataset.toolTag = tool.type;
 
   const actionIcon = document.createElement('span');
   actionIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
-  actionIcon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain`);
+  actionIcon.setAttribute('style', `background-image:url(${tool.icon_url});background-size:contain`);
 
   const actionLabel = document.createElement('span');
   actionLabel.setAttribute('class', 'aui-nav-item-label');
@@ -166,7 +155,7 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavURN(tool.type, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 
@@ -178,7 +167,7 @@ const createOpenAction = (tool, bitbucketMetadata) => {
   actionButton.setAttribute('class', 'aui-button');
   actionButton.setAttribute('original-title', `Open this file in ${tool.name}`);
   actionButton.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-bottom">`;
+    `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16" style="vertical-align:text-bottom">`;
 
   action.append(actionButton);
   addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
@@ -223,8 +212,7 @@ const trackDOMChanges = (tools, bitbucketMetadata) => {
 
 const toolboxify = () => {
   fetchMetadata().
-    then(metadata => fetchLanguages().
-      then(selectTools).
+    then(metadata => selectTools().
       then(tools => renderPopupCloneActions(tools).
         then(() => renderCloneActions(tools, metadata)).
         then(() => renderOpenActions(tools, metadata)).

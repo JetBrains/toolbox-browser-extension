@@ -2,15 +2,10 @@
 import 'whatwg-fetch';
 
 import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
   getToolboxURN,
   getToolboxNavURN,
   getProtocol,
   callToolbox,
-  USAGE_THRESHOLD,
-  DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET,
   CLONE_PROTOCOLS
 } from './common';
 
@@ -75,39 +70,17 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
     });
 });
 
-const fetchLanguages = gitlabMetadata => new Promise(resolve => {
-  fetch(`${location.origin}/api/v4/projects/${gitlabMetadata.id}/languages`).then(response => {
-    resolve(response.json());
-  }).catch(() => {
-    resolve(DEFAULT_LANGUAGE_SET);
-  });
-});
+let installedTools = null;
 
-const selectTools = languages => new Promise(resolve => {
-  const overallPoints = Object.
-    values(languages).
-    reduce((overall, current) => overall + current, 0);
-
-  const filterLang = language =>
-    SUPPORTED_LANGUAGES[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
-
-  const selectedToolIds = Object.
-    keys(languages).
-    filter(filterLang).
-    reduce((acc, key) => {
-      acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
-      return acc;
-    }, []);
-
-  const normalizedToolIds = selectedToolIds.length > 0
-    ? Array.from(new Set(selectedToolIds))
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  resolve(tools);
+const selectTools = () => new Promise(resolve => {
+  if (installedTools) {
+    resolve(installedTools);
+  } else {
+    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
+      installedTools = response.tools;
+      resolve(installedTools);
+    });
+  }
 });
 
 const renderPopupCloneActions = tools => new Promise(resolve => {
@@ -148,9 +121,9 @@ const createCloneAction = (tool, gitlabMetadata) => {
   action.dataset.title = `Clone in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
   action.setAttribute('aria-label', action.dataset.title);
-  action.dataset.toolTag = tool.tag;
+  action.dataset.toolTag = tool.type;
   action.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-top">`;
+    `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16" style="vertical-align:text-top">`;
 
   addCloneActionEventHandler(action, gitlabMetadata);
 
@@ -181,7 +154,7 @@ const addNavigateActionEventHandler = (domElement, tool, gitlabMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavURN(tool.type, gitlabMetadata.repo, filePath, lineNumber));
   });
 };
 
@@ -197,7 +170,7 @@ const createOpenAction = (tool, gitlabMetadata) => {
   action.dataset.originalTitle = action.dataset.title;
   action.setAttribute('aria-label', action.dataset.title);
   action.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="15" height="15" style="position:relative;top:-2px">`;
+    `<img alt="${tool.name}" src="${tool.icon_url}" width="15" height="15" style="position:relative;top:-2px">`;
 
   addNavigateActionEventHandler(action, tool, gitlabMetadata);
 
@@ -225,8 +198,7 @@ const renderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
 
 const toolboxify = () => {
   fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
+    then(metadata => selectTools().
       then(tools => renderPopupCloneActions(tools).
         then(() => renderCloneActions(tools, metadata)).
         then(() => renderOpenActions(tools, metadata))

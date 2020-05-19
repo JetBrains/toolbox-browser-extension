@@ -4,14 +4,14 @@ function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
   toolAction.setAttribute('class', 'tool-action');
   toolAction.dataset.https = httpsUrl;
   toolAction.dataset.ssh = sshUrl;
-  toolAction.dataset.tag = tool.tag;
+  toolAction.dataset.tag = tool.type;
 
   setToolActionClickHandler(toolAction);
 
   const icon = document.createElement('img');
   icon.setAttribute('class', 'tool-action__icon');
   icon.setAttribute('alt', tool.name);
-  icon.setAttribute('src', tool.icon);
+  icon.setAttribute('src', tool.icon_url);
 
   const actionText = document.createElement('div');
   actionText.setAttribute('class', 'tool-action__text');

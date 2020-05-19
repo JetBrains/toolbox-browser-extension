@@ -3,19 +3,10 @@ import {observe} from 'selector-observer';
 import gh from 'github-url-to-object';
 
 import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
   getToolboxURN,
   getToolboxNavURN,
   getProtocol,
   callToolbox,
-  USAGE_THRESHOLD,
-  HUNDRED_PERCENT,
-  MAX_DECIMALS,
-  MIN_VALID_HTTP_STATUS,
-  MAX_VALID_HTTP_STATUS,
-  DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET,
   CLONE_PROTOCOLS
 } from './common';
 
@@ -32,103 +23,17 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   }
 });
 
-const checkResponseStatus = response => new Promise((resolve, reject) => {
-  if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
-    resolve(response);
+let installedTools = null;
+
+const selectTools = () => new Promise(resolve => {
+  if (installedTools) {
+    resolve(installedTools);
   } else {
-    reject();
+    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
+      installedTools = response.tools;
+      resolve(installedTools);
+    });
   }
-});
-
-const parseResponse = response => new Promise((resolve, reject) => {
-  response.json().then(result => {
-    if (Object.keys(result).length > 0) {
-      resolve(result);
-    } else {
-      reject();
-    }
-  }).catch(() => {
-    reject();
-  });
-});
-
-const convertBytesToPercents = languages => new Promise(resolve => {
-  const totalBytes = Object.
-    values(languages).
-    reduce((total, bytes) => total + bytes, 0);
-
-  Object.
-    keys(languages).
-    forEach(key => {
-      const percentFloat = languages[key] / totalBytes * HUNDRED_PERCENT;
-      const percentString = percentFloat.toFixed(MAX_DECIMALS);
-      languages[key] = parseFloat(percentString);
-    });
-
-  resolve(languages);
-});
-
-const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
-  // TBX-4762: private repos don't let use API, load root page and scrape languages off it
-  fetch(githubMetadata.clone_url).
-    then(response => response.text()).
-    then(htmlString => {
-      const parser = new DOMParser();
-      const htmlDocument = parser.parseFromString(htmlString, 'text/html');
-      const languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
-      if (languageElements.length === 0) {
-        resolve(DEFAULT_LANGUAGE_SET);
-      } else {
-        const allLanguages = Array.from(languageElements).reduce((acc, el) => {
-          const percentEl = el.nextElementSibling;
-          acc[el.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-          return acc;
-        }, {});
-        resolve(allLanguages);
-      }
-    }).
-    catch(() => {
-      resolve(DEFAULT_LANGUAGE_SET);
-    });
-});
-
-const fetchLanguages = githubMetadata => new Promise(resolve => {
-  fetch(`${githubMetadata.api_url}/languages`).
-    then(checkResponseStatus).
-    then(parseResponse).
-    then(convertBytesToPercents).
-    then(resolve).
-    catch(() => {
-      extractLanguagesFromPage(githubMetadata).
-        then(resolve);
-    });
-});
-
-const selectTools = languages => new Promise(resolve => {
-  const overallPoints = Object.
-    values(languages).
-    reduce((overall, current) => overall + current, 0);
-
-  const filterLang = language =>
-    SUPPORTED_LANGUAGES[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
-
-  const selectedToolIds = Object.
-    keys(languages).
-    filter(filterLang).
-    reduce((acc, key) => {
-      acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
-      return acc;
-    }, []);
-
-  const normalizedToolIds = selectedToolIds.length > 0
-    ? Array.from(new Set(selectedToolIds))
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  resolve(tools);
 });
 
 const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
@@ -186,9 +91,9 @@ const createCloneAction = (tool, githubMetadata) => {
   action.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
   action.setAttribute('href', '#');
   action.setAttribute('aria-label', `Clone in ${tool.name}`);
-  action.dataset.toolTag = tool.tag;
+  action.dataset.toolTag = tool.type;
   action.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+    `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16" style="vertical-align: text-top;">`;
 
   addCloneActionEventHandler(action, githubMetadata);
 
@@ -236,7 +141,7 @@ const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
+    callToolbox(getToolboxNavURN(tool.type, repo, filePath, lineNumber));
   });
 };
 
@@ -264,7 +169,7 @@ const createOpenAction = (tool, githubMetadata) => {
   action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('aria-label', `Open this file in ${tool.name}`);
   action.setAttribute('href', '#');
-  action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
+  action.innerHTML = `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16">`;
 
   addNavigateActionEventHandler(action, tool, githubMetadata);
 
@@ -337,8 +242,7 @@ const renderPageActions = (tools, githubMetadata) => new Promise((resolve, rejec
 
 const init = () => new Promise((resolve, reject) => {
   fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
+    then(metadata => selectTools().
       then(tools => renderPopupCloneActions(tools).then(() => {
         chrome.runtime.sendMessage({
           type: 'enable-page-action',

@@ -15,18 +15,6 @@ const sendMessage = name => new Promise((resolve, reject) => {
   });
 });
 
-export const getVersion = () => new Promise((resolve, reject) => {
-  sendMessage(MESSAGE_NAMES.VERSION).
-    then(result => {
-      resolve(result.version);
-    }).
-    catch(reject);
-});
+export const getVersion = () => sendMessage(MESSAGE_NAMES.VERSION);
 
-export const getTools = () => new Promise((resolve, reject) => {
-  sendMessage(MESSAGE_NAMES.TOOLS).
-    then(result => {
-      resolve(result.tools);
-    }).
-    catch(reject);
-});
+export const getTools = () => sendMessage(MESSAGE_NAMES.TOOLS);

@@ -1,5 +1,12 @@
-import {getVersion} from './client';
-import {getProtocol, saveProtocol} from './common';
+import {
+  getVersion,
+  getTools
+} from './toolbox-client';
+import {
+  DEFAULT_TOOL,
+  getProtocol,
+  saveProtocol
+} from './common';
 import {createExtensionMenu} from './menu';
 
 const INSTALL_TOOLBOX_URL = 'https://www.jetbrains.com/toolbox-app';
@@ -68,6 +75,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'save-protocol':
       saveProtocol(message.protocol);
       break;
+    case 'get-tools':
+      getTools().
+        then(tools => {
+          sendResponse({tools: Array.isArray(tools) && tools.length > 0 ? tools : [DEFAULT_TOOL]});
+        }).
+        catch(() => {
+          sendResponse({tools: [DEFAULT_TOOL]});
+        });
+      return true;
     // no default
   }
 
