@@ -2,12 +2,9 @@
 import 'whatwg-fetch';
 
 import {
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
-  CLONE_PROTOCOLS
-} from './common';
+  CLONE_PROTOCOLS,
+  RUNTIME_MESSAGES
+} from './constants';
 
 const extractProjectIdFromPage = document => {
   const dataProjectId = document.body.dataset.projectId;
@@ -70,46 +67,20 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
     });
 });
 
-let installedTools = null;
-
 const selectTools = () => new Promise(resolve => {
-  if (installedTools) {
-    resolve(installedTools);
-  } else {
-    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
-      installedTools = response.tools;
-      resolve(installedTools);
-    });
-  }
-});
-
-const renderPopupCloneActions = tools => new Promise(resolve => {
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    switch (message.type) {
-      case 'get-tools':
-        sendResponse(tools);
-        break;
-      case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
-        break;
-      // no default
-    }
+  chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.GET_TOOLS}, response => {
+    resolve(response.tools);
   });
-
-  resolve();
 });
 
 const addCloneActionEventHandler = (btn, gitlabMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
-    getProtocol().then(protocol => {
-      const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
-      const action = getToolboxURN(toolTag, cloneUrl);
-
-      callToolbox(action);
+    const {toolType} = e.currentTarget.dataset;
+    chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.GET_PROTOCOL}, response => {
+      const cloneURL = response.protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
+      chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.CLONE_IN_TOOL, toolType, cloneURL});
     });
   });
 };
@@ -121,7 +92,7 @@ const createCloneAction = (tool, gitlabMetadata) => {
   action.dataset.title = `Clone in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
   action.setAttribute('aria-label', action.dataset.title);
-  action.dataset.toolTag = tool.type;
+  action.dataset.toolType = tool.type;
   action.innerHTML =
     `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16" style="vertical-align:text-top">`;
 
@@ -154,7 +125,13 @@ const addNavigateActionEventHandler = (domElement, tool, gitlabMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.type, gitlabMetadata.repo, filePath, lineNumber));
+    chrome.runtime.sendMessage({
+      type: RUNTIME_MESSAGES.NAVIGATE_IN_TOOL,
+      toolType: tool.type,
+      project: gitlabMetadata.repo,
+      filePath,
+      lineNumber
+    });
   });
 };
 
@@ -197,23 +174,20 @@ const renderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
 });
 
 const toolboxify = () => {
-  fetchMetadata().
-    then(metadata => selectTools().
-      then(tools => renderPopupCloneActions(tools).
-        then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata))
-      ).
-      then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: metadata.https,
-          ssh: metadata.ssh
-        });
-      })
+  Promise.all([fetchMetadata(), selectTools()]).
+    then(([metadata, tools]) =>
+      Promise.all([renderCloneActions(tools, metadata), renderOpenActions(tools, metadata)]).
+        then(() => {
+          chrome.runtime.sendMessage({
+            type: RUNTIME_MESSAGES.ENABLE_PAGE_ACTION,
+            project: metadata.repo,
+            https: metadata.https,
+            ssh: metadata.ssh
+          });
+        })
     ).
     catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
+      chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.DISABLE_PAGE_ACTION});
     });
 };
 

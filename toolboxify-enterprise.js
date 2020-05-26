@@ -2,7 +2,7 @@ import toolboxifyGithub from './github';
 import toolboxifyGitlab from './gitlab';
 import toolboxifyBitbucket from './bitbucket-server';
 
-(function detectEnterprise() {
+(function toolboxifyEnterprise() {
   const nameMeta = document.querySelector('meta[property="og:site_name"]') ||
     document.querySelector('meta[name="application-name"]');
   if (nameMeta) {

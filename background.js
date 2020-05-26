@@ -1,39 +1,29 @@
 import {
   getVersion,
-  getTools
-} from './toolbox-client';
+  getTools,
+  cloneInTool, navigateInTool
+} from './clients/toolbox';
 import {
-  DEFAULT_TOOL,
   getProtocol,
   saveProtocol
-} from './common';
-import {createExtensionMenu} from './menu';
+} from './clients/storage';
+import {createExtensionMenu} from './clients/menu';
+import {RUNTIME_MESSAGES} from './constants';
 
 const INSTALL_TOOLBOX_URL = 'https://www.jetbrains.com/toolbox-app';
-
-const setInstallPopup = () => {
-  chrome.browserAction.setIcon({
-    path: {128: 'icon-disabled-128.png'}
-  });
-  chrome.browserAction.setPopup(
-    {
-      popup: chrome.runtime.getURL('jetbrains-toolbox-install-popup.html')
-    }
-  );
-};
 
 chrome.runtime.onInstalled.addListener(details => {
   if (details.reason === chrome.runtime.OnInstalledReason.INSTALL) {
     getVersion().catch(() => {
       chrome.tabs.create({url: INSTALL_TOOLBOX_URL});
-      setInstallPopup();
     });
   }
 });
 
+// eslint-disable-next-line complexity, consistent-return
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
-    case 'enable-page-action':
+    case RUNTIME_MESSAGES.ENABLE_PAGE_ACTION:
       chrome.browserAction.setIcon({
         tabId: sender.tab.id,
         path: {128: 'icon-128.png'}
@@ -52,7 +42,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       );
       break;
-    case 'disable-page-action':
+    case RUNTIME_MESSAGES.DISABLE_PAGE_ACTION:
       chrome.browserAction.setIcon({
         tabId: sender.tab.id,
         path: {128: 'icon-disabled-128.png'}
@@ -64,30 +54,31 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         }
       );
       break;
-    case 'install-page-action':
-      setInstallPopup();
-      break;
-    case 'get-protocol':
+    case RUNTIME_MESSAGES.GET_PROTOCOL:
       getProtocol().then(protocol => {
         sendResponse({protocol});
       });
       return true;
-    case 'save-protocol':
+    case RUNTIME_MESSAGES.SAVE_PROTOCOL:
       saveProtocol(message.protocol);
       break;
-    case 'get-tools':
+    case RUNTIME_MESSAGES.GET_TOOLS:
       getTools().
         then(tools => {
-          sendResponse({tools: Array.isArray(tools) && tools.length > 0 ? tools : [DEFAULT_TOOL]});
+          sendResponse({tools});
         }).
-        catch(() => {
-          sendResponse({tools: [DEFAULT_TOOL]});
+        catch(error => {
+          sendResponse({error});
         });
       return true;
+    case RUNTIME_MESSAGES.CLONE_IN_TOOL:
+      cloneInTool(message.toolType, message.cloneURL);
+      break;
+    case RUNTIME_MESSAGES.NAVIGATE_IN_TOOL:
+      navigateInTool(message.toolType, message.project, message.filePath, message.lineNumber);
+      break;
     // no default
   }
-
-  return undefined;
 });
 
 createExtensionMenu();

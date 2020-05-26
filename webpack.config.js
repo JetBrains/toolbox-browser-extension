@@ -12,8 +12,8 @@ module.exports = {
     'gitlab-public': './gitlab-public',
     'bitbucket-public': './bitbucket-public',
     background: './background',
-    'clone-popup': './popup/clone',
-    'detect-enterprise': './detect-enterprise'
+    'clone-popup': './popups/clone',
+    'toolboxify-enterprise': './toolboxify-enterprise'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
@@ -54,10 +54,9 @@ module.exports = {
       {from: 'manifest.json'},
       {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
       {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
-      {from: 'popup/common.css', to: 'jetbrains-toolbox-common.css'},
-      {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
-      {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
-      {from: 'popup/install.html', to: 'jetbrains-toolbox-install-popup.html'}
+      {from: 'popups/common.css', to: 'jetbrains-toolbox-common.css'},
+      {from: 'popups/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
+      {from: 'popups/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'}
     ]),
     new LicenseChecker({
       format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})

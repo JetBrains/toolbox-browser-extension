@@ -3,12 +3,9 @@ import {observe} from 'selector-observer';
 import gh from 'github-url-to-object';
 
 import {
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
-  CLONE_PROTOCOLS
-} from './common';
+  CLONE_PROTOCOLS,
+  RUNTIME_MESSAGES
+} from './constants';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
@@ -23,45 +20,19 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   }
 });
 
-let installedTools = null;
-
-const selectTools = () => new Promise(resolve => {
-  if (installedTools) {
-    resolve(installedTools);
-  } else {
-    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
-      installedTools = response.tools;
-      resolve(installedTools);
-    });
-  }
-});
-
-const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
-const getSshCloneUrl =
-  githubMetadata => `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
-
-let onMessageHandler = null;
-
-const renderPopupCloneActions = tools => new Promise(resolve => {
-  if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
-    chrome.runtime.onMessage.removeListener(onMessageHandler);
-  }
-  onMessageHandler = (message, sender, sendResponse) => {
-    switch (message.type) {
-      case 'get-tools':
-        sendResponse(tools);
-        break;
-      case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
-        break;
-      // no default
+const selectTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.GET_TOOLS}, response => {
+    if (response.error) {
+      reject();
+    } else {
+      resolve(response.tools);
     }
-  };
-  chrome.runtime.onMessage.addListener(onMessageHandler);
-
-  resolve();
+  });
 });
+
+const getHttpsCloneURL = githubMetadata => `${githubMetadata.clone_url}.git`;
+const getSshCloneURL =
+  githubMetadata => `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
 
 const removeCloneActions = () => {
   const cloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
@@ -74,14 +45,12 @@ const addCloneActionEventHandler = (btn, githubMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
-    getProtocol().then(protocol => {
-      const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
-        ? getHttpsCloneUrl(githubMetadata)
-        : getSshCloneUrl(githubMetadata);
-      const action = getToolboxURN(toolTag, cloneUrl);
-
-      callToolbox(action);
+    const {toolType} = e.currentTarget.dataset;
+    chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.GET_PROTOCOL}, response => {
+      const cloneURL = response.protocol === CLONE_PROTOCOLS.HTTPS
+        ? getHttpsCloneURL(githubMetadata)
+        : getSshCloneURL(githubMetadata);
+      chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.CLONE_IN_TOOL, toolType, cloneURL});
     });
   });
 };
@@ -91,7 +60,7 @@ const createCloneAction = (tool, githubMetadata) => {
   action.setAttribute('class', 'btn btn-sm tooltipped tooltipped-s tooltipped-multiline BtnGroup-item');
   action.setAttribute('href', '#');
   action.setAttribute('aria-label', `Clone in ${tool.name}`);
-  action.dataset.toolTag = tool.type;
+  action.dataset.toolType = tool.type;
   action.innerHTML =
     `<img alt="${tool.name}" src="${tool.icon_url}" width="16" height="16" style="vertical-align: text-top;">`;
 
@@ -141,7 +110,13 @@ const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.type, repo, filePath, lineNumber));
+    chrome.runtime.sendMessage({
+      type: RUNTIME_MESSAGES.NAVIGATE_IN_TOOL,
+      toolType: tool.type,
+      project: repo,
+      filePath,
+      lineNumber
+    });
   });
 };
 
@@ -241,20 +216,18 @@ const renderPageActions = (tools, githubMetadata) => new Promise((resolve, rejec
 });
 
 const init = () => new Promise((resolve, reject) => {
-  fetchMetadata().
-    then(metadata => selectTools().
-      then(tools => renderPopupCloneActions(tools).then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: getHttpsCloneUrl(metadata),
-          ssh: getSshCloneUrl(metadata)
-        });
-        resolve({tools, metadata});
-      }))
-    ).
+  Promise.all([fetchMetadata(), selectTools()]).
+    then(([metadata, tools]) => {
+      chrome.runtime.sendMessage({
+        type: RUNTIME_MESSAGES.ENABLE_PAGE_ACTION,
+        project: metadata.repo,
+        https: getHttpsCloneURL(metadata),
+        ssh: getSshCloneURL(metadata)
+      });
+      resolve({tools, metadata});
+    }).
     catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
+      chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.DISABLE_PAGE_ACTION});
       reject();
     });
 });

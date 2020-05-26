@@ -2,13 +2,7 @@ import 'whatwg-fetch';
 import {observe} from 'selector-observer';
 import bb from 'bitbucket-url-to-object';
 
-import {
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
-  CLONE_PROTOCOLS
-} from './common';
+import {CLONE_PROTOCOLS, RUNTIME_MESSAGES} from './constants';
 
 /* eslint-disable max-len */
 const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > div > button:last-child';
@@ -50,40 +44,14 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   }
 });
 
-let installedTools = null;
-
-const selectTools = () => new Promise(resolve => {
-  if (installedTools) {
-    resolve(installedTools);
-  } else {
-    chrome.runtime.sendMessage({type: 'get-tools'}, response => {
-      installedTools = response.tools;
-      resolve(installedTools);
-    });
-  }
-});
-
-let onMessageHandler = null;
-
-const renderPopupCloneActions = tools => new Promise(resolve => {
-  if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
-    chrome.runtime.onMessage.removeListener(onMessageHandler);
-  }
-  onMessageHandler = (message, sender, sendResponse) => {
-    switch (message.type) {
-      case 'get-tools':
-        sendResponse(tools);
-        break;
-      case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
-        break;
-      // no default
+const selectTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.GET_TOOLS}, response => {
+    if (response.error) {
+      reject();
+    } else {
+      resolve(response.tools);
     }
-  };
-  chrome.runtime.onMessage.addListener(onMessageHandler);
-
-  resolve();
+  });
 });
 
 const getCloneUrl = (links, which) => {
@@ -155,14 +123,12 @@ const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
-    getProtocol().then(protocol => {
-      const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
+    const {toolType} = e.currentTarget.dataset;
+    chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.GET_PROTOCOL}, response => {
+      const cloneURL = response.protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(bitbucketMetadata.links)
         : getSshCloneUrl(bitbucketMetadata.links);
-      const action = getToolboxURN(toolTag, cloneUrl);
-
-      callToolbox(action);
+      chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.CLONE_IN_TOOL, toolType, cloneURL});
     });
   });
 };
@@ -171,7 +137,7 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
   const action = document.createElement('a');
   action.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('href', '#');
-  action.dataset.toolTag = tool.type;
+  action.dataset.toolType = tool.type;
   action.innerHTML = `<img alt="${tool.name}" src="${tool.icon_url}">`;
 
   addCloneActionEventHandler(action, bitbucketMetadata);
@@ -233,7 +199,13 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
       lineNumber = null;
     }
 
-    callToolbox(getToolboxNavURN(tool.type, bitbucketMetadata.repo, filePath, lineNumber));
+    chrome.runtime.sendMessage({
+      type: RUNTIME_MESSAGES.NAVIGATE_IN_TOOL,
+      toolType: tool.type,
+      project: bitbucketMetadata.repo,
+      filePath,
+      lineNumber
+    });
   });
 };
 
@@ -279,21 +251,19 @@ const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
   resolve();
 });
 
-const init = () => new Promise((resolve, reject) => {
+const setupPageAction = () => new Promise((resolve, reject) => {
   fetchMetadata().
-    then(metadata => selectTools().
-      then(tools => renderPopupCloneActions(tools).then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: getHttpsCloneUrl(metadata.links),
-          ssh: getSshCloneUrl(metadata.links)
-        });
-        resolve({tools, metadata});
-      }))
-    ).
+    then(metadata => {
+      chrome.runtime.sendMessage({
+        type: RUNTIME_MESSAGES.ENABLE_PAGE_ACTION,
+        project: metadata.repo,
+        https: getHttpsCloneUrl(metadata.links),
+        ssh: getSshCloneUrl(metadata.links)
+      });
+      resolve(metadata);
+    }).
     catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
+      chrome.runtime.sendMessage({type: RUNTIME_MESSAGES.DISABLE_PAGE_ACTION});
       reject();
     });
 });
@@ -301,7 +271,7 @@ const init = () => new Promise((resolve, reject) => {
 const trackUserNavigation = () => {
   const titleObserver = new MutationObserver((/*mutations*/) => {
     // re-init on client navigation
-    init().catch(() => {
+    setupPageAction().catch(() => {
       // do nothing
     });
   });
@@ -312,8 +282,10 @@ const trackDOMChanges = () => {
   observe(cloneButtonSelectors.join(', '), {
     add(el) {
       if (el.textContent.includes('Clone')) {
-        init().
-          then(({tools, metadata}) => renderCloneActions(tools, metadata, el)).
+        Promise.all([setupPageAction(), selectTools()]).
+          then(([bitbucketMetadata, tools]) => {
+            renderCloneActions(tools, bitbucketMetadata, el);
+          }).
           catch(() => {
             // do nothing
           });
@@ -325,8 +297,10 @@ const trackDOMChanges = () => {
   });
   observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
     add(/*el*/) {
-      init().
-        then(({tools, metadata}) => renderOpenActions(tools, metadata)).
+      Promise.all([setupPageAction(), selectTools()]).
+        then(([bitbucketMetadata, tools]) => {
+          renderOpenActions(tools, bitbucketMetadata);
+        }).
         catch(() => {
           // do nothing
         });
@@ -334,22 +308,9 @@ const trackDOMChanges = () => {
   });
 };
 
-const renderPageActions = (tools, bitbucketMetadata) => new Promise((resolve, reject) => {
-  Promise.
-    all([
-      renderCloneActions(tools, bitbucketMetadata),
-      renderOpenActions(tools, bitbucketMetadata)
-    ]).then(() => {
-      resolve();
-    }).catch(() => {
-      reject();
-    });
-});
-
 const toolboxify = () => {
   // initial page load
-  init().
-    then(({tools, metadata}) => renderPageActions(tools, metadata)).
+  setupPageAction().
     catch(() => {
       // do nothing
     }).

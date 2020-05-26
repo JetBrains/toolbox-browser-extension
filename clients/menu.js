@@ -3,7 +3,7 @@ import 'content-scripts-register-polyfill';
 import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
 
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
-const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';
+const TOOLBOXIFY_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-toolboxify-enterprise.js';
 
 const contentScriptUnregistrators = new Map();
 
@@ -191,7 +191,7 @@ function registerEnterpriseContentScripts(domainMatch) {
     const contentScriptOptions = {
       matches: [domainMatch],
       js: [
-        {file: DETECT_ENTERPRISE_CONTENT_SCRIPT}
+        {file: TOOLBOXIFY_ENTERPRISE_CONTENT_SCRIPT}
       ]
     };
     // implementation of chrome.contentScripts.register doesn't work as expected in FF

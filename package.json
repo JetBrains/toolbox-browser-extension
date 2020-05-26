@@ -4,7 +4,6 @@
   "description": "Browser extension for JetBrains Toolbox",
   "license": "Apache-2.0",
   "dependencies": {
-    "@jetbrains/logos": "^1.1.8",
     "bitbucket-url-to-object": "^0.3.0",
     "content-scripts-register-polyfill": "^1.0.0",
     "github-url-to-object": "^4.0.4",
