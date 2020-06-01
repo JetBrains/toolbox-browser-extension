@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Browser extension for JetBrains Toolbox",
   "license": "Apache-2.0",
+  "scripts": {
+    "prebuild": "eslint .",
+    "build": "webpack --bail -p",
+    "build:dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
+    "watch": "webpack -w"
+  },
   "dependencies": {
     "@jetbrains/logos": "^1.2.10",
     "bitbucket-url-to-object": "^0.3.0",
@@ -12,12 +18,6 @@
     "selector-observer": "^2.1.6",
     "webext-additional-permissions": "^1.0.0",
     "whatwg-fetch": "^3.0.0"
-  },
-  "scripts": {
-    "prebuild": "eslint .",
-    "build": "webpack --bail -p",
-    "build:dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
-    "watch": "webpack -w"
   },
   "devDependencies": {
     "@babel/core": "^7.10.2",
@@ -35,10 +35,23 @@
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-react": "^7.20.0",
     "file-loader": "^6.0.0",
+    "husky": "^4.2.5",
     "imports-loader": "^0.8.0",
+    "lint-staged": "^10.2.7",
     "regenerator-runtime": "^0.13.5",
     "terser-webpack-plugin": "^3.0.2",
     "webpack": "^4.43.0",
     "webpack-cli": "^3.3.11"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.js": [
+      "yarn prebuild --fix",
+      "git add"
+    ]
   }
 }
