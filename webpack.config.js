@@ -50,14 +50,14 @@ module.exports = {
     }
   },
   plugins: [
-    new CopyWebpackPlugin([
+    new CopyWebpackPlugin({patterns: [
       {from: 'manifest.json'},
       {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
       {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
       {from: 'popup/common.css', to: 'jetbrains-toolbox-common.css'},
       {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
       {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'}
-    ]),
+    ]}),
     new LicenseChecker({
       format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})
 ${mod.license.name} (${mod.license.url})`).join('\n\n'),
