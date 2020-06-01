@@ -47,7 +47,6 @@ module.exports = {
   optimization: {
     minimizer: [
       new TerserPlugin({
-        parallel: true,
         extractComments: false,
         terserOptions: {
           extractComments: false,
