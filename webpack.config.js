@@ -97,4 +97,3 @@ ${mod.license.name} (${mod.license.url})`).join('\n\n'),
     })
   ]
 };
-
