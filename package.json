@@ -6,6 +6,7 @@
   "scripts": {
     "prebuild": "eslint .",
     "build": "webpack --bail -p",
+    "postbuild": "node distribution/generate-readme.js",
     "build:dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
     "watch": "webpack -w"
   },
