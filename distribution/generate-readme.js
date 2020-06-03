@@ -1,26 +1,34 @@
 const chidProcess = require('child_process');
-const { writeFileSync } = require('fs');
+const fs = require('fs');
 
-const buffer = [
-  'The source code can be found here: [https://github.com/JetBrains/toolbox-browser-extension/](https://github.com/JetBrains/toolbox-browser-extension/).',
-  '\nUse the following data as your reference:'
-];
+const readme = fs.createWriteStream('dist/README.md');
+
+readme.write('This is an open source project which is hosted on GitHub: [https://github.com/JetBrains/toolbox-browser-extension/](https://github.com/JetBrains/toolbox-browser-extension/).\n');
+readme.write('\nUse the following data as your reference:\n');
 
 const branch = chidProcess.execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-buffer.push(`* Branch: ${branch}`);
+readme.write(`\n* Branch: ${branch}\n`);
 const longSHA = chidProcess.execSync("git rev-parse HEAD").toString().trim();
-buffer.push(`* Commit SHA: ${longSHA}`);
+readme.write(`* Commit SHA: ${longSHA}\n`);
 const shortSHA = chidProcess.execSync("git rev-parse --short HEAD").toString().trim();
-buffer.push(`* Commit short SHA: ${shortSHA}`);
+readme.write(`* Commit short SHA: ${shortSHA}\n`);
 const authorName = chidProcess.execSync("git log -1 --pretty=format:'%an'").toString().trim();
-buffer.push(`* Commit author: ${authorName}`);
+readme.write(`* Commit author: ${authorName}\n`);
 const commitTime = chidProcess.execSync("git log -1 --pretty=format:'%cd'").toString().trim();
-buffer.push(`* Commit time: ${commitTime}`);
+readme.write(`* Commit time: ${commitTime}\n`);
 const commitMsg = chidProcess.execSync("git log -1 --pretty=%B").toString().trim();
-buffer.push(`* Commit message: ${commitMsg}`);
+readme.write(`* Commit message: ${commitMsg}\n`);
 
-buffer.push('\nHow to build:');
-buffer.push('1. Run \`yarn install\` to install all the dependencies');
-buffer.push('2. Run \`yarn build\` to build the code and save it to the \'dist\' subfolder');
+readme.write('\nHow to build:\n');
+readme.write('\n1. \`git clone git@github.com:JetBrains/toolbox-browser-extension.git\`\n');
+readme.write('\n   OR  \n');
+readme.write('\n   \`git clone https://github.com/JetBrains/toolbox-browser-extension.git\`  \n');
+readme.write('2. \`cd \'toolbox-browser-extension\'\`\n');
+readme.write(`3. \`git checkout \'${branch}\'\`\n`);
+readme.write(`4. \`git reset --hard \'${longSHA}\'\`\n`);
+readme.write('5. \`yarn install\`\n');
+readme.write('6. \`yarn build\`\n');
+readme.write('\n   The built code is saved in the \'dist\' subfolder:  \n');
+readme.write('\n7. \`cd \'dist\'\`');
 
-writeFileSync('dist/README.md', buffer.join('\n'));
+readme.end();
