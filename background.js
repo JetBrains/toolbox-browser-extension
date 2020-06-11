@@ -1,6 +1,15 @@
 import {getProtocol, saveProtocol} from './common';
 import {createExtensionMenu} from './menu';
 
+chrome.runtime.onInstalled.addListener(() => {
+  const manifest = chrome.runtime.getManifest();
+  const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
+  chrome.runtime.setUninstallURL(uninstallUrl, () => {
+    // eslint-disable-next-line no-void
+    void chrome.runtime.lastError;
+  });
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   switch (message.type) {
     case 'enable-page-action':
