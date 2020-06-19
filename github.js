@@ -187,8 +187,14 @@ const createCloneAction = (tool, githubMetadata) => {
   action.setAttribute('href', '#');
   action.setAttribute('aria-label', `Clone in ${tool.name}`);
   action.dataset.toolTag = tool.tag;
-  action.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align: text-top;">`;
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('width', '16');
+  actionIcon.setAttribute('height', '16');
+  actionIcon.setAttribute('style', 'vertical-align:text-top');
+  action.appendChild(actionIcon);
 
   addCloneActionEventHandler(action, githubMetadata);
 
@@ -264,7 +270,13 @@ const createOpenAction = (tool, githubMetadata) => {
   action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('aria-label', `Open this file in ${tool.name}`);
   action.setAttribute('href', '#');
-  action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16">`;
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('width', '16');
+  actionIcon.setAttribute('height', '16');
+  action.appendChild(actionIcon);
 
   addNavigateActionEventHandler(action, tool, githubMetadata);
 

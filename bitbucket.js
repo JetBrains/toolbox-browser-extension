@@ -189,7 +189,11 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
   action.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('href', '#');
   action.dataset.toolTag = tool.tag;
-  action.innerHTML = `<img alt="${tool.name}" src="${tool.icon}">`;
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  action.appendChild(actionIcon);
 
   addCloneActionEventHandler(action, bitbucketMetadata);
 
@@ -262,8 +266,17 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
   actionButton.removeAttribute('disabled');
 
   const actionSpan = actionButton.querySelector('span > span');
-  actionSpan.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-bottom">`;
+  while (actionSpan.firstChild) {
+    actionSpan.removeChild(actionSpan.lastChild);
+  }
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('width', '16');
+  actionIcon.setAttribute('height', '16');
+  actionIcon.setAttribute('style', 'vertical-align:text-bottom');
+  actionSpan.appendChild(actionIcon);
 
   addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
 

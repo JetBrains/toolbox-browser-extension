@@ -177,8 +177,14 @@ const createOpenAction = (tool, bitbucketMetadata) => {
   const actionButton = document.createElement('button');
   actionButton.setAttribute('class', 'aui-button');
   actionButton.setAttribute('original-title', `Open this file in ${tool.name}`);
-  actionButton.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-bottom">`;
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('width', '16');
+  actionIcon.setAttribute('height', '16');
+  actionIcon.setAttribute('style', 'vertical-align:text-bottom');
+  actionButton.appendChild(actionIcon);
 
   action.append(actionButton);
   addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);

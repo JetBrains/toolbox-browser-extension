@@ -147,10 +147,16 @@ const createCloneAction = (tool, gitlabMetadata) => {
   action.setAttribute('style', 'cursor:pointer');
   action.dataset.title = `Clone in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
-  action.setAttribute('aria-label', action.dataset.title);
   action.dataset.toolTag = tool.tag;
-  action.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="16" height="16" style="vertical-align:text-top">`;
+  action.setAttribute('aria-label', action.dataset.title);
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('width', '16');
+  actionIcon.setAttribute('height', '16');
+  actionIcon.setAttribute('style', 'vertical-align:text-top');
+  action.appendChild(actionIcon);
 
   addCloneActionEventHandler(action, gitlabMetadata);
 
@@ -196,8 +202,14 @@ const createOpenAction = (tool, gitlabMetadata) => {
   action.dataset.title = `Open this file in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
   action.setAttribute('aria-label', action.dataset.title);
-  action.innerHTML =
-    `<img alt="${tool.name}" src="${tool.icon}" width="15" height="15" style="position:relative;top:-2px">`;
+
+  const actionIcon = document.createElement('img');
+  actionIcon.setAttribute('alt', tool.name);
+  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('width', '15');
+  actionIcon.setAttribute('height', '15');
+  actionIcon.setAttribute('style', 'position:relative;top:-2px');
+  action.appendChild(actionIcon);
 
   addNavigateActionEventHandler(action, tool, gitlabMetadata);
 
