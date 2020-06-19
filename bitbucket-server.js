@@ -61,9 +61,7 @@ const selectTools = language => new Promise(resolve => {
     ? toolIds
     : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+  const tools = normalizedToolIds.map(toolId => SUPPORTED_TOOLS[toolId]);
 
   resolve(tools);
 });
@@ -118,7 +116,11 @@ const createCloneAction = (tool, bitbucketMetadata) => {
 
   const actionIcon = document.createElement('span');
   actionIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
-  actionIcon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain`);
+  let actionIconStyle = `background-image:url(${tool.icon});background-size:contain`;
+  if (tool.tag === 'studio') {
+    actionIconStyle += ';width:26px;height:26px;margin-right:3px';
+  }
+  actionIcon.setAttribute('style', actionIconStyle);
 
   const actionLabel = document.createElement('span');
   actionLabel.setAttribute('class', 'aui-nav-item-label');

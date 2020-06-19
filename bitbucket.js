@@ -73,9 +73,7 @@ const selectTools = language => new Promise(resolve => {
     ? toolIds
     : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+  const tools = normalizedToolIds.map(toolId => SUPPORTED_TOOLS[toolId]);
 
   resolve(tools);
 });
@@ -188,11 +186,17 @@ const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
   const action = document.createElement('a');
   action.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('href', '#');
+  if (tool.tag === 'studio') {
+    action.setAttribute('style', 'padding-left:7px;padding-right:7px');
+  }
   action.dataset.toolTag = tool.tag;
 
   const actionIcon = document.createElement('img');
   actionIcon.setAttribute('alt', tool.name);
   actionIcon.setAttribute('src', tool.icon);
+  if (tool.tag === 'studio') {
+    actionIcon.setAttribute('style', 'width:20px;height:20px');
+  }
   action.appendChild(actionIcon);
 
   addCloneActionEventHandler(action, bitbucketMetadata);

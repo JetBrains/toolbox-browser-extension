@@ -124,9 +124,7 @@ const selectTools = languages => new Promise(resolve => {
     ? Array.from(new Set(selectedToolIds))
     : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+  const tools = normalizedToolIds.map(toolId => SUPPORTED_TOOLS[toolId]);
 
   resolve(tools);
 });

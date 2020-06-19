@@ -103,9 +103,7 @@ const selectTools = languages => new Promise(resolve => {
     ? Array.from(new Set(selectedToolIds))
     : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+  const tools = normalizedToolIds.map(toolId => SUPPORTED_TOOLS[toolId]);
 
   resolve(tools);
 });
@@ -144,7 +142,11 @@ const addCloneActionEventHandler = (btn, gitlabMetadata) => {
 const createCloneAction = (tool, gitlabMetadata) => {
   const action = document.createElement('a');
   action.setAttribute('class', 'gl-link btn has-tooltip');
-  action.setAttribute('style', 'cursor:pointer');
+  let actionStyle = 'cursor:pointer';
+  if (tool.tag === 'studio') {
+    actionStyle += ';padding-left:8px;padding-right:8px';
+  }
+  action.setAttribute('style', actionStyle);
   action.dataset.title = `Clone in ${tool.name}`;
   action.dataset.originalTitle = action.dataset.title;
   action.dataset.toolTag = tool.tag;
@@ -153,9 +155,9 @@ const createCloneAction = (tool, gitlabMetadata) => {
   const actionIcon = document.createElement('img');
   actionIcon.setAttribute('alt', tool.name);
   actionIcon.setAttribute('src', tool.icon);
-  actionIcon.setAttribute('width', '16');
-  actionIcon.setAttribute('height', '16');
-  actionIcon.setAttribute('style', 'vertical-align:text-top');
+  actionIcon.setAttribute('width', tool.tag === 'studio' ? '20' : '16');
+  actionIcon.setAttribute('height', tool.tag === 'studio' ? '20' : '16');
+  actionIcon.setAttribute('style', tool.tag === 'studio' ? 'vertical-align:top' : 'vertical-align:text-top');
   action.appendChild(actionIcon);
 
   addCloneActionEventHandler(action, gitlabMetadata);
