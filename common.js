@@ -26,7 +26,7 @@ export const SUPPORTED_LANGUAGES = {
   html: ['webstorm', 'phpstorm', 'idea', 'studio'],
   python: ['pycharm', 'idea', 'studio'],
   php: ['phpstorm', 'idea', 'studio'],
-  'c#': ['rider'],
+  'c#': ['rider', 'studio'],
   'f#': ['rider'],
   'c++': ['clion', 'studio'],
   c: ['clion', 'studio'],
