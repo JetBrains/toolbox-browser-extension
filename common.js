@@ -8,12 +8,14 @@ import webstormIcon from '@jetbrains/logos/webstorm/webstorm.svg';
 import riderIcon from '@jetbrains/logos/rider/rider.svg';
 import golandIcon from '@jetbrains/logos/goland/goland.svg';
 
+import studioIcon from './studio.svg';
+
 export const DEFAULT_LANGUAGE = 'java';
 
 export const SUPPORTED_LANGUAGES = {
-  [DEFAULT_LANGUAGE]: ['idea'],
-  kotlin: ['idea'],
-  groovy: ['idea'],
+  [DEFAULT_LANGUAGE]: ['idea', 'studio'],
+  kotlin: ['idea', 'studio'],
+  groovy: ['idea', 'studio'],
   scala: ['idea'],
   javascript: ['webstorm', 'phpstorm', 'idea'],
   coffeescript: ['webstorm', 'phpstorm', 'idea'],
@@ -80,6 +82,11 @@ export const SUPPORTED_TOOLS = {
     name: 'GoLand',
     tag: 'goland',
     icon: chrome.runtime.getURL(golandIcon)
+  },
+  studio: {
+    name: 'Android Studio',
+    tag: 'studio',
+    icon: chrome.runtime.getURL(studioIcon)
   }
 };
 
