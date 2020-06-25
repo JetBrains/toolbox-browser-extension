@@ -78,7 +78,7 @@ const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
       const languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
       if (languageElements.length === 0) {
         // see if it's new UI as of 24.06.20
-        const newLanguageElements = document.querySelectorAll(
+        const newLanguageElements = htmlDocument.querySelectorAll(
           '[data-ga-click="Repository, language stats search click, location:repo overview"]'
         );
         if (newLanguageElements.length > 0) {
