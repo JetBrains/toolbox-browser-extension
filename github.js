@@ -77,7 +77,25 @@ const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
       const htmlDocument = parser.parseFromString(htmlString, 'text/html');
       const languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
       if (languageElements.length === 0) {
-        resolve(DEFAULT_LANGUAGE_SET);
+        // see if it's new UI as of 24.06.20
+        const newLanguageElements = document.querySelectorAll(
+          '[data-ga-click="Repository, language stats search click, location:repo overview"]'
+        );
+        if (newLanguageElements.length > 0) {
+          const allLanguages = Array.from(newLanguageElements).reduce((acc, el) => {
+            const langEl = el.querySelector('span');
+            const percentEl = langEl.nextElementSibling;
+            acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
+            return acc;
+          }, {});
+          if (Object.keys(allLanguages).length > 0) {
+            resolve(allLanguages);
+          } else {
+            resolve(DEFAULT_LANGUAGE_SET);
+          }
+        } else {
+          resolve(DEFAULT_LANGUAGE_SET);
+        }
       } else {
         const allLanguages = Array.from(languageElements).reduce((acc, el) => {
           const percentEl = el.nextElementSibling;
