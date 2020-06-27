@@ -36,7 +36,6 @@
   "permissions": [
     "activeTab",
     "contextMenus",
-    "nativeMessaging",
     "storage",
     "https://github.com/*",
     "https://api.github.com/*",
