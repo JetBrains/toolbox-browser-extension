@@ -245,21 +245,21 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
     }
   } else {
     // new UI as of 24.06.20
-    getRepoController = document.querySelector('get-repo-controller');
-    if (getRepoController) {
+    const breadcrumb = document.querySelector('.file-navigation > .breadcrumb');
+    if (breadcrumb) {
       // the buttons still exist on the previous page after clicking on the 'Back' button;
       // only create them if they are absent
       let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
       if (!toolboxCloneButtonGroup) {
         toolboxCloneButtonGroup = document.createElement('div');
-        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 mr-1 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
         tools.forEach(tool => {
           const btn = createCloneAction(tool, githubMetadata, false);
           toolboxCloneButtonGroup.appendChild(btn);
         });
 
-        getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+        breadcrumb.insertAdjacentElement('afterend', toolboxCloneButtonGroup);
       }
     }
   }
