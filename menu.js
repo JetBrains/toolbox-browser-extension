@@ -74,6 +74,9 @@ function manifestPermissionGranted(url) {
         } else {
           reject();
         }
+      }).
+      catch(() => {
+        reject();
       });
   });
 }
