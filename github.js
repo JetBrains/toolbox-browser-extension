@@ -234,7 +234,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
     let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
     if (!toolboxCloneButtonGroup) {
       toolboxCloneButtonGroup = document.createElement('div');
-      toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+      toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 mr-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
       tools.forEach(tool => {
         const btn = createCloneAction(tool, githubMetadata);
