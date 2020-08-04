@@ -180,9 +180,9 @@ const addNavigateActionEventHandlerSingleFileView = (domElement, tool, gitlabMet
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
-    const branchAndFilePath = location.pathname.split("/blob/")[1];
-    const filePath = branchAndFilePath.split("/").splice(1).join("/");
-    let lineNumber = location.hash.replace("#L", "");
+    const branchAndFilePath = location.pathname.split('/blob/')[1];
+    const filePath = branchAndFilePath.split('/').splice(1).join('/');
+    let lineNumber = location.hash.replace('#L', '');
     if (lineNumber === '') {
       lineNumber = null;
     }
