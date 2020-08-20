@@ -11,7 +11,8 @@ import {
   USAGE_THRESHOLD,
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET,
-  CLONE_PROTOCOLS
+  CLONE_PROTOCOLS,
+  MAX_TIMEOUT_MILLISECONDS
 } from './common';
 
 const extractProjectIdFromPage = document => {
@@ -197,9 +198,9 @@ const addNavigateActionEventHandlerMergeRequestView = (domElement, tool, gitlabM
     let lineNumber = null;
     const fileHolder = e.currentTarget.closest('.diff-file.file-holder');
     const filePath = fileHolder.dataset.path;
-    const firstDiffLine = fileHolder.querySelector('tbody tr:nth-child(2)');
-    if (firstDiffLine){
-        lineNumber = parseInt(firstDiffLine.querySelector('td:nth-child(1) a').dataset.linenumber);
+    const firstDiffLine = fileHolder.querySelector('tbody tr a[data-linenumber]');
+    if (firstDiffLine) {
+      lineNumber = parseInt(firstDiffLine.dataset.linenumber, 10);
     }
 
     callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
@@ -226,34 +227,59 @@ const createOpenAction = (tool, gitlabMetadata, viewType) => {
   actionIcon.setAttribute('style', 'position:relative;top:-2px');
   action.appendChild(actionIcon);
 
-  switch(viewType){
+  switch (viewType) {
     case 'blob':
-        addNavigateActionEventHandlerSingleFileView(action, tool, gitlabMetadata);
-        break;
+      addNavigateActionEventHandlerSingleFileView(action, tool, gitlabMetadata);
+      break;
     case 'merge_request':
-        addNavigateActionEventHandlerMergeRequestView(action, tool, gitlabMetadata);
-        break;
+      addNavigateActionEventHandlerMergeRequestView(action, tool, gitlabMetadata);
+      break;
+    default:
+      return null;
   }
 
   return action;
 };
 
-const renderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
-  const buttonGroupAnchorElement = document.querySelector('.file-holder .file-actions .btn-group:last-child');
-  if (buttonGroupAnchorElement) {
+const renderOpenActions = (tools, gitlabMetadata) => {
+  const buttonGroupAnchorElements = document.querySelectorAll('.file-holder .file-actions .btn-group:last-child');
+  if (!buttonGroupAnchorElements || buttonGroupAnchorElements.length === 0) {
+    return false;
+  }
+
+  const viewType = location.pathname.match(/merge_request|blob/)[0];
+  buttonGroupAnchorElements.forEach(buttonGroupAnchorElement => {
     const toolboxButtonGroup = document.createElement('div');
     toolboxButtonGroup.setAttribute('class', 'btn-group ml-2');
     toolboxButtonGroup.setAttribute('role', 'group');
 
-    const viewType = location.pathname.match(/merge_request|blob/)[0];
     tools.forEach(tool => {
       const action = createOpenAction(tool, gitlabMetadata, viewType);
-      toolboxButtonGroup.appendChild(action);
+      if (action !== null) {
+        toolboxButtonGroup.appendChild(action);
+      }
     });
 
     buttonGroupAnchorElement.insertAdjacentElement('beforebegin', toolboxButtonGroup);
     buttonGroupAnchorElement.insertAdjacentText('beforebegin', '\n');
-  }
+  });
+
+  return true;
+};
+
+const tryRenderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
+  let retryLimit = 10;
+  const loopMethod = () => {
+    setTimeout(() => {
+      if (renderOpenActions(tools, gitlabMetadata) === false && retryLimit-- > 0) {
+        loopMethod();
+      } else {
+        resolve();
+      }
+    }, MAX_TIMEOUT_MILLISECONDS);
+  };
+
+  loopMethod();
 
   resolve();
 });
@@ -264,7 +290,7 @@ const toolboxify = () => {
       then(selectTools).
       then(tools => renderPopupCloneActions(tools).
         then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata))
+        then(() => tryRenderOpenActions(tools, metadata))
       ).
       then(() => {
         chrome.runtime.sendMessage({
