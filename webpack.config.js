@@ -14,7 +14,8 @@ module.exports = {
     'bitbucket-public': './bitbucket-public',
     background: './background',
     'clone-popup': './popups/clone',
-    'detect-enterprise': './detect-enterprise'
+    'detect-enterprise': './detect-enterprise',
+    options: './pages/options'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
