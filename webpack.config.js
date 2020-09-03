@@ -84,7 +84,10 @@ module.exports = {
         {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
         {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
         {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
+        {from: 'pages/options.html', to: 'options.html'},
+        {from: 'pages/options.css', to: 'options.css'},
         {from: 'styles/common.css', to: 'common.css'},
+        {from: 'styles/page.css', to: 'page.css'},
         {from: 'styles/popup.css', to: 'popup.css'},
         {from: 'styles/variables.css', to: 'variables.css'}
       ]
