@@ -1,0 +1,19 @@
+@import "variables.css";
+
+body {
+  background-color: var(--main-background-color);
+  box-sizing: border-box;
+  color: var(--main-color);
+  font-family: system-ui, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  margin: 0;
+  padding: var(--body-v-padding) var(--body-h-padding);
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--link-hover-color);
+}
