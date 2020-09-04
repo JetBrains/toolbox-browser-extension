@@ -1,4 +1,9 @@
-import {getProtocol, saveProtocol} from './api/storage';
+import {
+  getProtocol,
+  saveProtocol,
+  getModifyPages,
+  saveModifyPages
+} from './api/storage';
 import {createExtensionMenu} from './api/menu';
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -49,7 +54,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return true;
     case 'save-protocol':
-      saveProtocol(message.protocol);
+      saveProtocol(message.protocol).catch(() => {
+        // do nothing
+      });
+      break;
+    case 'get-modify-pages':
+      getModifyPages().then(allow => {
+        sendResponse({allow});
+      });
+      return true;
+    case 'save-modify-pages':
+      saveModifyPages(message.allow).catch(() => {
+        // do nothing
+      });
       break;
     // no default
   }
