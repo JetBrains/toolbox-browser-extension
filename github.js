@@ -5,10 +5,6 @@ import gh from 'github-url-to-object';
 import {
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS,
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
   USAGE_THRESHOLD,
   HUNDRED_PERCENT,
   MAX_DECIMALS,
@@ -17,7 +13,17 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET,
   CLONE_PROTOCOLS
-} from './common';
+} from './constants';
+
+import {
+  getProtocol
+} from './api/storage';
+
+import {
+  getToolboxURN,
+  getToolboxNavURN,
+  callToolbox
+} from './api/toolbox';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';

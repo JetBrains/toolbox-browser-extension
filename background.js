@@ -1,5 +1,5 @@
-import {getProtocol, saveProtocol} from './common';
-import {createExtensionMenu} from './menu';
+import {getProtocol, saveProtocol} from './api/storage';
+import {createExtensionMenu} from './api/menu';
 
 chrome.runtime.onInstalled.addListener(() => {
   const manifest = chrome.runtime.getManifest();

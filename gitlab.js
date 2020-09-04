@@ -4,15 +4,21 @@ import 'whatwg-fetch';
 import {
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS,
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
   USAGE_THRESHOLD,
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET,
   CLONE_PROTOCOLS
-} from './common';
+} from './constants';
+
+import {
+  getProtocol
+} from './api/storage';
+
+import {
+  getToolboxURN,
+  getToolboxNavURN,
+  callToolbox
+} from './api/toolbox';
 
 const extractProjectIdFromPage = document => {
   const dataProjectId = document.body.dataset.projectId;

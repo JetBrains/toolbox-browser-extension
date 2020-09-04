@@ -5,13 +5,19 @@ import parseBitbucketUrl from 'parse-bitbucket-url';
 import {
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS,
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
-} from './common';
+} from './constants';
+
+import {
+  getProtocol
+} from './api/storage';
+
+import {
+  getToolboxURN,
+  getToolboxNavURN,
+  callToolbox
+} from './api/toolbox';
 
 const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
 

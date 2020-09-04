@@ -5,13 +5,19 @@ import bb from 'bitbucket-url-to-object';
 import {
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS,
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
-} from './common';
+} from './constants';
+
+import {
+  getProtocol
+} from './api/storage';
+
+import {
+  getToolboxURN,
+  getToolboxNavURN,
+  callToolbox
+} from './api/toolbox';
 
 /* eslint-disable max-len */
 const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > div > button:last-child';
