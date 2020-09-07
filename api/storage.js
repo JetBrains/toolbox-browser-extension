@@ -10,29 +10,40 @@ const DEFAULTS = {
   MODIFY_PAGES: true
 };
 
-function saveToStorage(key, value) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.set({[key]: value}, () => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError.message);
-      } else {
-        resolve();
-      }
-    });
+const saveToStorage = (key, value) => new Promise((resolve, reject) => {
+  chrome.storage.local.set({[key]: value}, () => {
+    if (chrome.runtime.lastError) {
+      reject(chrome.runtime.lastError.message);
+    } else {
+      resolve();
+    }
   });
-}
+});
 
-function getFromStorage(key) {
-  return new Promise((resolve, reject) => {
-    chrome.storage.local.get([key], result => {
-      if (chrome.runtime.lastError) {
-        reject(chrome.runtime.lastError.message);
-      } else {
-        resolve(result[key]);
-      }
-    });
+const getFromStorage = key => new Promise((resolve, reject) => {
+  chrome.storage.local.get([key], result => {
+    if (chrome.runtime.lastError) {
+      reject(chrome.runtime.lastError.message);
+    } else {
+      resolve(result[key]);
+    }
   });
-}
+});
+
+const handleStorageChanged = (changes, areaName) => {
+  if (STORAGE_KEYS.MODIFY_PAGES in changes && areaName === 'local') {
+    const {newValue} = changes[STORAGE_KEYS.MODIFY_PAGES];
+
+    chrome.tabs.query({currentWindow: true}, tabs => {
+      tabs.forEach(t => {
+        chrome.tabs.sendMessage(t.id, {
+          type: 'modify-pages-changed',
+          newValue
+        });
+      });
+    });
+  }
+};
 
 export function getProtocol() {
   return new Promise(resolve => {
@@ -77,3 +88,8 @@ export function saveModifyPages(allow) {
       });
   });
 }
+
+if (chrome.storage.onChanged.hasListener(handleStorageChanged)) {
+  chrome.storage.onChanged.removeListener(handleStorageChanged);
+}
+chrome.storage.onChanged.addListener(handleStorageChanged);
