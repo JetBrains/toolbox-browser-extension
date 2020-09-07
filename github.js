@@ -16,6 +16,7 @@ import {
 } from './constants';
 
 import {
+  getModifyPages,
   getProtocol
 } from './api/storage';
 
@@ -155,29 +156,32 @@ const selectTools = languages => new Promise(resolve => {
   resolve(tools);
 });
 
+const fetchTools = githubMetadata => fetchLanguages(githubMetadata).then(selectTools);
+
 const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
 const getSshCloneUrl =
   githubMetadata => `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
 
-let onMessageHandler = null;
+let handleMessage = null;
 
-const renderPopupCloneActions = tools => new Promise(resolve => {
-  if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
-    chrome.runtime.onMessage.removeListener(onMessageHandler);
+const renderPageAction = githubMetadata => new Promise(resolve => {
+  if (handleMessage && chrome.runtime.onMessage.hasListener(handleMessage)) {
+    chrome.runtime.onMessage.removeListener(handleMessage);
   }
-  onMessageHandler = (message, sender, sendResponse) => {
+  handleMessage = (message, sender, sendResponse) => {
     switch (message.type) {
       case 'get-tools':
-        sendResponse(tools);
-        break;
+        fetchTools(githubMetadata).then(sendResponse);
+        return true;
       case 'perform-action':
         const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
         callToolbox(toolboxAction);
         break;
       // no default
     }
+    return undefined;
   };
-  chrome.runtime.onMessage.addListener(onMessageHandler);
+  chrome.runtime.onMessage.addListener(handleMessage);
 
   resolve();
 });
@@ -271,7 +275,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
   }
 };
 
-const renderCloneActions = (tools, githubMetadata) => new Promise(resolve => {
+const renderCloneButtons = (tools, githubMetadata) => new Promise(resolve => {
   renderCloneActionsSync(tools, githubMetadata);
   resolve();
 });
@@ -294,7 +298,7 @@ const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
 
 // when navigating with back and forward buttons
 // we have to re-create open actions b/c their click handlers got lost somehow
-const removeOpenActions = () => {
+const removeOpenButtons = () => {
   const actions = document.querySelectorAll(`.${OPEN_ACTION_JS_CSS_CLASS}`);
   actions.forEach(action => {
     action.parentElement.removeChild(action);
@@ -306,12 +310,12 @@ const removeOpenActions = () => {
   });
 };
 
-const removePageActions = () => {
+const removePageButtons = () => {
   removeCloneActions();
-  removeOpenActions();
+  removeOpenButtons();
 };
 
-const createOpenAction = (tool, githubMetadata) => {
+const createOpenButton = (tool, githubMetadata) => {
   const action = document.createElement('a');
   action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_ACTION_JS_CSS_CLASS}`);
   action.setAttribute('aria-label', `Open this file in ${tool.name}`);
@@ -354,14 +358,14 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
   return menuItemContainer;
 };
 
-const renderOpenActionsSync = (tools, githubMetadata) => {
+const renderOpenButtonsSync = (tools, githubMetadata) => {
   const actionAnchorElement = document.querySelector('.repository-content .Box-header .BtnGroup + div');
   const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
 
   tools.forEach((tool, toolIndex) => {
     if (actionAnchorElement) {
-      const action = createOpenAction(tool, githubMetadata);
+      const action = createOpenButton(tool, githubMetadata);
       actionAnchorFragment.appendChild(action);
     }
     if (blobToolbarDropdown) {
@@ -374,62 +378,87 @@ const renderOpenActionsSync = (tools, githubMetadata) => {
   }
 };
 
-const renderOpenActions = (tools, githubMetadata) => new Promise(resolve => {
-  renderOpenActionsSync(tools, githubMetadata);
+const renderOpenButtons = (tools, githubMetadata) => new Promise(resolve => {
+  renderOpenButtonsSync(tools, githubMetadata);
   resolve();
 });
 
-const renderPageActions = (tools, githubMetadata) => new Promise((resolve, reject) => {
-  Promise.
-    all([
-      renderCloneActions(tools, githubMetadata),
-      renderOpenActions(tools, githubMetadata)
-    ]).
-    then(() => {
-      resolve();
+const renderPageButtons = githubMetadata => new Promise((resolve, reject) => {
+  fetchTools(githubMetadata).
+    then(tools => {
+      Promise.
+        all([
+          renderCloneButtons(tools, githubMetadata),
+          renderOpenButtons(tools, githubMetadata)
+        ]).
+        then(() => {
+          resolve();
+        }).
+        catch(reject);
     }).
-    catch(() => {
-      reject();
-    });
+    catch(reject);
 });
 
-const init = () => new Promise((resolve, reject) => {
-  fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
-      then(tools => renderPopupCloneActions(tools).then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: getHttpsCloneUrl(metadata),
-          ssh: getSshCloneUrl(metadata)
-        });
-        resolve({tools, metadata});
-      }))
-    ).
-    catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
-      reject();
-    });
-});
-
-const trackDOMChanges = () => {
+const startTrackingDOMChanges = githubMetadata =>
   observe('.new-discussion-timeline', {
     add() {
-      init().
-        then(({tools, metadata}) => renderPageActions(tools, metadata)).
+      renderPageButtons(githubMetadata).
         catch(() => {
           // do nothing
         });
     },
     remove() {
-      removePageActions();
+      removePageButtons();
     }
+  });
+
+const stopTrackingDOMChanges = observer => {
+  if (observer) {
+    observer.abort();
+  }
+};
+
+const enablePageAction = githubMetadata => {
+  chrome.runtime.sendMessage({
+    type: 'enable-page-action',
+    project: githubMetadata.repo,
+    https: getHttpsCloneUrl(githubMetadata),
+    ssh: getSshCloneUrl(githubMetadata)
   });
 };
 
+const disablePageAction = () => {
+  chrome.runtime.sendMessage({type: 'disable-page-action'});
+};
+
 const toolboxify = () => {
-  trackDOMChanges();
+  Promise.all([fetchMetadata(), getModifyPages()]).
+    then(([metadata, allowModifyPages]) => {
+      let DOMObserver = null;
+      if (allowModifyPages) {
+        DOMObserver = startTrackingDOMChanges(metadata);
+      }
+
+      chrome.runtime.onMessage.addListener(message => {
+        switch (message.type) {
+          case 'modify-pages-changed':
+            if (message.newValue) {
+              DOMObserver = startTrackingDOMChanges(metadata);
+            } else {
+              stopTrackingDOMChanges(DOMObserver);
+            }
+            break;
+          // no default
+        }
+      });
+
+      renderPageAction(metadata).then(() => {
+        enablePageAction(metadata);
+      });
+    }).
+    catch(() => {
+      disablePageAction();
+    });
 };
 
 export default toolboxify;
