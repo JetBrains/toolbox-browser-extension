@@ -1,4 +1,5 @@
 import {
+  STORAGE_ITEMS,
   getProtocol,
   saveProtocol,
   getModifyPages,
@@ -6,16 +7,17 @@ import {
 } from './api/storage';
 import {createExtensionMenu} from './api/menu';
 
-chrome.runtime.onInstalled.addListener(() => {
+function handleInstalled() {
   const manifest = chrome.runtime.getManifest();
   const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
     // eslint-disable-next-line no-void
     void chrome.runtime.lastError;
   });
-});
+}
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// eslint-disable-next-line complexity
+function handleMessage(message, sender, sendResponse) {
   switch (message.type) {
     case 'enable-page-action':
       chrome.browserAction.setIcon({
@@ -68,10 +70,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // do nothing
       });
       break;
+    case 'storage-changed':
+      if (STORAGE_ITEMS.MODIFY_PAGES in message.changes) {
+        const {newValue} = message.changes[STORAGE_ITEMS.MODIFY_PAGES];
+        chrome.tabs.query({}, tabs => {
+          tabs.forEach(t => {
+            chrome.tabs.sendMessage(t.id, {
+              type: 'modify-pages-changed',
+              newValue
+            });
+          });
+        });
+      }
+      break;
     // no default
   }
 
   return undefined;
-});
+}
+
+chrome.runtime.onInstalled.addListener(handleInstalled);
+chrome.runtime.onMessage.addListener(handleMessage);
 
 createExtensionMenu();
