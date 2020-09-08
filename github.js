@@ -22,7 +22,7 @@ import {
 } from './api/toolbox';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
-const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
+const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
@@ -188,7 +188,7 @@ const removeCloneButtons = () => {
   }
 };
 
-const addCloneActionEventHandler = (btn, githubMetadata) => {
+const addCloneButtonEventHandler = (btn, githubMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
@@ -203,30 +203,30 @@ const addCloneActionEventHandler = (btn, githubMetadata) => {
   });
 };
 
-const createCloneAction = (tool, githubMetadata, small = true) => {
-  const action = document.createElement('a');
-  action.setAttribute(
+const createCloneButton = (tool, githubMetadata, small = true) => {
+  const button = document.createElement('a');
+  button.setAttribute(
     'class',
     `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item`
   );
-  action.setAttribute('href', '#');
-  action.setAttribute('aria-label', `Clone in ${tool.name}`);
-  action.dataset.toolTag = tool.tag;
+  button.setAttribute('href', '#');
+  button.setAttribute('aria-label', `Clone in ${tool.name}`);
+  button.dataset.toolTag = tool.tag;
 
-  const actionIcon = document.createElement('img');
-  actionIcon.setAttribute('alt', tool.name);
-  actionIcon.setAttribute('src', tool.icon);
-  actionIcon.setAttribute('width', '16');
-  actionIcon.setAttribute('height', '16');
-  actionIcon.setAttribute('style', 'vertical-align:text-top');
-  action.appendChild(actionIcon);
+  const buttonIcon = document.createElement('img');
+  buttonIcon.setAttribute('alt', tool.name);
+  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('width', '16');
+  buttonIcon.setAttribute('height', '16');
+  buttonIcon.setAttribute('style', 'vertical-align:text-top');
+  button.appendChild(buttonIcon);
 
-  addCloneActionEventHandler(action, githubMetadata);
+  addCloneButtonEventHandler(button, githubMetadata);
 
-  return action;
+  return button;
 };
 
-const renderCloneActionsSync = (tools, githubMetadata) => {
+const renderCloneButtons = (tools, githubMetadata) => {
   let getRepoController = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
   getRepoController = getRepoController
     ? getRepoController.parentElement
@@ -241,7 +241,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
       toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
       tools.forEach(tool => {
-        const btn = createCloneAction(tool, githubMetadata);
+        const btn = createCloneButton(tool, githubMetadata);
         toolboxCloneButtonGroup.appendChild(btn);
       });
 
@@ -259,7 +259,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
         toolboxCloneButtonGroup.setAttribute('class', `BtnGroup mr-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
         tools.forEach(tool => {
-          const btn = createCloneAction(tool, githubMetadata, false);
+          const btn = createCloneButton(tool, githubMetadata, false);
           toolboxCloneButtonGroup.appendChild(btn);
         });
 
@@ -269,12 +269,7 @@ const renderCloneActionsSync = (tools, githubMetadata) => {
   }
 };
 
-const renderCloneButtons = (tools, githubMetadata) => new Promise(resolve => {
-  renderCloneActionsSync(tools, githubMetadata);
-  resolve();
-});
-
-const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
+const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
@@ -293,7 +288,7 @@ const addNavigateActionEventHandler = (domElement, tool, githubMetadata) => {
 // when navigating with back and forward buttons
 // we have to re-create open actions b/c their click handlers got lost somehow
 const removeOpenButtons = () => {
-  const actions = document.querySelectorAll(`.${OPEN_ACTION_JS_CSS_CLASS}`);
+  const actions = document.querySelectorAll(`.${OPEN_BUTTON_JS_CSS_CLASS}`);
   actions.forEach(action => {
     action.parentElement.removeChild(action);
   });
@@ -311,7 +306,7 @@ const removePageButtons = () => {
 
 const createOpenButton = (tool, githubMetadata) => {
   const action = document.createElement('a');
-  action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_ACTION_JS_CSS_CLASS}`);
+  action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`);
   action.setAttribute('aria-label', `Open this file in ${tool.name}`);
   action.setAttribute('href', '#');
 
@@ -322,7 +317,7 @@ const createOpenButton = (tool, githubMetadata) => {
   actionIcon.setAttribute('height', '16');
   action.appendChild(actionIcon);
 
-  addNavigateActionEventHandler(action, tool, githubMetadata);
+  addOpenButtonEventHandler(action, tool, githubMetadata);
 
   return action;
 };
@@ -337,7 +332,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
   }
   menuItem.textContent = `Open in ${tool.name}`;
 
-  addNavigateActionEventHandler(menuItem, tool, githubMetadata);
+  addOpenButtonEventHandler(menuItem, tool, githubMetadata);
   menuItem.addEventListener('click', () => {
     const blobToolbar = document.querySelector('.BlobToolbar');
     if (blobToolbar) {
@@ -352,7 +347,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
   return menuItemContainer;
 };
 
-const renderOpenButtonsSync = (tools, githubMetadata) => {
+const renderOpenButtons = (tools, githubMetadata) => {
   const actionAnchorElement = document.querySelector('.repository-content .Box-header .BtnGroup + div');
   const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
@@ -372,34 +367,21 @@ const renderOpenButtonsSync = (tools, githubMetadata) => {
   }
 };
 
-const renderOpenButtons = (tools, githubMetadata) => new Promise(resolve => {
-  renderOpenButtonsSync(tools, githubMetadata);
-  resolve();
-});
-
-const renderPageButtons = githubMetadata => new Promise((resolve, reject) => {
+const renderPageButtons = githubMetadata => {
   fetchTools(githubMetadata).
     then(tools => {
-      Promise.
-        all([
-          renderCloneButtons(tools, githubMetadata),
-          renderOpenButtons(tools, githubMetadata)
-        ]).
-        then(() => {
-          resolve();
-        }).
-        catch(reject);
+      renderCloneButtons(tools, githubMetadata);
+      renderOpenButtons(tools, githubMetadata);
     }).
-    catch(reject);
-});
+    catch(() => {
+      // do nothing
+    });
+};
 
 const startTrackingDOMChanges = githubMetadata =>
   observe('.new-discussion-timeline', {
     add() {
-      renderPageButtons(githubMetadata).
-        catch(() => {
-          // do nothing
-        });
+      renderPageButtons(githubMetadata);
     },
     remove() {
       removePageButtons();
