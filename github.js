@@ -181,7 +181,7 @@ const renderPageAction = githubMetadata => new Promise(resolve => {
   resolve();
 });
 
-const removeCloneActions = () => {
+const removeCloneButtons = () => {
   const cloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (cloneButtonGroup) {
     cloneButtonGroup.parentElement.removeChild(cloneButtonGroup);
@@ -305,7 +305,7 @@ const removeOpenButtons = () => {
 };
 
 const removePageButtons = () => {
-  removeCloneActions();
+  removeCloneButtons();
   removeOpenButtons();
 };
 
