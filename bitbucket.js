@@ -10,10 +10,6 @@ import {
 } from './constants';
 
 import {
-  getProtocol
-} from './api/storage';
-
-import {
   getToolboxURN,
   getToolboxNavURN,
   callToolbox
@@ -179,12 +175,11 @@ const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
     e.preventDefault();
 
     const {toolTag} = e.currentTarget.dataset;
-    getProtocol().then(protocol => {
+    chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(bitbucketMetadata.links)
         : getSshCloneUrl(bitbucketMetadata.links);
       const action = getToolboxURN(toolTag, cloneUrl);
-
       callToolbox(action);
     });
   });

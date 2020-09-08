@@ -7,17 +7,17 @@ import {
 } from './api/storage';
 import {createExtensionMenu} from './api/menu';
 
-function handleInstalled() {
+const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
   const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
     // eslint-disable-next-line no-void
     void chrome.runtime.lastError;
   });
-}
+};
 
 // eslint-disable-next-line complexity
-function handleMessage(message, sender, sendResponse) {
+const handleMessage = (message, sender, sendResponse) => {
   switch (message.type) {
     case 'enable-page-action':
       chrome.browserAction.setIcon({
@@ -87,7 +87,7 @@ function handleMessage(message, sender, sendResponse) {
   }
 
   return undefined;
-}
+};
 
 chrome.runtime.onInstalled.addListener(handleInstalled);
 chrome.runtime.onMessage.addListener(handleMessage);

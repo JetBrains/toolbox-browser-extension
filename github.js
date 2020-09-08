@@ -16,11 +16,6 @@ import {
 } from './constants';
 
 import {
-  getModifyPages,
-  getProtocol
-} from './api/storage';
-
-import {
   getToolboxURN,
   getToolboxNavURN,
   callToolbox
@@ -198,12 +193,11 @@ const addCloneActionEventHandler = (btn, githubMetadata) => {
     e.preventDefault();
 
     const {toolTag} = e.currentTarget.dataset;
-    getProtocol().then(protocol => {
+    chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(githubMetadata)
         : getSshCloneUrl(githubMetadata);
       const action = getToolboxURN(toolTag, cloneUrl);
-
       callToolbox(action);
     });
   });
@@ -432,28 +426,29 @@ const disablePageAction = () => {
 };
 
 const toolboxify = () => {
-  Promise.all([fetchMetadata(), getModifyPages()]).
-    then(([metadata, allowModifyPages]) => {
-      let DOMObserver = null;
-      if (allowModifyPages) {
-        DOMObserver = startTrackingDOMChanges(metadata);
-      }
+  fetchMetadata().
+    then(metadata => {
+      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
+        renderPageAction(metadata).then(() => {
+          enablePageAction(metadata);
+        });
 
-      chrome.runtime.onMessage.addListener(message => {
-        switch (message.type) {
-          case 'modify-pages-changed':
-            if (message.newValue) {
-              DOMObserver = startTrackingDOMChanges(metadata);
-            } else {
-              stopTrackingDOMChanges(DOMObserver);
-            }
-            break;
-          // no default
+        let DOMObserver = null;
+        if (data.allow) {
+          DOMObserver = startTrackingDOMChanges(metadata);
         }
-      });
-
-      renderPageAction(metadata).then(() => {
-        enablePageAction(metadata);
+        chrome.runtime.onMessage.addListener(message => {
+          switch (message.type) {
+            case 'modify-pages-changed':
+              if (message.newValue) {
+                DOMObserver = startTrackingDOMChanges(metadata);
+              } else {
+                stopTrackingDOMChanges(DOMObserver);
+              }
+              break;
+            // no default
+          }
+        });
       });
     }).
     catch(() => {
