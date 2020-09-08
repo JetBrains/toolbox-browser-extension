@@ -1,5 +1,4 @@
 import {
-  STORAGE_ITEMS,
   getProtocol,
   saveProtocol,
   getModifyPages,
@@ -66,22 +65,20 @@ const handleMessage = (message, sender, sendResponse) => {
       });
       return true;
     case 'save-modify-pages':
-      saveModifyPages(message.allow).catch(() => {
-        // do nothing
-      });
-      break;
-    case 'storage-changed':
-      if (STORAGE_ITEMS.MODIFY_PAGES in message.changes) {
-        const {newValue} = message.changes[STORAGE_ITEMS.MODIFY_PAGES];
-        chrome.tabs.query({}, tabs => {
-          tabs.forEach(t => {
-            chrome.tabs.sendMessage(t.id, {
-              type: 'modify-pages-changed',
-              newValue
+      saveModifyPages(message.allow).
+        then(() => {
+          chrome.tabs.query({}, tabs => {
+            tabs.forEach(t => {
+              chrome.tabs.sendMessage(t.id, {
+                type: 'modify-pages-changed',
+                newValue: message.allow
+              });
             });
           });
+        }).
+        catch(() => {
+          // do nothing
         });
-      }
       break;
     // no default
   }

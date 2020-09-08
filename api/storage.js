@@ -1,6 +1,6 @@
 import {CLONE_PROTOCOLS} from '../constants';
 
-export const STORAGE_ITEMS = {
+const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',
   MODIFY_PAGES: 'modify-pages'
 };
@@ -29,15 +29,6 @@ const getFromStorage = key => new Promise((resolve, reject) => {
     }
   });
 });
-
-const handleStorageChanged = (changes, areaName) => {
-  if (areaName === 'local') {
-    chrome.runtime.sendMessage({
-      type: 'storage-changed',
-      changes
-    });
-  }
-};
 
 export function getProtocol() {
   return new Promise(resolve => {
@@ -82,8 +73,3 @@ export function saveModifyPages(allow) {
       });
   });
 }
-
-if (chrome.storage.onChanged.hasListener(handleStorageChanged)) {
-  chrome.storage.onChanged.removeListener(handleStorageChanged);
-}
-chrome.storage.onChanged.addListener(handleStorageChanged);
