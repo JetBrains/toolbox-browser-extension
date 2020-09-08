@@ -55,9 +55,17 @@ const handleMessage = (message, sender, sendResponse) => {
       });
       return true;
     case 'save-protocol':
-      saveProtocol(message.protocol).catch(() => {
+      saveProtocol(message.protocol).
+        then(() => {
+          // sync options page if it is open
+          chrome.runtime.sendMessage({
+            type: 'protocol-changed',
+            newValue: message.protocol
+          });
+        }).
+        catch(() => {
         // do nothing
-      });
+        });
       break;
     case 'get-modify-pages':
       getModifyPages().then(allow => {
