@@ -428,11 +428,11 @@ const disablePageAction = () => {
 const toolboxify = () => {
   fetchMetadata().
     then(metadata => {
-      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
-        renderPageAction(metadata).then(() => {
-          enablePageAction(metadata);
-        });
+      renderPageAction(metadata).then(() => {
+        enablePageAction(metadata);
+      });
 
+      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
         let DOMObserver = null;
         if (data.allow) {
           DOMObserver = startTrackingDOMChanges(metadata);
