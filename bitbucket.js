@@ -29,8 +29,8 @@ const cloneButtonSelectors = [
   CLONE_BUTTON_NARROW_PAGE_SIDE_PANEL_OPEN
 ];
 
-const CLONE_ACTION_JS_CSS_CLASS = 'js-toolbox-clone-action';
-const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
+const CLONE_BUTTON_JS_CSS_CLASS = 'js-toolbox-clone-button';
+const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const metadata = bb(window.location.toString());
@@ -47,9 +47,7 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
         };
         resolve(extendedMetadata);
       }).
-      catch(() => {
-        reject();
-      });
+      catch(reject);
   } else {
     reject();
   }
@@ -82,23 +80,26 @@ const selectTools = language => new Promise(resolve => {
   resolve(tools);
 });
 
+const fetchTools = bitbucketMetadata => fetchLanguages(bitbucketMetadata).then(selectTools);
+
 let onMessageHandler = null;
 
-const renderPopupCloneActions = tools => new Promise(resolve => {
+const renderPageAction = bitbucketMetadata => new Promise(resolve => {
   if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
     chrome.runtime.onMessage.removeListener(onMessageHandler);
   }
   onMessageHandler = (message, sender, sendResponse) => {
     switch (message.type) {
       case 'get-tools':
-        sendResponse(tools);
-        break;
+        fetchTools(bitbucketMetadata).then(sendResponse);
+        return true;
       case 'perform-action':
         const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
         callToolbox(toolboxAction);
         break;
       // no default
     }
+    return undefined;
   };
   chrome.runtime.onMessage.addListener(onMessageHandler);
 
@@ -168,9 +169,9 @@ const createButtonTooltip = (button, text) => {
   return tooltip;
 };
 
-const cloneActionsRendered = () => document.getElementsByClassName(CLONE_ACTION_JS_CSS_CLASS).length > 0;
+const cloneButtonsRendered = () => document.getElementsByClassName(CLONE_BUTTON_JS_CSS_CLASS).length > 0;
 
-const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
+const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
@@ -185,25 +186,31 @@ const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
   });
 };
 
-const createCloneAction = (tool, cloneButton, bitbucketMetadata) => {
-  const action = document.createElement('a');
-  action.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_ACTION_JS_CSS_CLASS}`);
-  action.setAttribute('href', '#');
-  action.dataset.toolTag = tool.tag;
+const createCloneButton = (tool, cloneButton, bitbucketMetadata) => {
+  const button = document.createElement('a');
+  button.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_BUTTON_JS_CSS_CLASS}`);
+  button.setAttribute('href', '#');
+  button.dataset.toolTag = tool.tag;
 
-  const actionIcon = document.createElement('img');
-  actionIcon.setAttribute('alt', tool.name);
-  actionIcon.setAttribute('src', tool.icon);
-  action.appendChild(actionIcon);
+  const buttonIcon = document.createElement('img');
+  buttonIcon.setAttribute('alt', tool.name);
+  buttonIcon.setAttribute('src', tool.icon);
+  button.appendChild(buttonIcon);
 
-  addCloneActionEventHandler(action, bitbucketMetadata);
+  addCloneButtonEventHandler(button, bitbucketMetadata);
 
-  return action;
+  return button;
 };
 
-// eslint-disable-next-line complexity
-const renderCloneActionsSync = (tools, bitbucketMetadata, cloneButton = null) => {
-  if (cloneActionsRendered()) {
+const removeCloneButtons = () => {
+  const buttonGroup = document.querySelector('.jt-button-group');
+  if (buttonGroup) {
+    buttonGroup.parentElement.removeChild(buttonGroup);
+  }
+};
+
+const renderCloneButtons = (tools, bitbucketMetadata, cloneButton = null) => {
+  if (cloneButtonsRendered()) {
     return;
   }
 
@@ -222,7 +229,7 @@ const renderCloneActionsSync = (tools, bitbucketMetadata, cloneButton = null) =>
 
   tools.
     forEach(tool => {
-      const btn = createCloneAction(tool, cloneButton, bitbucketMetadata);
+      const btn = createCloneButton(tool, cloneButton, bitbucketMetadata);
       buttonGroup.appendChild(btn);
 
       const tooltip = createButtonTooltip(btn, `Clone in ${tool.name}`);
@@ -232,19 +239,13 @@ const renderCloneActionsSync = (tools, bitbucketMetadata, cloneButton = null) =>
   cloneButton.insertAdjacentElement('beforebegin', buttonGroup);
 };
 
-const removeCloneActions = () => {
-  const buttonGroup = document.querySelector('.jt-button-group');
-  if (buttonGroup) {
-    buttonGroup.parentElement.removeChild(buttonGroup);
-  }
+const removeOpenButtons = () => {
+  document.querySelectorAll(`.${OPEN_BUTTON_JS_CSS_CLASS}`).forEach(b => {
+    b.remove();
+  });
 };
 
-const renderCloneActions = (tools, bitbucketMetadata, cloneButton = null) => new Promise(resolve => {
-  renderCloneActionsSync(tools, bitbucketMetadata, cloneButton);
-  resolve();
-});
-
-const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
+const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
@@ -259,11 +260,11 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
   });
 };
 
-const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
-  const action = sampleAction.cloneNode(true);
-  action.classList.add(OPEN_ACTION_JS_CSS_CLASS);
+const createOpenButton = (tool, sampleButton, bitbucketMetadata) => {
+  const button = sampleButton.cloneNode(true);
+  button.classList.add(OPEN_BUTTON_JS_CSS_CLASS);
 
-  const actionButton = action.querySelector('button');
+  const actionButton = button.querySelector('button');
   actionButton.removeAttribute('disabled');
 
   const actionSpan = actionButton.querySelector('span > span');
@@ -271,26 +272,26 @@ const createOpenAction = (tool, sampleAction, bitbucketMetadata) => {
     actionSpan.removeChild(actionSpan.lastChild);
   }
 
-  const actionIcon = document.createElement('img');
-  actionIcon.setAttribute('alt', tool.name);
-  actionIcon.setAttribute('src', tool.icon);
-  actionIcon.setAttribute('width', '16');
-  actionIcon.setAttribute('height', '16');
-  actionIcon.setAttribute('style', 'vertical-align:text-bottom');
-  actionSpan.appendChild(actionIcon);
+  const buttonIcon = document.createElement('img');
+  buttonIcon.setAttribute('alt', tool.name);
+  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('width', '16');
+  buttonIcon.setAttribute('height', '16');
+  buttonIcon.setAttribute('style', 'vertical-align:text-bottom');
+  actionSpan.appendChild(buttonIcon);
 
-  addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
+  addOpenButtonEventHandler(actionButton, tool, bitbucketMetadata);
 
   const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name}`);
-  action.appendChild(tooltip);
+  button.appendChild(tooltip);
 
-  return action;
+  return button;
 };
 
-const openActionsRendered = () => document.getElementsByClassName(OPEN_ACTION_JS_CSS_CLASS).length > 0;
+const openButtonsRendered = () => document.getElementsByClassName(OPEN_BUTTON_JS_CSS_CLASS).length > 0;
 
-const renderOpenActionsSync = (tools, bitbucketMetadata) => {
-  if (openActionsRendered()) {
+const renderOpenButtons = (tools, bitbucketMetadata) => {
+  if (openButtonsRendered()) {
     return;
   }
 
@@ -299,95 +300,107 @@ const renderOpenActionsSync = (tools, bitbucketMetadata) => {
 
   if (actionAnchorElement) {
     tools.forEach(tool => {
-      const action = createOpenAction(tool, actionAnchorElement, bitbucketMetadata);
+      const action = createOpenButton(tool, actionAnchorElement, bitbucketMetadata);
       actionAnchorElement.insertAdjacentElement('beforebegin', action);
     });
   }
 };
 
-const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
-  renderOpenActionsSync(tools, bitbucketMetadata);
-  resolve();
-});
-
-const init = () => new Promise((resolve, reject) => {
-  fetchMetadata().
-    then(metadata => fetchLanguages(metadata).
-      then(selectTools).
-      then(tools => renderPopupCloneActions(tools).then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: getHttpsCloneUrl(metadata.links),
-          ssh: getSshCloneUrl(metadata.links)
+const startTrackingDOMChanges = bitbucketMetadata => {
+  const cloneButtonsObserver = observe(cloneButtonSelectors.join(', '), {
+    add(el) {
+      if (el.textContent.includes('Clone')) {
+        fetchTools(bitbucketMetadata).then(tools => {
+          renderCloneButtons(tools, bitbucketMetadata, el);
         });
-        resolve({tools, metadata});
-      }))
-    ).
-    catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
-      reject();
-    });
-});
+      }
+    },
+    remove(/*el*/) {
+      removeCloneButtons();
+    }
+  });
 
-const trackUserNavigation = () => {
-  const titleObserver = new MutationObserver((/*mutations*/) => {
-    // re-init on client navigation
-    init().catch(() => {
-      // do nothing
+  const openButtonsObserver = observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
+    add(/*el*/) {
+      fetchTools(bitbucketMetadata).then(tools => {
+        renderOpenButtons(tools, bitbucketMetadata);
+      });
+    },
+    remove(/*el*/) {
+      removeOpenButtons();
+    }
+  });
+
+  return [cloneButtonsObserver, openButtonsObserver];
+};
+
+const stopTrackingDOMChanges = observers => {
+  if (observers) {
+    observers.forEach(o => {
+      o.abort();
     });
+  }
+};
+
+const enablePageAction = bitbucketMetadata => {
+  chrome.runtime.sendMessage({
+    type: 'enable-page-action',
+    project: bitbucketMetadata.repo,
+    https: getHttpsCloneUrl(bitbucketMetadata.links),
+    ssh: getSshCloneUrl(bitbucketMetadata.links)
+  });
+};
+
+const disablePageAction = () => {
+  chrome.runtime.sendMessage({type: 'disable-page-action'});
+};
+
+const startTrackingClientNavigation = () => {
+  const titleObserver = new MutationObserver((/*mutations*/) => {
+    // refresh on client navigation
+    fetchMetadata().
+      then(metadata => {
+        renderPageAction(metadata).then(() => {
+          enablePageAction(metadata);
+        });
+      }).
+      catch(() => {
+        disablePageAction();
+      });
   });
   titleObserver.observe(document.querySelector('title'), {childList: true});
 };
 
-const trackDOMChanges = () => {
-  observe(cloneButtonSelectors.join(', '), {
-    add(el) {
-      if (el.textContent.includes('Clone')) {
-        init().
-          then(({tools, metadata}) => renderCloneActions(tools, metadata, el)).
-          catch(() => {
-            // do nothing
-          });
-      }
-    },
-    remove(/*el*/) {
-      removeCloneActions();
-    }
-  });
-  observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
-    add(/*el*/) {
-      init().
-        then(({tools, metadata}) => renderOpenActions(tools, metadata)).
-        catch(() => {
-          // do nothing
-        });
-    }
-  });
-};
-
-const renderPageActions = (tools, bitbucketMetadata) => new Promise((resolve, reject) => {
-  Promise.
-    all([
-      renderCloneActions(tools, bitbucketMetadata),
-      renderOpenActions(tools, bitbucketMetadata)
-    ]).then(() => {
-      resolve();
-    }).catch(() => {
-      reject();
-    });
-});
-
 const toolboxify = () => {
-  // initial page load
-  init().
-    then(({tools, metadata}) => renderPageActions(tools, metadata)).
-    catch(() => {
-      // do nothing
+  fetchMetadata().
+    then(metadata => {
+      renderPageAction(metadata).then(() => {
+        enablePageAction(metadata);
+      });
+
+      startTrackingClientNavigation();
+
+      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
+        let DOMObservers = null;
+        if (data.allow) {
+          DOMObservers = startTrackingDOMChanges(metadata);
+        }
+        chrome.runtime.onMessage.addListener(message => {
+          switch (message.type) {
+            case 'modify-pages-changed':
+              if (message.newValue) {
+                DOMObservers = startTrackingDOMChanges(metadata);
+              } else {
+                stopTrackingDOMChanges(DOMObservers);
+              }
+              break;
+            // no default
+          }
+        });
+      });
     }).
-    then(() => {
-      trackUserNavigation();
-      trackDOMChanges();
+    catch(() => {
+      disablePageAction();
     });
 };
 
