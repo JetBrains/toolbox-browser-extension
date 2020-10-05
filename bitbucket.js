@@ -306,12 +306,14 @@ const renderOpenButtons = (tools, bitbucketMetadata) => {
   }
 };
 
-const startTrackingDOMChanges = bitbucketMetadata => {
+const startTrackingDOMChanges = () => {
   const cloneButtonsObserver = observe(cloneButtonSelectors.join(', '), {
     add(el) {
       if (el.textContent.includes('Clone')) {
-        fetchTools(bitbucketMetadata).then(tools => {
-          renderCloneButtons(tools, bitbucketMetadata, el);
+        fetchMetadata().then(metadata => {
+          fetchTools(metadata).then(tools => {
+            renderCloneButtons(tools, metadata, el);
+          });
         });
       }
     },
@@ -322,8 +324,10 @@ const startTrackingDOMChanges = bitbucketMetadata => {
 
   const openButtonsObserver = observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
     add(/*el*/) {
-      fetchTools(bitbucketMetadata).then(tools => {
-        renderOpenButtons(tools, bitbucketMetadata);
+      fetchMetadata().then(metadata => {
+        fetchTools(metadata).then(tools => {
+          renderOpenButtons(tools, metadata);
+        });
       });
     },
     remove(/*el*/) {
@@ -355,53 +359,47 @@ const disablePageAction = () => {
   chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 
-const startTrackingClientNavigation = () => {
-  const titleObserver = new MutationObserver((/*mutations*/) => {
-    // refresh on client navigation
-    fetchMetadata().
-      then(metadata => {
-        renderPageAction(metadata).then(() => {
-          enablePageAction(metadata);
-        });
-      }).
-      catch(() => {
-        disablePageAction();
-      });
-  });
-  titleObserver.observe(document.querySelector('title'), {childList: true});
-};
-
-const toolboxify = () => {
+const refreshPageAction = () => {
   fetchMetadata().
     then(metadata => {
       renderPageAction(metadata).then(() => {
         enablePageAction(metadata);
       });
-
-      startTrackingClientNavigation();
-
-      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
-        let DOMObservers = null;
-        if (data.allow) {
-          DOMObservers = startTrackingDOMChanges(metadata);
-        }
-        chrome.runtime.onMessage.addListener(message => {
-          switch (message.type) {
-            case 'modify-pages-changed':
-              if (message.newValue) {
-                DOMObservers = startTrackingDOMChanges(metadata);
-              } else {
-                stopTrackingDOMChanges(DOMObservers);
-              }
-              break;
-            // no default
-          }
-        });
-      });
     }).
     catch(() => {
       disablePageAction();
     });
+};
+
+const startTrackingClientNavigation = () => {
+  const titleObserver = new MutationObserver((/*mutations*/) => {
+    // refresh on client navigation
+    refreshPageAction();
+  });
+  titleObserver.observe(document.querySelector('title'), {childList: true});
+};
+
+const toolboxify = () => {
+  refreshPageAction();
+  startTrackingClientNavigation();
+  chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
+    let DOMObservers = null;
+    if (data.allow) {
+      DOMObservers = startTrackingDOMChanges();
+    }
+    chrome.runtime.onMessage.addListener(message => {
+      switch (message.type) {
+        case 'modify-pages-changed':
+          if (message.newValue) {
+            DOMObservers = startTrackingDOMChanges();
+          } else {
+            stopTrackingDOMChanges(DOMObservers);
+          }
+          break;
+        // no default
+      }
+    });
+  });
 };
 
 export default toolboxify;
