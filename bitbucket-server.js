@@ -15,7 +15,6 @@ import {
   callToolbox
 } from './api/toolbox';
 
-const SSH_PROTOCOL = 'ssh://';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
@@ -43,10 +42,6 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
       if (httpLink) {
         // normalize name
         httpLink.name = 'https';
-      }
-      const sshLink = metadata.links.clone.find(l => l.name === 'ssh');
-      if (sshLink && sshLink.href.startsWith(SSH_PROTOCOL)) {
-        sshLink.href = sshLink.href.substring(SSH_PROTOCOL.length);
       }
       resolve(metadata);
     }).
