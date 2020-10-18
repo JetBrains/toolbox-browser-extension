@@ -1,5 +1,6 @@
 /** @author Johannes Tegnér <johannes@jitesoft.com> */
 import 'whatwg-fetch';
+import {observe} from 'selector-observer';
 
 import {
   SUPPORTED_LANGUAGES,
@@ -11,8 +12,7 @@ import {
   USAGE_THRESHOLD,
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET,
-  CLONE_PROTOCOLS,
-  MAX_TIMEOUT_MILLISECONDS
+  CLONE_PROTOCOLS
 } from './common';
 
 const extractProjectIdFromPage = document => {
@@ -207,7 +207,7 @@ const addNavigateActionEventHandlerMergeRequestView = (domElement, tool, gitlabM
   });
 };
 
-const createOpenAction = (tool, gitlabMetadata, viewType) => {
+const createOpenActionButton = tool => {
   const action = document.createElement('button');
   action.setAttribute('class', 'btn btn-sm');
   action.setAttribute('type', 'button');
@@ -227,17 +227,6 @@ const createOpenAction = (tool, gitlabMetadata, viewType) => {
   actionIcon.setAttribute('style', 'position:relative;top:-2px');
   action.appendChild(actionIcon);
 
-  switch (viewType) {
-    case 'blob':
-      addNavigateActionEventHandlerSingleFileView(action, tool, gitlabMetadata);
-      break;
-    case 'merge_request':
-      addNavigateActionEventHandlerMergeRequestView(action, tool, gitlabMetadata);
-      break;
-    default:
-      return null;
-  }
-
   return action;
 };
 
@@ -248,16 +237,24 @@ const renderOpenActions = (tools, gitlabMetadata) => {
   }
 
   const viewType = location.pathname.match(/merge_request|blob/)[0];
+  if (['merge_request', 'blob'].indexOf(viewType) < 0) {
+    return false;
+  }
+
   buttonGroupAnchorElements.forEach(buttonGroupAnchorElement => {
     const toolboxButtonGroup = document.createElement('div');
-    toolboxButtonGroup.setAttribute('class', 'btn-group ml-2');
+    toolboxButtonGroup.setAttribute('class', 'btn-group mr-2');
     toolboxButtonGroup.setAttribute('role', 'group');
 
     tools.forEach(tool => {
-      const action = createOpenAction(tool, gitlabMetadata, viewType);
-      if (action !== null) {
-        toolboxButtonGroup.appendChild(action);
+      const actionButton = createOpenActionButton(tool);
+      if (viewType === 'merge_request') {
+        addNavigateActionEventHandlerMergeRequestView(actionButton, tool, gitlabMetadata);
+      } else {
+        addNavigateActionEventHandlerSingleFileView(actionButton, tool, gitlabMetadata);
       }
+
+      toolboxButtonGroup.appendChild(actionButton);
     });
 
     buttonGroupAnchorElement.insertAdjacentElement('beforebegin', toolboxButtonGroup);
@@ -266,23 +263,13 @@ const renderOpenActions = (tools, gitlabMetadata) => {
 
   return true;
 };
-
-const tryRenderOpenActions = (tools, gitlabMetadata) => new Promise(resolve => {
-  let retryLimit = 10;
-  const loopMethod = () => {
-    setTimeout(() => {
-      if (renderOpenActions(tools, gitlabMetadata) === false && retryLimit-- > 0) {
-        loopMethod();
-      } else {
-        resolve();
-      }
-    }, MAX_TIMEOUT_MILLISECONDS);
-  };
-
-  loopMethod();
-
-  resolve();
-});
+const observeAndRenderOpenActions = (tools, metadata) => {
+  observe('.merge-request .diffs', {
+    add() {
+      renderOpenActions(tools, metadata);
+    }
+  });
+};
 
 const toolboxify = () => {
   fetchMetadata().
@@ -290,7 +277,7 @@ const toolboxify = () => {
       then(selectTools).
       then(tools => renderPopupCloneActions(tools).
         then(() => renderCloneActions(tools, metadata)).
-        then(() => tryRenderOpenActions(tools, metadata))
+        then(() => observeAndRenderOpenActions(tools, metadata))
       ).
       then(() => {
         chrome.runtime.sendMessage({
