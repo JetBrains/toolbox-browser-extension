@@ -78,6 +78,7 @@ chrome.tabs.query({active: true, currentWindow: true}, tabs => {
     tools.forEach(tool => {
       fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
     });
+    document.querySelector('.js-tool-action-placeholder').remove();
     document.querySelector('.js-tool-actions').append(fragment);
   });
 });

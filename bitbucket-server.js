@@ -5,21 +5,24 @@ import parseBitbucketUrl from 'parse-bitbucket-url';
 import {
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS,
-  getToolboxURN,
-  getToolboxNavURN,
-  getProtocol,
-  callToolbox,
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
-} from './common';
+} from './constants';
 
-const OPEN_ACTION_JS_CSS_CLASS = 'js-toolbox-open-action';
+import {
+  getToolboxURN,
+  getToolboxNavURN,
+  callToolbox
+} from './api/toolbox';
+
+const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
   const parsedStashUrl = document.querySelector('meta[name=application-name][content=Bitbucket]') &&
     parseBitbucketUrl(window.location.toString());
   if (!parsedStashUrl) {
     reject();
+    return;
   }
   // normalize metadata
   const metadata = {
@@ -68,18 +71,21 @@ const selectTools = language => new Promise(resolve => {
   resolve(tools);
 });
 
-const renderPopupCloneActions = tools => new Promise(resolve => {
+const fetchTools = bitbucketMetadata => fetchLanguages(bitbucketMetadata).then(selectTools);
+
+const renderPageAction = bitbucketMetadata => new Promise(resolve => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case 'get-tools':
-        sendResponse(tools);
-        break;
+        fetchTools(bitbucketMetadata).then(sendResponse);
+        return true;
       case 'perform-action':
         const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
         callToolbox(toolboxAction);
         break;
       // no default
     }
+    return undefined;
   });
 
   resolve();
@@ -93,12 +99,12 @@ const getCloneUrl = (links, which) => {
 const getHttpsCloneUrl = links => getCloneUrl(links, 'https');
 const getSshCloneUrl = links => getCloneUrl(links, 'ssh');
 
-const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
+const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
     const {toolTag} = e.currentTarget.dataset;
-    getProtocol().then(protocol => {
+    chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(bitbucketMetadata.links)
         : getSshCloneUrl(bitbucketMetadata.links);
@@ -108,54 +114,59 @@ const addCloneActionEventHandler = (btn, bitbucketMetadata) => {
   });
 };
 
-const createCloneAction = (tool, bitbucketMetadata) => {
+const createCloneButton = (tool, bitbucketMetadata) => {
   const title = `Clone in ${tool.name}`;
-  const action = document.createElement('a');
-  action.setAttribute('class', 'aui-nav-item');
-  action.setAttribute('href', '#');
-  action.setAttribute('original-title', title);
-  action.dataset.toolTag = tool.tag;
+  const button = document.createElement('a');
+  button.setAttribute('class', 'aui-nav-item');
+  button.setAttribute('href', '#');
+  button.setAttribute('original-title', title);
+  button.dataset.toolTag = tool.tag;
 
-  const actionIcon = document.createElement('span');
-  actionIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
-  actionIcon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain`);
+  const buttonIcon = document.createElement('span');
+  buttonIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
+  buttonIcon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain`);
 
-  const actionLabel = document.createElement('span');
-  actionLabel.setAttribute('class', 'aui-nav-item-label');
-  actionLabel.textContent = title;
+  const buttonLabel = document.createElement('span');
+  buttonLabel.setAttribute('class', 'aui-nav-item-label');
+  buttonLabel.textContent = title;
 
-  action.appendChild(actionIcon);
-  action.appendChild(actionLabel);
+  button.appendChild(buttonIcon);
+  button.appendChild(buttonLabel);
 
-  addCloneActionEventHandler(action, bitbucketMetadata);
+  addCloneButtonEventHandler(button, bitbucketMetadata);
 
-  return action;
+  return button;
 };
 
-// eslint-disable-next-line complexity
-const renderCloneActionsSync = (tools, bitbucketMetadata) => {
+const renderCloneButtons = bitbucketMetadata => {
   const cloneElement = document.querySelector('.clone-repo');
   if (!cloneElement) {
     return;
   }
 
-  tools.forEach(tool => {
-    const toolboxCloneElement = document.createElement('li');
-    toolboxCloneElement.setAttribute('class', 'js-toolbox-clone-repo');
+  fetchTools(bitbucketMetadata).
+    then(tools => {
+      tools.forEach(tool => {
+        const buttonContainer = document.createElement('li');
+        buttonContainer.setAttribute('class', 'js-toolbox-clone-repo');
 
-    const action = createCloneAction(tool, bitbucketMetadata);
-    toolboxCloneElement.appendChild(action);
+        const button = createCloneButton(tool, bitbucketMetadata);
+        buttonContainer.appendChild(button);
 
-    cloneElement.insertAdjacentElement('beforebegin', toolboxCloneElement);
+        cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
+      });
+    }).catch(() => {
+      // do nothing
+    });
+};
+
+const removeCloneButtons = () => {
+  document.querySelectorAll('.js-toolbox-clone-repo').forEach(buttonContainer => {
+    buttonContainer.remove();
   });
 };
 
-const renderCloneActions = (tools, bitbucketMetadata) => new Promise(resolve => {
-  renderCloneActionsSync(tools, bitbucketMetadata);
-  resolve();
-});
-
-const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
+const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
@@ -170,83 +181,123 @@ const addNavigateActionEventHandler = (domElement, tool, bitbucketMetadata) => {
   });
 };
 
-const createOpenAction = (tool, bitbucketMetadata) => {
-  const action = document.createElement('div');
-  action.setAttribute('class', `aui-buttons ${OPEN_ACTION_JS_CSS_CLASS}`);
+const createOpenButton = (tool, bitbucketMetadata) => {
+  const buttonContainer = document.createElement('div');
+  buttonContainer.setAttribute('class', `aui-buttons ${OPEN_BUTTON_JS_CSS_CLASS}`);
 
-  const actionButton = document.createElement('button');
-  actionButton.setAttribute('class', 'aui-button');
-  actionButton.setAttribute('original-title', `Open this file in ${tool.name}`);
+  const button = document.createElement('button');
+  button.setAttribute('class', 'aui-button');
+  button.setAttribute('original-title', `Open this file in ${tool.name}`);
 
-  const actionIcon = document.createElement('img');
-  actionIcon.setAttribute('alt', tool.name);
-  actionIcon.setAttribute('src', tool.icon);
-  actionIcon.setAttribute('width', '16');
-  actionIcon.setAttribute('height', '16');
-  actionIcon.setAttribute('style', 'vertical-align:text-bottom');
-  actionButton.appendChild(actionIcon);
+  const buttonIcon = document.createElement('img');
+  buttonIcon.setAttribute('alt', tool.name);
+  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('width', '16');
+  buttonIcon.setAttribute('height', '16');
+  buttonIcon.setAttribute('style', 'vertical-align:text-bottom');
+  button.appendChild(buttonIcon);
 
-  action.append(actionButton);
-  addNavigateActionEventHandler(actionButton, tool, bitbucketMetadata);
+  buttonContainer.append(button);
+  addOpenButtonEventHandler(button, tool, bitbucketMetadata);
 
-  return action;
+  return buttonContainer;
 };
 
-const setOpenActionTooltips = () => {
+const setOpenButtonTooltips = () => {
   const tooltipScript = document.createElement('script');
-  tooltipScript.textContent = `jQuery('.${OPEN_ACTION_JS_CSS_CLASS} > .aui-button:first-child').tipsy();`;
+  tooltipScript.textContent = `jQuery('.${OPEN_BUTTON_JS_CSS_CLASS} > .aui-button:first-child').tipsy();`;
   document.body.appendChild(tooltipScript);
 };
 
-const openActionsRendered = () => document.getElementsByClassName(OPEN_ACTION_JS_CSS_CLASS).length > 0;
+const openButtonsRendered = () => document.getElementsByClassName(OPEN_BUTTON_JS_CSS_CLASS).length > 0;
 
-const renderOpenActionsSync = (tools, bitbucketMetadata) => {
-  if (openActionsRendered()) {
+const renderOpenButtons = bitbucketMetadata => {
+  if (openButtonsRendered()) {
     return;
   }
   const anchorElement = document.querySelector('.file-toolbar > .secondary > .aui-buttons:first-child');
   if (anchorElement) {
-    tools.forEach(tool => {
-      const action = createOpenAction(tool, bitbucketMetadata);
-      anchorElement.insertAdjacentElement('beforebegin', action);
-    });
-    setOpenActionTooltips();
+    fetchTools(bitbucketMetadata).
+      then(tools => {
+        tools.forEach(tool => {
+          const action = createOpenButton(tool, bitbucketMetadata);
+          anchorElement.insertAdjacentElement('beforebegin', action);
+        });
+        setOpenButtonTooltips();
+      }).
+      catch(() => {
+        // do nothing
+      });
   }
 };
 
-const renderOpenActions = (tools, bitbucketMetadata) => new Promise(resolve => {
-  renderOpenActionsSync(tools, bitbucketMetadata);
-  resolve();
-});
+const removeOpenButtons = () => {
+  document.querySelectorAll(`.${OPEN_BUTTON_JS_CSS_CLASS}`).forEach(button => {
+    button.remove();
+  });
+};
 
-const trackDOMChanges = (tools, bitbucketMetadata) => {
+const startTrackingDOMChanges = bitbucketMetadata =>
   observe('#file-content > .file-toolbar > .secondary > .aui-buttons > .file-blame', {
     add(/*el*/) {
-      renderOpenActions(tools, bitbucketMetadata);
+      renderOpenButtons(bitbucketMetadata);
+    },
+    remove() {
+      removeOpenButtons();
     }
   });
+
+const stopTrackingDOMChanges = observer => {
+  if (observer) {
+    observer.abort();
+  }
+};
+
+const enablePageAction = bitbucketMetadata => {
+  chrome.runtime.sendMessage({
+    type: 'enable-page-action',
+    project: bitbucketMetadata.repo,
+    https: getHttpsCloneUrl(bitbucketMetadata.links),
+    ssh: getSshCloneUrl(bitbucketMetadata.links)
+  });
+};
+
+const disablePageAction = () => {
+  chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 
 const toolboxify = () => {
   fetchMetadata().
-    then(metadata => fetchLanguages().
-      then(selectTools).
-      then(tools => renderPopupCloneActions(tools).
-        then(() => renderCloneActions(tools, metadata)).
-        then(() => renderOpenActions(tools, metadata)).
-        then(() => trackDOMChanges(tools, metadata))
-      ).
-      then(() => {
-        chrome.runtime.sendMessage({
-          type: 'enable-page-action',
-          project: metadata.repo,
-          https: getHttpsCloneUrl(metadata.links),
-          ssh: getSshCloneUrl(metadata.links)
+    then(metadata => {
+      renderPageAction(metadata).then(() => {
+        enablePageAction(metadata);
+      });
+
+      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
+        let DOMObserver = null;
+        if (data.allow) {
+          renderCloneButtons(metadata);
+          DOMObserver = startTrackingDOMChanges(metadata);
+        }
+
+        chrome.runtime.onMessage.addListener(message => {
+          switch (message.type) {
+            case 'modify-pages-changed':
+              if (message.newValue) {
+                renderCloneButtons(metadata);
+                DOMObserver = startTrackingDOMChanges(metadata);
+              } else {
+                removeCloneButtons();
+                stopTrackingDOMChanges(DOMObserver);
+              }
+              break;
+            // no default
+          }
         });
-      })
-    ).
+      });
+    }).
     catch(() => {
-      chrome.runtime.sendMessage({type: 'disable-page-action'});
+      disablePageAction();
     });
 };
 

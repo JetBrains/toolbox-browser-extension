@@ -1,0 +1,33 @@
+@import "page.css";
+
+.options {
+  width: 36rem;
+  margin: 0 auto;
+}
+
+.option {
+  margin: 1.6rem 0 0.6rem;
+  display: flex;
+}
+
+.option__label {
+  flex-grow: 1;
+}
+
+.option__description {
+  font-size: 0.8rem;
+  padding-right: 2rem;
+}
+
+.option__extra-buttons {
+  width: 100%;
+  padding: 0.4rem 0;
+}
+
+.option__extra-buttons > img {
+  max-width: 100%;
+}
+
+h1 + .option {
+  margin-top: 3rem;
+}

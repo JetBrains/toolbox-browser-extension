@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JetBrains Toolbox App Extension Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="options">
+  <h1>General Options</h1>
+  <div class="option">
+    <div class="option__label">
+      Clone with
+    </div>
+    <div class="option__input js-protocol-input-group">
+      <label>
+        <input class="js-protocol-input" type="radio" name="protocol" value="HTTPS"> HTTPS
+      </label>
+      /
+      <label>
+        <input class="js-protocol-input" type="radio" name="protocol" value="SSH"> SSH
+      </label>
+    </div>
+  </div>
+  <div class="option">
+    <div class="option__label">
+      Add additional buttons to web pages
+    </div>
+    <div class="option__input">
+      <input class="js-modify-pages-input" type="checkbox">
+    </div>
+  </div>
+  <div class="option__description">
+    In addition to the standard button (the one in the main toolbar of your browser),
+    the extension can add additional buttons to clone projects directly to the page, when the above option is on.
+    This feature is experimental and may lead to incorrect display of the user interface under certain conditions
+    (works for most of the users though):
+    <div class="option__extra-buttons">
+      <img src="options-extra-buttons.png" alt="Extra buttons added to page">
+    </div>
+  </div>
+</div>
+<script src="jetbrains-toolbox-options.js"></script>
+</body>
+</html>

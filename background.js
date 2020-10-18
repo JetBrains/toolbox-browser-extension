@@ -1,16 +1,22 @@
-import {getProtocol, saveProtocol} from './common';
-import {createExtensionMenu} from './menu';
+import {
+  getProtocol,
+  saveProtocol,
+  getModifyPages,
+  saveModifyPages
+} from './api/storage';
+import {createExtensionMenu} from './api/menu';
 
-chrome.runtime.onInstalled.addListener(() => {
+const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
   const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
     // eslint-disable-next-line no-void
     void chrome.runtime.lastError;
   });
-});
+};
 
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// eslint-disable-next-line complexity
+const handleMessage = (message, sender, sendResponse) => {
   switch (message.type) {
     case 'enable-page-action':
       chrome.browserAction.setIcon({
@@ -49,12 +55,46 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       });
       return true;
     case 'save-protocol':
-      saveProtocol(message.protocol);
+      saveProtocol(message.protocol).
+        then(() => {
+          // sync options page if it is open
+          chrome.runtime.sendMessage({
+            type: 'protocol-changed',
+            newValue: message.protocol
+          });
+        }).
+        catch(() => {
+        // do nothing
+        });
+      break;
+    case 'get-modify-pages':
+      getModifyPages().then(allow => {
+        sendResponse({allow});
+      });
+      return true;
+    case 'save-modify-pages':
+      saveModifyPages(message.allow).
+        then(() => {
+          chrome.tabs.query({}, tabs => {
+            tabs.forEach(t => {
+              chrome.tabs.sendMessage(t.id, {
+                type: 'modify-pages-changed',
+                newValue: message.allow
+              });
+            });
+          });
+        }).
+        catch(() => {
+          // do nothing
+        });
       break;
     // no default
   }
 
   return undefined;
-});
+};
+
+chrome.runtime.onInstalled.addListener(handleInstalled);
+chrome.runtime.onMessage.addListener(handleMessage);
 
 createExtensionMenu();
