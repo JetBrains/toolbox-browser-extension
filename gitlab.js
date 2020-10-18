@@ -297,16 +297,12 @@ const renderOpenButtonsForMergeRequest = (tools, gitlabMetadata) => {
 };
 
 const observeAndRenderOpenActions = (tools, metadata) => {
-  observe('li.diffs-tab.qa-diffs-tab.active', {
+  observe('.merge-request-details .tab-content .diffs.active .diff-files-holder > .diff-file', {
     add() {
-      observe('.merge-request .diffs.active .diff-files-holder > .diff-file', {
-        add() {
-          renderOpenButtonsForMergeRequest(tools, metadata);
-        },
-        remove() {
-          removeOpenButtons();
-        }
-      });
+      renderOpenButtonsForMergeRequest(tools, metadata);
+    },
+    remove() {
+      removeOpenButtons();
     }
   });
   observe('article.file-holder .blob-viewer[data-loaded=true]', {
