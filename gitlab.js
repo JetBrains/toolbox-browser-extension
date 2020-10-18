@@ -203,9 +203,10 @@ const addOpenButtonEventHandler = (domElement, tool, gitlabMetadata) => {
   });
 };
 
-const addNavigateActionEventHandlerMergeRequestView = (domElement, tool, gitlabMetadata) => {
+const addMergeRequestViewOpenActionEventHandler = (domElement, tool, gitlabMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
+
     let lineNumber = null;
     const fileHolder = e.currentTarget.closest('.diff-file.file-holder');
     const filePath = fileHolder.dataset.path;
@@ -230,7 +231,7 @@ const removePageButtons = () => {
   removeOpenButtons();
 };
 
-const createOpenButton = (tool, gitlabMetadata) => {
+const createOpenButton = tool => {
   const button = document.createElement('button');
   button.setAttribute('class', 'btn btn-sm');
   button.setAttribute('type', 'button');
@@ -250,15 +251,14 @@ const createOpenButton = (tool, gitlabMetadata) => {
   buttonIcon.setAttribute('style', 'position:relative;top:-2px');
   button.appendChild(buttonIcon);
 
-  addOpenButtonEventHandler(button, tool, gitlabMetadata);
-
   return button;
 };
 
 const renderOpenButtons = (tools, gitlabMetadata) => {
   const buttonGroupAnchorElement = document.querySelector('.file-holder .file-actions .btn-group:last-child');
   const viewType = location.pathname.match(/merge_request|blob/)[0];
-  if (buttonGroupAnchorElement && ['merge_request', 'blob'].indexOf(viewType) > -1) {
+
+  if (buttonGroupAnchorElement && ['merge_request', 'blob'].indexOf(viewType) >= 0) {
     const toolboxButtonGroup = document.createElement('div');
     toolboxButtonGroup.setAttribute('class', `btn-group mr-2 ${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
     toolboxButtonGroup.setAttribute('role', 'group');
@@ -267,16 +267,25 @@ const renderOpenButtons = (tools, gitlabMetadata) => {
       const actionButton = createOpenButton(tool, gitlabMetadata);
 
       if (viewType === 'merge_request') {
-        addNavigateActionEventHandlerMergeRequestView(actionButton, tool, gitlabMetadata);
+        addMergeRequestViewOpenActionEventHandler(actionButton, tool, gitlabMetadata);
       } else {
-        addNavigateActionEventHandlerSingleFileView(actionButton, tool, gitlabMetadata);
+        addOpenButtonEventHandler(actionButton, tool, gitlabMetadata);
       }
-      toolboxButtonGroup.appendChild(action);
+
+      toolboxButtonGroup.appendChild(actionButton);
     });
 
     buttonGroupAnchorElement.insertAdjacentElement('beforebegin', toolboxButtonGroup);
     buttonGroupAnchorElement.insertAdjacentText('beforebegin', '\n');
   }
+};
+
+const observeAndRenderOpenActions = (tools, metadata) => {
+  observe('.merge-request .diffs', {
+    add() {
+      renderOpenButtons(tools, metadata);
+    }
+  });
 };
 
 const renderPageButtons = gitlabMetadata => {
@@ -298,14 +307,6 @@ const enablePageAction = gitlabMetadata => {
 
 const disablePageAction = () => {
   chrome.runtime.sendMessage({type: 'disable-page-action'});
-};
-
-const observeAndRenderOpenActions = (tools, metadata) => {
-  observe('.merge-request .diffs', {
-    add() {
-      renderOpenButtons(tools, metadata);
-    }
-  });
 };
 
 const toolboxify = () => {
