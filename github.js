@@ -238,7 +238,7 @@ const renderCloneButtons = (tools, githubMetadata) => {
     let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
     if (!toolboxCloneButtonGroup) {
       toolboxCloneButtonGroup = document.createElement('div');
-      toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+      toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
       tools.forEach(tool => {
         const btn = createCloneButton(tool, githubMetadata);
@@ -256,7 +256,7 @@ const renderCloneButtons = (tools, githubMetadata) => {
       let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
       if (!toolboxCloneButtonGroup) {
         toolboxCloneButtonGroup = document.createElement('div');
-        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup mr-2 ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup mr-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
         tools.forEach(tool => {
           const btn = createCloneButton(tool, githubMetadata, false);
