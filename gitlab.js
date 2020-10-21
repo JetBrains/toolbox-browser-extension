@@ -168,7 +168,7 @@ const createCloneButton = (tool, gitlabMetadata) => {
   buttonIcon.setAttribute('src', tool.icon);
   buttonIcon.setAttribute('width', '16');
   buttonIcon.setAttribute('height', '16');
-  buttonIcon.setAttribute('style', 'vertical-align:text-top');
+  buttonIcon.setAttribute('style', 'vertical-align:sub');
   button.appendChild(buttonIcon);
 
   addCloneButtonEventHandler(button, gitlabMetadata);
