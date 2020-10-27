@@ -207,10 +207,11 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
   const button = document.createElement('a');
   button.setAttribute(
     'class',
-    `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item`
+    `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item d-flex`
   );
   button.setAttribute('href', '#');
   button.setAttribute('aria-label', `Clone in ${tool.name}`);
+  button.setAttribute('style', 'align-items:center');
   button.dataset.toolTag = tool.tag;
 
   const buttonIcon = document.createElement('img');
