@@ -1,5 +1,6 @@
 /** @author Johannes Tegnér <johannes@jitesoft.com> */
 import 'whatwg-fetch';
+import {observe} from 'selector-observer';
 
 import {
   SUPPORTED_LANGUAGES,
@@ -202,6 +203,22 @@ const addOpenButtonEventHandler = (domElement, tool, gitlabMetadata) => {
   });
 };
 
+const addMergeRequestViewOpenActionEventHandler = (domElement, tool, gitlabMetadata) => {
+  domElement.addEventListener('click', e => {
+    e.preventDefault();
+
+    let lineNumber = null;
+    const fileHolder = e.currentTarget.closest('.diff-file.file-holder');
+    const filePath = fileHolder.dataset.path;
+    const firstDiffLine = fileHolder.querySelector('tbody tr a[data-linenumber]');
+    if (firstDiffLine) {
+      lineNumber = parseInt(firstDiffLine.dataset.linenumber, 10);
+    }
+
+    callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
+  });
+};
+
 const removeOpenButtons = () => {
   const openButtonGroup = document.querySelector(`.${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (openButtonGroup) {
@@ -214,7 +231,7 @@ const removePageButtons = () => {
   removeOpenButtons();
 };
 
-const createOpenButton = (tool, gitlabMetadata) => {
+const createOpenButton = tool => {
   const button = document.createElement('button');
   button.setAttribute('class', 'btn btn-sm');
   button.setAttribute('type', 'button');
@@ -234,8 +251,6 @@ const createOpenButton = (tool, gitlabMetadata) => {
   buttonIcon.setAttribute('style', 'position:relative;top:-2px');
   button.appendChild(buttonIcon);
 
-  addOpenButtonEventHandler(button, tool, gitlabMetadata);
-
   return button;
 };
 
@@ -248,6 +263,7 @@ const renderOpenButtons = (tools, gitlabMetadata) => {
 
     tools.forEach(tool => {
       const action = createOpenButton(tool, gitlabMetadata);
+      addOpenButtonEventHandler(action, tool, gitlabMetadata);
       toolboxButtonGroup.appendChild(action);
     });
 
@@ -256,10 +272,53 @@ const renderOpenButtons = (tools, gitlabMetadata) => {
   }
 };
 
+const renderOpenButtonsForMergeRequest = (tools, gitlabMetadata) => {
+  const buttonGroupAnchorElementList = document.querySelectorAll('.file-holder .file-actions > .btn-group');
+
+  buttonGroupAnchorElementList.forEach(buttonGroupAnchorElement => {
+    // Skip where the buttons were already added
+    if (buttonGroupAnchorElement.parentElement.querySelector(`.btn-group.mr-2.${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`)) {
+      return;
+    }
+
+    const toolboxButtonGroup = document.createElement('div');
+    toolboxButtonGroup.setAttribute('class', `btn-group mr-2 ${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
+    toolboxButtonGroup.setAttribute('role', 'group');
+
+    tools.forEach(tool => {
+      const actionButton = createOpenButton(tool);
+      addMergeRequestViewOpenActionEventHandler(actionButton, tool, gitlabMetadata);
+      toolboxButtonGroup.appendChild(actionButton);
+    });
+
+    buttonGroupAnchorElement.insertAdjacentElement('beforebegin', toolboxButtonGroup);
+    buttonGroupAnchorElement.insertAdjacentText('beforebegin', '\n');
+  });
+};
+
+const observeAndRenderOpenActions = (tools, metadata) => {
+  observe('.merge-request-details .tab-content .diffs.active .diff-files-holder > .diff-file', {
+    add() {
+      renderOpenButtonsForMergeRequest(tools, metadata);
+    },
+    remove() {
+      removeOpenButtons();
+    }
+  });
+  observe('article.file-holder .blob-viewer[data-loaded=true]', {
+    add() {
+      renderOpenButtons(tools, metadata);
+    },
+    remove() {
+      removeOpenButtons();
+    }
+  });
+};
+
 const renderPageButtons = gitlabMetadata => {
   fetchTools(gitlabMetadata).then(tools => {
     renderCloneButtons(tools, gitlabMetadata);
-    renderOpenButtons(tools, gitlabMetadata);
+    observeAndRenderOpenActions(tools, gitlabMetadata);
   });
 };
 
