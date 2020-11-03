@@ -217,8 +217,8 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
   const buttonIcon = document.createElement('img');
   buttonIcon.setAttribute('alt', tool.name);
   buttonIcon.setAttribute('src', tool.icon);
-  buttonIcon.setAttribute('width', '16');
-  buttonIcon.setAttribute('height', '16');
+  buttonIcon.setAttribute('width', tool.size || '16');
+  buttonIcon.setAttribute('height', tool.size || '16');
   buttonIcon.setAttribute('style', 'vertical-align:text-top');
   button.appendChild(buttonIcon);
 
@@ -250,21 +250,22 @@ const renderCloneButtons = (tools, githubMetadata) => {
     }
   } else {
     // new UI as of 24.06.20
-    getRepoController = document.querySelector('get-repo');
+    getRepoController = document.querySelector('get-repo  tab-container');
     if (getRepoController) {
       // the buttons still exist on the previous page after clicking on the 'Back' button;
       // only create them if they are absent
       let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
       if (!toolboxCloneButtonGroup) {
         toolboxCloneButtonGroup = document.createElement('div');
-        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup mr-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup mr-2 pt-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
         tools.forEach(tool => {
+          tool.size = '20';
           const btn = createCloneButton(tool, githubMetadata, false);
           toolboxCloneButtonGroup.appendChild(btn);
         });
 
-        getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+        getRepoController.insertAdjacentElement('afterend', toolboxCloneButtonGroup);
       }
     }
   }
