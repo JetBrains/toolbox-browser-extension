@@ -180,9 +180,14 @@ const renderCloneButtons = (tools, gitlabMetadata) => {
   const gitCloneHolder = document.querySelector('.js-git-clone-holder');
   const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
   if (gitCloneHolderParent) {
+    const gitCloneHolderGroup = document.createElement('div');
+    gitCloneHolderGroup.setAttribute('class', 'btn-group');
+    gitCloneHolderGroup.setAttribute('role', 'group');
+    gitCloneHolderParent.insertAdjacentElement('beforebegin', gitCloneHolderGroup);
+
     tools.forEach(tool => {
       const button = createCloneButton(tool, gitlabMetadata);
-      gitCloneHolderParent.insertAdjacentElement('beforebegin', button);
+      gitCloneHolderGroup.appendChild(button);
     });
   }
 };
