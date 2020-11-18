@@ -11,14 +11,14 @@ import golandIcon from '@jetbrains/logos/goland/goland.svg';
 export const DEFAULT_LANGUAGE = 'java';
 
 export const SUPPORTED_LANGUAGES = {
-  [DEFAULT_LANGUAGE]: ['idea'],
-  kotlin: ['idea'],
-  groovy: ['idea'],
+  [DEFAULT_LANGUAGE]: ['idea', 'studio'],
+  kotlin: ['idea', 'studio'],
+  groovy: ['idea', 'studio'],
   scala: ['idea'],
   javascript: ['webstorm', 'phpstorm', 'idea'],
   coffeescript: ['webstorm', 'phpstorm', 'idea'],
   typescript: ['webstorm', 'phpstorm', 'idea'],
-  dart: ['webstorm', 'phpstorm', 'idea'],
+  dart: ['webstorm', 'phpstorm', 'idea', 'studio'],
   go: ['goland', 'idea'],
   css: ['webstorm', 'phpstorm', 'idea'],
   html: ['webstorm', 'phpstorm', 'idea'],
@@ -81,6 +81,11 @@ export const SUPPORTED_TOOLS = {
     name: 'GoLand',
     tag: 'goland',
     icon: golandIcon
+  },
+  studio: {
+    name: 'Android Studio',
+    tag: 'studio',
+    icon: chrome.runtime.getURL('studio.svg')
   }
 };
 
