@@ -45,7 +45,9 @@
     "https://api.github.com/*",
     "https://gitlab.com/*",
     "https://bitbucket.org/*",
-    "https://api.bitbucket.org/*"
+    "https://api.bitbucket.org/*",
+    "https://github.*/*",
+    "https://gitlab*.*/*"
   ],
   "optional_permissions": [
     "http://*/*",
