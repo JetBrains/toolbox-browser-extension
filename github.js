@@ -383,7 +383,7 @@ const renderPageButtons = githubMetadata => {
 };
 
 const startTrackingDOMChanges = githubMetadata =>
-  observe('.repository-content > .clearfix > div', {
+  observe('.repository-content get-repo feature-callout, .repository-content .js-blob-header', {
     add() {
       renderPageButtons(githubMetadata);
     },
