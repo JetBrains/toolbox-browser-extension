@@ -257,9 +257,11 @@ const renderCloneButtons = (tools, githubMetadata) => {
       let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
       if (!toolboxCloneButtonGroup) {
         toolboxCloneButtonGroup = document.createElement('div');
-        const pullRequest = document.querySelector('#pull-requests-tab[aria-current="true"]')
-        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ${pullRequest ? "ml-1" : "mr-2"} d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
-
+        const isOnPullRequestsTab = document.querySelector('#pull-requests-tab[aria-current="page"]');
+        toolboxCloneButtonGroup.setAttribute(
+          'class',
+          `BtnGroup ${isOnPullRequestsTab ? 'ml-1' : 'mr-2'} d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
+        );
         tools.forEach(tool => {
           const btn = createCloneButton(tool, githubMetadata, false);
           toolboxCloneButtonGroup.appendChild(btn);
@@ -381,7 +383,7 @@ const renderPageButtons = githubMetadata => {
 };
 
 const startTrackingDOMChanges = githubMetadata =>
-  observe('.repository-content > .container-xl.clearfix > div', {
+  observe('.repository-content > .clearfix > div', {
     add() {
       renderPageButtons(githubMetadata);
     },
