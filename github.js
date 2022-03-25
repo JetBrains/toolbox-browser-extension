@@ -257,7 +257,8 @@ const renderCloneButtons = (tools, githubMetadata) => {
       let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
       if (!toolboxCloneButtonGroup) {
         toolboxCloneButtonGroup = document.createElement('div');
-        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup mr-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+        const pullRequest = document.querySelector('#pull-requests-tab[aria-current="true"]')
+        toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ${pullRequest ? "ml-1" : "mr-2"} d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
         tools.forEach(tool => {
           const btn = createCloneButton(tool, githubMetadata, false);
