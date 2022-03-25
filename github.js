@@ -380,7 +380,7 @@ const renderPageButtons = githubMetadata => {
 };
 
 const startTrackingDOMChanges = githubMetadata =>
-  observe('.new-discussion-timeline', {
+  observe('.repository-content > .container-xl.clearfix > div', {
     add() {
       renderPageButtons(githubMetadata);
     },
