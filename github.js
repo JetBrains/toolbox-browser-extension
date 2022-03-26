@@ -234,41 +234,31 @@ const renderCloneButtons = (tools, githubMetadata) => {
     : document.querySelector('.js-get-repo-select-menu');
 
   if (getRepoController) {
-    // the buttons still exist on the previous page after clicking on the 'Back' button;
-    // only create them if they are absent
-    let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
-    if (!toolboxCloneButtonGroup) {
-      toolboxCloneButtonGroup = document.createElement('div');
-      toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+    const toolboxCloneButtonGroup = document.createElement('div');
+    toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
-      tools.forEach(tool => {
-        const btn = createCloneButton(tool, githubMetadata);
-        toolboxCloneButtonGroup.appendChild(btn);
-      });
+    tools.forEach(tool => {
+      const btn = createCloneButton(tool, githubMetadata);
+      toolboxCloneButtonGroup.appendChild(btn);
+    });
 
-      getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
-    }
+    getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
   } else {
     // new UI as of 24.06.20
     getRepoController = document.querySelector('get-repo');
     if (getRepoController) {
-      // the buttons still exist on the previous page after clicking on the 'Back' button;
-      // only create them if they are absent
-      let toolboxCloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
-      if (!toolboxCloneButtonGroup) {
-        toolboxCloneButtonGroup = document.createElement('div');
-        const isOnPullRequestsTab = document.querySelector('#pull-requests-tab[aria-current="page"]');
-        toolboxCloneButtonGroup.setAttribute(
-          'class',
-          `BtnGroup ${isOnPullRequestsTab ? 'ml-1' : 'mr-2'} d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
-        );
-        tools.forEach(tool => {
-          const btn = createCloneButton(tool, githubMetadata, false);
-          toolboxCloneButtonGroup.appendChild(btn);
-        });
+      const toolboxCloneButtonGroup = document.createElement('div');
+      const isOnPullRequestsTab = document.querySelector('#pull-requests-tab[aria-current="page"]');
+      toolboxCloneButtonGroup.setAttribute(
+        'class',
+        `BtnGroup ${isOnPullRequestsTab ? 'ml-1' : 'mr-2'} d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
+      );
+      tools.forEach(tool => {
+        const btn = createCloneButton(tool, githubMetadata, false);
+        toolboxCloneButtonGroup.appendChild(btn);
+      });
 
-        getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
-      }
+      getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
     }
   }
 };
@@ -385,6 +375,7 @@ const renderPageButtons = githubMetadata => {
 const startTrackingDOMChanges = githubMetadata =>
   observe('.repository-content get-repo feature-callout, .repository-content .js-blob-header', {
     add() {
+      removePageButtons();
       renderPageButtons(githubMetadata);
     },
     remove() {
