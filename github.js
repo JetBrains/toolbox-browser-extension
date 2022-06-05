@@ -373,7 +373,7 @@ const renderPageButtons = githubMetadata => {
 };
 
 const startTrackingDOMChanges = githubMetadata =>
-  observe('.repository-content get-repo, .repository-content .Box-header .BtnGroup', {
+  observe('.repository-content get-repo, .repository-content .Box-header .BtnGroup:first-child', {
     add() {
       removePageButtons();
       renderPageButtons(githubMetadata);
