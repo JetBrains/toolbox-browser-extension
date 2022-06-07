@@ -342,7 +342,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
-  const actionAnchorElement = document.querySelector('.repository-content .Box-header .BtnGroup + div');
+  const actionAnchorElement = document.querySelector('.repository-content .Box-header .BtnGroup + div:not(.BtnGroup)');
   const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
 
@@ -373,7 +373,7 @@ const renderPageButtons = githubMetadata => {
 };
 
 const startTrackingDOMChanges = githubMetadata =>
-  observe('.repository-content get-repo, .repository-content .Box-header .BtnGroup', {
+  observe('.repository-content get-repo, .repository-content .Box-header .BtnGroup + div:not(.BtnGroup)', {
     add() {
       removePageButtons();
       renderPageButtons(githubMetadata);
