@@ -373,15 +373,19 @@ const renderPageButtons = githubMetadata => {
 };
 
 const startTrackingDOMChanges = githubMetadata =>
-  observe('.repository-content get-repo, .repository-content .Box-header .BtnGroup + div:not(.BtnGroup)', {
-    add() {
-      removePageButtons();
-      renderPageButtons(githubMetadata);
-    },
-    remove() {
-      removePageButtons();
+  observe(
+    'get-repo,' +
+    '.repository-content .Box-header .BtnGroup + div:not(.BtnGroup)',
+    {
+      add() {
+        removePageButtons();
+        renderPageButtons(githubMetadata);
+      },
+      remove() {
+        removePageButtons();
+      }
     }
-  });
+  );
 
 const stopTrackingDOMChanges = observer => {
   if (observer) {
