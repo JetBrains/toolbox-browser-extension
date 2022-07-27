@@ -364,6 +364,7 @@ const renderOpenButtons = (tools, githubMetadata) => {
 const renderPageButtons = githubMetadata => {
   fetchTools(githubMetadata).
     then(tools => {
+      removePageButtons();
       renderCloneButtons(tools, githubMetadata);
       renderOpenButtons(tools, githubMetadata);
     }).
@@ -378,7 +379,6 @@ const startTrackingDOMChanges = githubMetadata =>
     '.repository-content .Box-header .BtnGroup + div:not(.BtnGroup)',
     {
       add() {
-        removePageButtons();
         renderPageButtons(githubMetadata);
       },
       remove() {
