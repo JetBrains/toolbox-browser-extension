@@ -156,8 +156,7 @@ const addCloneButtonEventHandler = (button, gitlabMetadata) => {
 
 const createCloneButton = (tool, gitlabMetadata) => {
   const button = document.createElement('a');
-  button.setAttribute('class', `gl-link btn has-tooltip ${CLONE_BUTTON_JS_CSS_CLASS}`);
-  button.setAttribute('style', 'cursor:pointer');
+  button.setAttribute('class', `btn btn-default gl-button has-tooltip ${CLONE_BUTTON_JS_CSS_CLASS}`);
   button.dataset.title = `Clone in ${tool.name}`;
   button.dataset.originalTitle = button.dataset.title;
   button.dataset.toolTag = tool.tag;
@@ -166,9 +165,7 @@ const createCloneButton = (tool, gitlabMetadata) => {
   const buttonIcon = document.createElement('img');
   buttonIcon.setAttribute('alt', tool.name);
   buttonIcon.setAttribute('src', tool.icon);
-  buttonIcon.setAttribute('width', '16');
-  buttonIcon.setAttribute('height', '16');
-  buttonIcon.setAttribute('class', 'square s16');
+  buttonIcon.setAttribute('class', 'gl-icon s16');
   button.appendChild(buttonIcon);
 
   addCloneButtonEventHandler(button, gitlabMetadata);
