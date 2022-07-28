@@ -25,14 +25,9 @@ const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
 
-const fetchMetadata = () => new Promise((resolve, reject) => {
-  const metadata = gh(window.location.toString(), {enterprise: true});
-  if (metadata) {
-    resolve(metadata);
-  } else {
-    reject();
-  }
-});
+function fetchMetadata() {
+  return gh(window.location.toString(), {enterprise: true});
+}
 
 const checkResponseStatus = response => new Promise((resolve, reject) => {
   if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
@@ -406,35 +401,181 @@ const disablePageAction = () => {
   chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 
+class GitHubObserver {
+  constructor() {
+    if (this.constructor === GitHubObserver) {
+      throw new Error('Abstract classes can\'t be instantiated.');
+    }
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  observe(onChange) {
+    this._throwNotImplemented(this.observe);
+  }
+
+  abort() {
+    this._throwNotImplemented(this.abort);
+  }
+
+  _throwNotImplemented(method) {
+    throw new Error(`Method '${method.name}' is not implemented.`);
+  }
+}
+
+class DomObserver extends GitHubObserver {
+  constructor() {
+    super();
+
+    this._observer = null;
+  }
+
+  observe(onChange) {
+    if (this._observer !== null) {
+      return;
+    }
+
+    this._observer = observe(
+      '.turbo-progress-bar',
+      {
+        remove() {
+          onChange();
+        }
+      }
+    );
+  }
+
+  abort() {
+    this._observer?.abort();
+
+    this._observer = null;
+  }
+}
+
+class HistoryObserver extends GitHubObserver {
+  constructor() {
+    super();
+
+    this._handlePopState = null;
+  }
+
+  observe(onChange) {
+    if (this._handlePopState !== null) {
+      return;
+    }
+
+    this._handlePopState = () => {
+      setTimeout(onChange);
+    };
+
+    window.addEventListener('popstate', this._handlePopState);
+  }
+
+  abort() {
+    if (this._handlePopState === null) {
+      return;
+    }
+
+    window.removeEventListener('popstate', this._handlePopState);
+
+    this._handlePopState = null;
+  }
+}
+
+class ProjectObserver extends GitHubObserver {
+  constructor() {
+    super();
+
+    this._isObserving = false;
+    this._metadata = null;
+    this._domObserver = null;
+    this._historyObserver = null;
+  }
+
+  observe(onProjectEnter, onProjectLeave) {
+    if (this._isObserving) {
+      return;
+    }
+
+    this._isObserving = true;
+    this._metadata = fetchMetadata();
+
+    if (this._metadata) {
+      onProjectEnter(this._metadata);
+    } else {
+      onProjectLeave();
+    }
+
+    const handleChange = () => {
+      const metadata = fetchMetadata();
+      const enteredProject = Boolean(metadata) && !this._metadata;
+      const leftProject = Boolean(this._metadata) && !metadata;
+
+      if (enteredProject) {
+        onProjectEnter(metadata);
+      } else if (leftProject) {
+        onProjectLeave();
+      }
+
+      this._metadata = metadata;
+    };
+
+    this._domObserver = new DomObserver();
+    this._historyObserver = new HistoryObserver();
+
+    this._domObserver.observe(handleChange);
+    this._historyObserver.observe(handleChange);
+  }
+
+  abort() {
+    if (this._isObserving) {
+      this._domObserver.abort();
+      this._historyObserver.abort();
+
+      this._domObserver = null;
+      this._historyObserver = null;
+    }
+  }
+}
+
 const toolboxify = () => {
-  fetchMetadata().
-    then(metadata => {
+  let githubMetadata = null;
+  let DOMObserver = null;
+
+  const handleInnerMessage = message => {
+    switch (message.type) {
+      case 'modify-pages-changed':
+        if (message.newValue) {
+          DOMObserver = startTrackingDOMChanges(githubMetadata);
+        } else {
+          stopTrackingDOMChanges(DOMObserver);
+        }
+        break;
+      // no default
+    }
+  };
+
+  const projectObserver = new ProjectObserver();
+  projectObserver.observe(
+    metadata => {
+      githubMetadata = metadata;
+
       renderPageAction(metadata).then(() => {
         enablePageAction(metadata);
       });
 
-      chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
-        let DOMObserver = null;
-        if (data.allow) {
-          DOMObserver = startTrackingDOMChanges(metadata);
+      chrome.runtime.sendMessage({type: 'get-modify-pages'}, response => {
+        if (response.allow) {
+          DOMObserver = startTrackingDOMChanges(githubMetadata);
         }
-        chrome.runtime.onMessage.addListener(message => {
-          switch (message.type) {
-            case 'modify-pages-changed':
-              if (message.newValue) {
-                DOMObserver = startTrackingDOMChanges(metadata);
-              } else {
-                stopTrackingDOMChanges(DOMObserver);
-              }
-              break;
-            // no default
-          }
-        });
+        chrome.runtime.onMessage.addListener(handleInnerMessage);
       });
-    }).
-    catch(() => {
+    },
+    () => {
       disablePageAction();
-    });
+      stopTrackingDOMChanges(DOMObserver);
+      chrome.runtime.onMessage.removeListener(handleInnerMessage);
+    }
+  );
 };
 
 export default toolboxify;
