@@ -25,6 +25,8 @@ const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
 
+const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR = '.js-blob-header .BtnGroup + div:not(.BtnGroup)';
+
 function fetchMetadata() {
   return gh(window.location.toString(), {enterprise: true});
 }
@@ -337,7 +339,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
-  const actionAnchorElement = document.querySelector('.repository-content .Box-header .BtnGroup + div:not(.BtnGroup)');
+  const actionAnchorElement = document.querySelector(BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR);
   const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
 
@@ -352,7 +354,7 @@ const renderOpenButtons = (tools, githubMetadata) => {
     }
   });
   if (actionAnchorElement) {
-    actionAnchorElement.prepend(actionAnchorFragment);
+    actionAnchorElement.append(actionAnchorFragment);
   }
 };
 
@@ -370,8 +372,7 @@ const renderPageButtons = githubMetadata => {
 
 const startTrackingDOMChanges = githubMetadata =>
   observe(
-    'get-repo,' +
-    '.repository-content .Box-header .BtnGroup + div:not(.BtnGroup)',
+    `get-repo, ${BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR}`,
     {
       add() {
         renderPageButtons(githubMetadata);
