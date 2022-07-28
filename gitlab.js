@@ -1,5 +1,6 @@
 /** @author Johannes Tegnér <johannes@jitesoft.com> */
 import 'whatwg-fetch';
+import {observe} from 'selector-observer';
 
 import {
   SUPPORTED_LANGUAGES,
@@ -16,6 +17,7 @@ import {
   callToolbox
 } from './api/toolbox';
 
+const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const CLONE_BUTTON_JS_CSS_CLASS = 'js-toolbox-clone-button';
 const OPEN_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-open-button-group';
 
@@ -136,7 +138,7 @@ const renderPageAction = gitlabMetadata => new Promise(resolve => {
 });
 
 const removeCloneButtons = () => {
-  document.querySelectorAll(`.${CLONE_BUTTON_JS_CSS_CLASS}`).forEach(button => {
+  document.querySelectorAll(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`).forEach(button => {
     button.remove();
   });
 };
@@ -174,13 +176,18 @@ const createCloneButton = (tool, gitlabMetadata) => {
 };
 
 const renderCloneButtons = (tools, gitlabMetadata) => {
-  const gitCloneHolder = document.querySelector('.js-git-clone-holder');
-  const gitCloneHolderParent = gitCloneHolder ? gitCloneHolder.parentElement : null;
-  if (gitCloneHolderParent) {
+  const projectCloneHolder = document.querySelector('.project-clone-holder');
+
+  if (projectCloneHolder) {
+    const buttonGroup = document.createElement('div');
+    buttonGroup.setAttribute('class', `btn-group ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+
     tools.forEach(tool => {
       const button = createCloneButton(tool, gitlabMetadata);
-      gitCloneHolderParent.insertAdjacentElement('beforebegin', button);
+      buttonGroup.append(button);
     });
+
+    projectCloneHolder.insertAdjacentElement('beforebegin', buttonGroup);
   }
 };
 
@@ -204,11 +211,6 @@ const removeOpenButtons = () => {
   if (openButtonGroup) {
     openButtonGroup.remove();
   }
-};
-
-const removePageButtons = () => {
-  removeCloneButtons();
-  removeOpenButtons();
 };
 
 const createOpenButton = (tool, gitlabMetadata) => {
@@ -250,11 +252,25 @@ const renderOpenButtons = (tools, gitlabMetadata) => {
   }
 };
 
-const renderPageButtons = gitlabMetadata => {
-  fetchTools(gitlabMetadata).then(tools => {
-    renderCloneButtons(tools, gitlabMetadata);
-    renderOpenButtons(tools, gitlabMetadata);
-  });
+const startTrackingDOMChanges = gitlabMetadata =>
+  observe(
+    '.file-holder .file-actions',
+    {
+      add() {
+        fetchTools(gitlabMetadata).then(tools => {
+          renderOpenButtons(tools, gitlabMetadata);
+        });
+      },
+      remove() {
+        removeOpenButtons();
+      }
+    }
+  );
+
+const stopTrackingDOMChanges = observer => {
+  if (observer) {
+    observer.abort();
+  }
 };
 
 const enablePageAction = gitlabMetadata => {
@@ -271,6 +287,8 @@ const disablePageAction = () => {
 };
 
 const toolboxify = () => {
+  let DOMObserver = null;
+
   fetchMetadata().
     then(metadata => {
       renderPageAction(metadata).then(() => {
@@ -279,15 +297,22 @@ const toolboxify = () => {
 
       chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
         if (data.allow) {
-          renderPageButtons(metadata);
+          fetchTools(metadata).then(tools => {
+            renderCloneButtons(tools, metadata);
+          });
+          DOMObserver = startTrackingDOMChanges(metadata);
         }
         chrome.runtime.onMessage.addListener(message => {
           switch (message.type) {
             case 'modify-pages-changed':
               if (message.newValue) {
-                renderPageButtons(metadata);
+                fetchTools(metadata).then(tools => {
+                  renderCloneButtons(tools, metadata);
+                });
+                DOMObserver = startTrackingDOMChanges(metadata);
               } else {
-                removePageButtons();
+                removeCloneButtons();
+                stopTrackingDOMChanges(DOMObserver);
               }
               break;
             // no default
