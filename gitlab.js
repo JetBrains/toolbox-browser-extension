@@ -216,12 +216,12 @@ const removePageButtons = () => {
 
 const createOpenButton = (tool, gitlabMetadata) => {
   const button = document.createElement('button');
-  button.setAttribute('class', 'btn btn-sm');
+  button.setAttribute('class', 'btn btn-default btn-md gl-button btn-icon');
   button.setAttribute('type', 'button');
   button.dataset.toggle = 'tooltip';
   button.dataset.placement = 'bottom';
   button.dataset.container = 'body';
-  button.dataset.class = 'btn btn-sm';
+  button.dataset.class = 'btn btn-default btn-md gl-button btn-icon';
   button.dataset.title = `Open this file in ${tool.name}`;
   button.dataset.originalTitle = button.dataset.title;
   button.setAttribute('aria-label', button.dataset.title);
@@ -229,9 +229,7 @@ const createOpenButton = (tool, gitlabMetadata) => {
   const buttonIcon = document.createElement('img');
   buttonIcon.setAttribute('alt', tool.name);
   buttonIcon.setAttribute('src', tool.icon);
-  buttonIcon.setAttribute('width', '15');
-  buttonIcon.setAttribute('height', '15');
-  buttonIcon.setAttribute('style', 'position:relative;top:-2px');
+  buttonIcon.setAttribute('class', 'gl-icon s16');
   button.appendChild(buttonIcon);
 
   addOpenButtonEventHandler(button, tool, gitlabMetadata);
@@ -251,8 +249,7 @@ const renderOpenButtons = (tools, gitlabMetadata) => {
       toolboxButtonGroup.appendChild(action);
     });
 
-    buttonGroupAnchorElement.insertAdjacentElement('beforebegin', toolboxButtonGroup);
-    buttonGroupAnchorElement.insertAdjacentText('beforebegin', '\n');
+    buttonGroupAnchorElement.insertAdjacentElement('afterend', toolboxButtonGroup);
   }
 };
 
