@@ -28,7 +28,7 @@ const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
 const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR = '.js-blob-header .BtnGroup + div:not(.BtnGroup)';
 
 function fetchMetadata() {
-  return gh(window.location.toString(), {enterprise: true});
+  return document.getElementById('repository-container-header') && gh(window.location.toString(), {enterprise: true});
 }
 
 const checkResponseStatus = response => new Promise((resolve, reject) => {
