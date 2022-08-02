@@ -428,6 +428,7 @@ class DomObserver extends GitHubObserver {
     super();
 
     this._observer = null;
+    this._loaded = true;
   }
 
   observe(onChange) {
@@ -435,18 +436,31 @@ class DomObserver extends GitHubObserver {
       return;
     }
 
-    this._observer = observe(
-      '.turbo-progress-bar',
-      {
-        remove() {
-          onChange();
+    this._observer = new MutationObserver(mutationList => {
+      for (const mutation of mutationList) {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-busy') {
+          this._loaded = !this._loaded;
+          if (this._loaded) {
+            onChange();
+          }
         }
       }
-    );
+    });
+
+    this._observer.observe(document.querySelector('html'), {attributes: true});
+
+    // this._observer = observe(
+    //   '.turbo-progress-bar',
+    //   {
+    //     remove() {
+    //       onChange();
+    //     }
+    //   }
+    // );
   }
 
   abort() {
-    this._observer?.abort();
+    this._observer?.disconnect();
 
     this._observer = null;
   }
@@ -508,8 +522,8 @@ class ProjectObserver extends GitHubObserver {
 
     const handleChange = () => {
       const metadata = fetchMetadata();
-      const enteredProject = Boolean(metadata) && !this._metadata;
-      const leftProject = Boolean(this._metadata) && !metadata;
+      const enteredProject = Boolean(metadata) && (!this._metadata || metadata.clone_url !== this._metadata.clone_url);
+      const leftProject = Boolean(this._metadata) && (!metadata || this._metadata.clone_url !== metadata.clone_url);
 
       if (enteredProject) {
         onProjectEnter(metadata);
@@ -524,7 +538,7 @@ class ProjectObserver extends GitHubObserver {
     this._historyObserver = new HistoryObserver();
 
     this._domObserver.observe(handleChange);
-    this._historyObserver.observe(handleChange);
+    // this._historyObserver.observe(handleChange);
   }
 
   abort() {
