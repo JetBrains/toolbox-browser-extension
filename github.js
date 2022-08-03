@@ -428,7 +428,23 @@ class DomObserver extends GitHubObserver {
     super();
 
     this._observer = null;
-    this._loaded = true;
+  }
+
+  // eslint-disable-next-line no-magic-numbers
+  static DEFAULT_TIMEOUT = 150;
+
+  _debounce(callback, timeout = DomObserver.DEFAULT_TIMEOUT) {
+    let timer;
+
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(
+        () => {
+          callback.apply(this, args);
+        },
+        timeout
+      );
+    };
   }
 
   observe(onChange) {
@@ -436,27 +452,32 @@ class DomObserver extends GitHubObserver {
       return;
     }
 
+    const onChangeDebounced = this._debounce(onChange);
+
     this._observer = new MutationObserver(mutationList => {
       for (const mutation of mutationList) {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'aria-busy') {
-          this._loaded = !this._loaded;
-          if (this._loaded) {
-            onChange();
-          }
+        if (
+          mutation.type === 'attributes' &&
+          (mutation.attributeName === 'aria-busy' || mutation.attributeName === 'data-turbo-loaded')
+        ) {
+          onChangeDebounced();
         }
       }
     });
 
     this._observer.observe(document.querySelector('html'), {attributes: true});
 
-    // this._observer = observe(
-    //   '.turbo-progress-bar',
-    //   {
-    //     remove() {
-    //       onChange();
-    //     }
-    //   }
-    // );
+    this._observer = observe(
+      '#repository-container-header',
+      {
+        add() {
+          onChangeDebounced();
+        },
+        remove() {
+          onChangeDebounced();
+        }
+      }
+    );
   }
 
   abort() {
