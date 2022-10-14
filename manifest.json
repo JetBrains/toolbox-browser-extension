@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "JetBrains Toolbox Extension",
   "short_name": "Toolbox",
   "description": "Clone and open projects from GitHub, GitLab, Gitee, and Bitbucket in JetBrains IDEs right from your browser",
@@ -7,14 +7,13 @@
   "icons": {
     "128": "icon-128.png"
   },
-  "browser_action": {
+  "action": {
     "default_icon": "icon-disabled-128.png",
     "default_title": "JetBrains Toolbox Extension",
     "default_popup": "jetbrains-toolbox-disabled-popup.html"
   },
   "background": {
-    "scripts": ["jetbrains-toolbox-background.js"],
-    "persistent": false
+    "service_worker": "jetbrains-toolbox-background.js"
   },
   "content_scripts": [
     {
@@ -38,21 +37,23 @@
     "page": "options.html",
     "open_in_tab": true
   },
-  "web_accessible_resources": [
-    "*.svg"
-  ],
+  "web_accessible_resources": [{
+    "resources": ["*.svg"],
+    "matches": ["http://*/*", "https://*/*"]
+  }],
   "permissions": [
     "activeTab",
     "contextMenus",
     "storage",
+    "scripting"
+  ],
+  "host_permissions": [
     "https://github.com/*",
-    "https://api.github.com/*",
     "https://gitlab.com/*",
     "https://bitbucket.org/*",
-    "https://api.bitbucket.org/*",
     "https://gitee.com/*"
   ],
-  "optional_permissions": [
+  "optional_host_permissions": [
     "http://*/*",
     "https://*/*"
   ]
