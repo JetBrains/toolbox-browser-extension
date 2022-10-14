@@ -11,16 +11,20 @@ let activeTabId = null;
 
 function getTabUrl(tabId) {
   return new Promise((resolve, reject) => {
-    chrome.tabs.executeScript(tabId, {
-      code: 'window.location.href'
-    }, result => {
-      if (!chrome.runtime.lastError && result && result.length > 0) {
-        const url = result[0];
-        resolve(url);
-      } else {
-        reject();
+    chrome.scripting.executeScript(
+      {
+        target: {tabId},
+        func: () => window.location.href
+      },
+      results => {
+        if (!chrome.runtime.lastError && results && results.length > 0) {
+          const url = results[0].result;
+          resolve(url);
+        } else {
+          reject();
+        }
       }
-    });
+    );
   });
 }
 
@@ -32,9 +36,13 @@ function getDomain(url) {
 }
 
 function reloadTab(tabId) {
-  chrome.tabs.executeScript(tabId, {
-    code: 'window.location.reload()'
-  }, () => chrome.runtime.lastError);
+  chrome.scripting.executeScript(
+    {
+      target: {tabId},
+      func: () => window.location.reload()
+    },
+    () => chrome.runtime.lastError
+  );
 }
 
 function createMenu(createProperties = {}) {
