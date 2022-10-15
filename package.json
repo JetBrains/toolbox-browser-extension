@@ -5,9 +5,9 @@
   "license": "Apache-2.0",
   "scripts": {
     "prebuild": "eslint .",
-    "build": "webpack --bail -p",
+    "build": "webpack --bail --mode production",
     "postbuild": "node distribution/generate-readme.js",
-    "build:dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
+    "build:dev": "webpack --bail --mode development --devtool inline-source-map",
     "watch": "webpack -w"
   },
   "dependencies": {
@@ -27,22 +27,23 @@
     "@jetbrains/ring-ui-license-checker": "^1.5.5",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
-    "copy-webpack-plugin": "^6.0.2",
+    "copy-webpack-plugin": "^11.0.0",
     "core-js": "^3.25.5",
     "eslint": "^7.3.1",
-    "eslint-import-resolver-webpack": "^0.12.2",
+    "eslint-import-resolver-webpack": "^0.13.2",
     "eslint-plugin-angular": "^4.0.1",
     "eslint-plugin-bdd": "^2.1.1",
     "eslint-plugin-import": "^2.21.2",
     "eslint-plugin-react": "^7.31.10",
     "file-loader": "^6.0.0",
     "husky": "^4.2.5",
-    "imports-loader": "^1.0.0",
+    "imports-loader": "^4.0.1",
     "lint-staged": "^10.2.11",
+    "node-polyfill-webpack-plugin": "^2.0.1",
     "regenerator-runtime": "^0.13.10",
-    "terser-webpack-plugin": "^3.0.6",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12"
+    "terser-webpack-plugin": "^5.3.6",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0"
   },
   "husky": {
     "hooks": {

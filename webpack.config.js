@@ -6,6 +6,7 @@ const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -25,7 +26,12 @@ module.exports = {
     rules: [
       {
         test: require.resolve('whatwg-fetch'),
-        loader: 'imports-loader?Promise=core-js/es6/promise'
+        use: {
+          loader: 'imports-loader',
+          options: {
+            promise: 'core-js/es6/promise'
+          }
+        }
       },
       {
         test: /\.js$/,
@@ -41,7 +47,12 @@ module.exports = {
       },
       {
         test: /\.(svg|png)$/,
-        loader: 'file-loader?name=[name].[ext]'
+        use: {
+          loader: 'file-loader',
+          options: {
+            name: '[name].[ext]'
+          }
+        }
       }
     ]
   },
@@ -78,6 +89,9 @@ module.exports = {
     ]
   },
   plugins: [
+    new NodePolyfillPlugin({
+      includeAliases: ['url']
+    }),
     new CopyWebpackPlugin({
       patterns: [
         {from: 'manifest.json'},

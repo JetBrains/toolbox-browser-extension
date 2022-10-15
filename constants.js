@@ -36,51 +36,53 @@ export const SUPPORTED_LANGUAGES = {
   swift: ['appcode']
 };
 
+const getIconUrl = iconUrl => chrome.runtime.getURL(iconUrl.split('/').pop());
+
 export const SUPPORTED_TOOLS = {
   idea: {
     name: 'IntelliJ IDEA',
     tag: 'idea',
-    icon: chrome.runtime.getURL(ideaIcon)
+    icon: getIconUrl(ideaIcon)
   },
   appcode: {
     name: 'AppCode',
     tag: 'appcode',
-    icon: chrome.runtime.getURL(appcodeIcon)
+    icon: getIconUrl(appcodeIcon)
   },
   clion: {
     name: 'CLion',
     tag: 'clion',
-    icon: chrome.runtime.getURL(clionIcon)
+    icon: getIconUrl(clionIcon)
   },
   pycharm: {
     name: 'PyCharm',
     tag: 'pycharm',
-    icon: chrome.runtime.getURL(pycharmIcon)
+    icon: getIconUrl(pycharmIcon)
   },
   phpstorm: {
     name: 'PhpStorm',
     tag: 'php-storm',
-    icon: chrome.runtime.getURL(phpstormIcon)
+    icon: getIconUrl(phpstormIcon)
   },
   rubymine: {
     name: 'RubyMine',
     tag: 'rubymine',
-    icon: chrome.runtime.getURL(rubymineIcon)
+    icon: getIconUrl(rubymineIcon)
   },
   webstorm: {
     name: 'WebStorm',
     tag: 'web-storm',
-    icon: chrome.runtime.getURL(webstormIcon)
+    icon: getIconUrl(webstormIcon)
   },
   rider: {
     name: 'Rider',
     tag: 'rd',
-    icon: chrome.runtime.getURL(riderIcon)
+    icon: getIconUrl(riderIcon)
   },
   goland: {
     name: 'GoLand',
     tag: 'goland',
-    icon: chrome.runtime.getURL(golandIcon)
+    icon: getIconUrl(golandIcon)
   }
 };
 
