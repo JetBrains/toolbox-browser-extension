@@ -46,13 +46,8 @@ module.exports = {
         }
       },
       {
-        test: /\.(svg|png)$/,
-        use: {
-          loader: 'file-loader',
-          options: {
-            name: '[name].[ext]'
-          }
-        }
+        test: /\.svg$/,
+        type: 'asset/inline'
       }
     ]
   },
