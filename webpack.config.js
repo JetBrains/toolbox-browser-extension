@@ -56,7 +56,6 @@ module.exports = {
       new TerserPlugin({
         extractComments: false,
         terserOptions: {
-          extractComments: false,
           mangle: false,
           compress: {
             defaults: false,
@@ -66,13 +65,12 @@ module.exports = {
             expression: false,
             sequences: false,
             /* eslint-disable camelcase */
-            dead_code: true,
             join_vars: false,
             keep_classnames: true,
             keep_fnames: true
             /* eslint-enable camelcase */
           },
-          output: {
+          format: {
             beautify: true,
             comments: false,
             /* eslint-disable camelcase */
