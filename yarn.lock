@@ -1213,10 +1213,10 @@
   resolved "https://registry.yarnpkg.com/@octetstream/promisify/-/promisify-2.0.2.tgz#29ac3bd7aefba646db670227f895d812c1a19615"
   integrity sha512-7XHoRB61hxsz8lBQrjC1tq/3OEIgpvGWg6DKAdwi7WRzruwkmsdwmOoUXbU4Dtd4RSOMDwed0SkP3y8UlMt1Bg==
 
-"@types/chrome@0.0.127":
-  version "0.0.127"
-  resolved "https://registry.yarnpkg.com/@types/chrome/-/chrome-0.0.127.tgz#9e29f351d558f60e95326ceadc586fdcc824151b"
-  integrity sha512-hBB9EApLYKKn2GvklVkTxVP6vZvxsH9okyIRUinNtMzZHIgIKWQk/ESbX+O5g4Bihfy38+aFGn7Kl7Cxou5JUg==
+"@types/chrome@0.0.178":
+  version "0.0.178"
+  resolved "https://registry.yarnpkg.com/@types/chrome/-/chrome-0.0.178.tgz#fba7969208cef79ae752dc1138ff05de39f5ffde"
+  integrity sha512-U+G5YG2pH0qvLrYVJ9aT5VbPXYR3fAFyCuRBRAA14Pv7GrkFzDJuXPspgdeLYaKzGEp4rymUkuqUOuFz18LI1g==
   dependencies:
     "@types/filesystem" "*"
     "@types/har-format" "*"
@@ -2340,6 +2340,11 @@ escape-string-regexp@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz#14ba83a5d373e3d311e5afca29cf5bfad965bf34"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
+
+escape-string-regexp@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz#4683126b500b61762f2dbebace1806e8be31b1c8"
+  integrity sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==
 
 eslint-import-resolver-node@^0.3.6:
   version "0.3.6"
@@ -4755,12 +4760,20 @@ watchpack@^2.4.0:
     glob-to-regexp "^0.4.1"
     graceful-fs "^4.1.2"
 
-webext-additional-permissions@^1.0.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/webext-additional-permissions/-/webext-additional-permissions-1.1.0.tgz#e74c9bb70678ba1586cd7528cc973d6482cc7286"
-  integrity sha512-t3kOZAaK+g1Q/1pjQQKhSrYqBfXKiGNdXk/UxJn9DfCyTSNFsLZ0byJ1zHe2CU22ChbGuK0Hw0rYLBMy9sVHFw==
+webext-additional-permissions@^2.3.0:
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/webext-additional-permissions/-/webext-additional-permissions-2.3.0.tgz#cde59ff8358fc07d0f32adc7516d7d875b8dda60"
+  integrity sha512-WhrE049ubufZbZ9AZbC9ULQX57+R22L5IUXUNOzMuh73QKXVomcXP5H6xa8Nm5wBLFjkgB0q5HB4SPO9+Rra2Q==
   dependencies:
-    "@types/chrome" "0.0.127"
+    "@types/chrome" "0.0.178"
+    webext-patterns "^1.1.1"
+
+webext-patterns@^1.1.1:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/webext-patterns/-/webext-patterns-1.2.0.tgz#871f035b770e4ce7ec60ee2eb2197ff12b7ebaa9"
+  integrity sha512-AoRWbDuQooGxWqmcGiTN2gIWmMmLUr4TgQ69XhEzxXf+s+vUeKFA9WEKQxWvCyEBetTWhx69WQN9rDupjnh0Mw==
+  dependencies:
+    escape-string-regexp "^5.0.0"
 
 webpack-cli@^4.10.0:
   version "4.10.0"
