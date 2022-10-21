@@ -37,7 +37,7 @@
     "eslint-plugin-react": "^7.31.10",
     "husky": "^4.2.5",
     "imports-loader": "^4.0.1",
-    "lint-staged": "^10.2.11",
+    "lint-staged": "^13.0.3",
     "node-polyfill-webpack-plugin": "^2.0.1",
     "regenerator-runtime": "^0.13.10",
     "terser-webpack-plugin": "^5.3.6",
@@ -51,8 +51,7 @@
   },
   "lint-staged": {
     "*.js": [
-      "yarn prebuild --fix",
-      "git add"
+      "yarn prebuild --fix"
     ]
   }
 }
