@@ -14,7 +14,7 @@
   "dependencies": {
     "@jetbrains/logos": "^2.2.9",
     "bitbucket-url-to-object": "^0.3.0",
-    "content-scripts-register-polyfill": "1.0.0",
+    "content-scripts-register-polyfill": "^4.0.0",
     "github-url-to-object": "^4.0.4",
     "parse-bitbucket-url": "^0.3.0",
     "selector-observer": "^2.1.6",
