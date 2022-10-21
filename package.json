@@ -11,7 +11,7 @@
     "watch": "webpack -w"
   },
   "dependencies": {
-    "@jetbrains/logos": "^2.2.7",
+    "@jetbrains/logos": "^2.2.9",
     "bitbucket-url-to-object": "^0.3.0",
     "content-scripts-register-polyfill": "1.0.0",
     "github-url-to-object": "^4.0.4",
@@ -21,7 +21,7 @@
     "whatwg-fetch": "^3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.19.3",
+    "@babel/core": "^7.19.6",
     "@babel/eslint-parser": "^7.19.1",
     "@babel/preset-env": "^7.19.4",
     "@jetbrains/eslint-config": "^5.3.1",
