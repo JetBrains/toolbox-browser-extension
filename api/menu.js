@@ -1,11 +1,8 @@
 import 'regenerator-runtime/runtime';
-import 'content-scripts-register-polyfill';
 import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
 
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
 const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';
-
-const contentScriptUnregistrators = new Map();
 
 let activeTabId = null;
 
@@ -48,7 +45,7 @@ function reloadTab(tabId) {
 function createMenu(createProperties = {}) {
   return new Promise(resolve => {
     const contexts = [
-      chrome.contextMenus.ContextType.BROWSER_ACTION
+      chrome.contextMenus.ContextType.ACTION
     ];
     const documentUrlPatterns = [
       'http://*/*',
@@ -176,9 +173,7 @@ function handleMenuItemClick(info, tab) {
         reloadTab(tab.id);
       });
     } else {
-      const unregistrator = contentScriptUnregistrators.get(domainMatch);
-      unregistrator.unregister();
-      contentScriptUnregistrators.delete(tab.url);
+      chrome.scripting.unregisterContentScripts({ids: [domainMatch]});
       reloadTab(tab.id);
     }
   }).catch(() => {
@@ -200,20 +195,12 @@ function handleTabUpdated(tabId, changeInfo) {
 function registerEnterpriseContentScripts(domainMatch) {
   return new Promise((resolve, reject) => {
     const contentScriptOptions = {
+      id: domainMatch,
       matches: [domainMatch],
-      js: [
-        {file: DETECT_ENTERPRISE_CONTENT_SCRIPT}
-      ]
+      js: [DETECT_ENTERPRISE_CONTENT_SCRIPT]
     };
-    // implementation of chrome.contentScripts.register doesn't work as expected in FF
-    // (returns promise which doesn't resolve soon)
-    (window.browser || window.chrome).contentScripts.register(contentScriptOptions).
-      then(newUnregistrator => {
-        if (contentScriptUnregistrators.has(domainMatch)) {
-          const prevUnregistrator = contentScriptUnregistrators.get(domainMatch);
-          prevUnregistrator.unregister();
-        }
-        contentScriptUnregistrators.set(domainMatch, newUnregistrator);
+    chrome.scripting.registerContentScripts([contentScriptOptions]).
+      then(() => {
         resolve();
       }).
       catch(() => {
