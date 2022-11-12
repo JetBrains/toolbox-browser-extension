@@ -83,7 +83,7 @@ module.exports = {
   },
   plugins: [
     new NodePolyfillPlugin({
-      includeAliases: ['url']
+      includeAliases: ['url', 'process']
     }),
     new CopyWebpackPlugin({
       patterns: [
