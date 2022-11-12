@@ -18,8 +18,7 @@
     "github-url-to-object": "^4.0.4",
     "parse-bitbucket-url": "^0.3.0",
     "selector-observer": "^2.1.6",
-    "webext-additional-permissions": "^2.3.0",
-    "whatwg-fetch": "^3.0.0"
+    "webext-additional-permissions": "^2.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.2",

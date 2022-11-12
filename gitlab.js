@@ -1,5 +1,4 @@
 /** @author Johannes Tegnér <johannes@jitesoft.com> */
-import 'whatwg-fetch';
 import {observe} from 'selector-observer';
 
 import {

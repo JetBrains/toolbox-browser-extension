@@ -1,4 +1,3 @@
-import 'whatwg-fetch';
 import {observe} from 'selector-observer';
 import bb from 'bitbucket-url-to-object';
 

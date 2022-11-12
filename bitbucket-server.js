@@ -1,4 +1,3 @@
-import 'whatwg-fetch';
 import {observe} from 'selector-observer';
 import parseBitbucketUrl from 'parse-bitbucket-url';
 

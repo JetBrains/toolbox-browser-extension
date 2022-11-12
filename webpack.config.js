@@ -25,15 +25,6 @@ module.exports = {
   module: {
     rules: [
       {
-        test: require.resolve('whatwg-fetch'),
-        use: {
-          loader: 'imports-loader',
-          options: {
-            promise: 'core-js/es6/promise'
-          }
-        }
-      },
-      {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {

@@ -1,4 +1,3 @@
-import 'whatwg-fetch';
 import {observe} from 'selector-observer';
 import gh from 'github-url-to-object';
 
