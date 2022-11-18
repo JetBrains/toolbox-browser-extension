@@ -28,7 +28,7 @@
     "@jetbrains/ring-ui-license-checker": "^1.5.5",
     "babel-loader": "^9.1.0",
     "copy-webpack-plugin": "^11.0.0",
-    "core-js": "^3.26.0",
+    "core-js": "^3.26.1",
     "eslint": "^8.27.0",
     "eslint-import-resolver-webpack": "^0.13.2",
     "eslint-plugin-angular": "^4.0.1",
@@ -39,10 +39,10 @@
     "imports-loader": "^4.0.1",
     "lint-staged": "^13.0.3",
     "node-polyfill-webpack-plugin": "^2.0.1",
-    "regenerator-runtime": "^0.13.10",
+    "regenerator-runtime": "^0.13.11",
     "terser-webpack-plugin": "^5.3.6",
     "webpack": "^5.75.0",
-    "webpack-cli": "^4.10.0"
+    "webpack-cli": "^5.0.0"
   },
   "lint-staged": {
     "*.js": [
