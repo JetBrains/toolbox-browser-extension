@@ -190,13 +190,23 @@ const renderCloneButtons = (tools, gitlabMetadata) => {
   }
 };
 
-const addOpenButtonEventHandler = (domElement, tool, gitlabMetadata) => {
-  domElement.addEventListener('click', e => {
+const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
+  const mrPageHashPartsCount = 3;
+
+  buttonElement.addEventListener('click', e => {
     e.preventDefault();
 
-    const branchAndFilePath = location.pathname.split('/blob/')[1];
-    const filePath = branchAndFilePath.split('/').splice(1).join('/');
-    let lineNumber = location.hash.replace('#L', '');
+    const filePath = e.currentTarget.dataset.filePath;
+    let lineNumber = '';
+    if (document.body.dataset.page === 'projects:merge_requests:show') {
+      const hashParts = location.hash.split('_');
+      if (hashParts.length === mrPageHashPartsCount) {
+        lineNumber = hashParts.pop();
+      }
+    } else {
+      lineNumber = location.hash.replace('#L', '');
+    }
+
     if (lineNumber === '') {
       lineNumber = null;
     }
@@ -205,14 +215,14 @@ const addOpenButtonEventHandler = (domElement, tool, gitlabMetadata) => {
   });
 };
 
-const removeOpenButtons = () => {
-  const openButtonGroup = document.querySelector(`.${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
+const removeOpenButtons = targetElement => {
+  const openButtonGroup = targetElement.querySelector(`.${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (openButtonGroup) {
     openButtonGroup.remove();
   }
 };
 
-const createOpenButton = (tool, gitlabMetadata) => {
+const createOpenButton = (tool, gitlabMetadata, filePath) => {
   const button = document.createElement('button');
   button.setAttribute('class', 'btn btn-default btn-md gl-button btn-icon');
   button.setAttribute('type', 'button');
@@ -222,6 +232,7 @@ const createOpenButton = (tool, gitlabMetadata) => {
   button.dataset.class = 'btn btn-default btn-md gl-button btn-icon';
   button.dataset.title = `Open this file in ${tool.name}`;
   button.dataset.originalTitle = button.dataset.title;
+  button.dataset.filePath = filePath;
   button.setAttribute('aria-label', button.dataset.title);
 
   const buttonIcon = document.createElement('img');
@@ -235,33 +246,43 @@ const createOpenButton = (tool, gitlabMetadata) => {
   return button;
 };
 
-const renderOpenButtons = (tools, gitlabMetadata) => {
-  const buttonGroupAnchorElement = document.querySelector('.file-holder .file-actions .btn-group:last-child');
+const renderOpenButtons = (tools, gitlabMetadata, targetElement) => {
+  const buttonGroupAnchorElement = targetElement.querySelector('.file-actions .btn-group:last-child');
   if (buttonGroupAnchorElement) {
     const toolboxButtonGroup = document.createElement('div');
     toolboxButtonGroup.setAttribute('class', `btn-group ml-2 ${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
     toolboxButtonGroup.setAttribute('role', 'group');
 
-    tools.forEach(tool => {
-      const action = createOpenButton(tool, gitlabMetadata);
-      toolboxButtonGroup.appendChild(action);
-    });
+    const copyFilePathButton = targetElement.querySelector('.file-header-content button[id^="clipboard-button"]');
+    if (copyFilePathButton) {
+      try {
+        const {text: filePath} = JSON.parse(copyFilePathButton.dataset.clipboardText);
+        if (filePath) {
+          tools.forEach(tool => {
+            const action = createOpenButton(tool, gitlabMetadata, filePath);
+            toolboxButtonGroup.appendChild(action);
+          });
 
-    buttonGroupAnchorElement.insertAdjacentElement('afterend', toolboxButtonGroup);
+          buttonGroupAnchorElement.insertAdjacentElement('afterend', toolboxButtonGroup);
+        }
+      } catch {
+        // do nothing
+      }
+    }
   }
 };
 
 const startTrackingDOMChanges = gitlabMetadata =>
   observe(
-    '.file-holder .file-actions',
+    '.file-holder',
     {
-      add() {
+      add(el) {
         fetchTools(gitlabMetadata).then(tools => {
-          renderOpenButtons(tools, gitlabMetadata);
+          renderOpenButtons(tools, gitlabMetadata, el);
         });
       },
-      remove() {
-        removeOpenButtons();
+      remove(el) {
+        removeOpenButtons(el);
       }
     }
   );
