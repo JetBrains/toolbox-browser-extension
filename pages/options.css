@@ -19,14 +19,27 @@
   padding-right: 2rem;
 }
 
-.option__extra-buttons {
+.extra-buttons {
   width: 100%;
   padding: 0.4rem 0;
 }
 
-.option__extra-buttons > img {
+.extra-buttons .extra-buttons__image {
   max-width: 100%;
 }
+
+@media (prefers-color-scheme: dark) {
+  .extra-buttons__image-light {
+    display: none;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  .extra-buttons__image-dark {
+    display: none;
+  }
+}
+
 
 h1 + .option {
   margin-top: 3rem;
