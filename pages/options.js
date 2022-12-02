@@ -1,7 +1,15 @@
 const selectProtocolInput = protocol => {
-  const protocolInput = document.querySelector(`.js-protocol-input[value="${protocol}"]`);
-  if (protocolInput) {
-    protocolInput.checked = true;
+  const checkedProtocolInput = document.querySelector(`.js-protocol-input[value="${protocol}"]`);
+  if (checkedProtocolInput) {
+    checkedProtocolInput.checked = true;
+  }
+
+  const uncheckedProtocolInput = document.querySelector(`.js-protocol-input:not([value="${protocol}"])`);
+  if (uncheckedProtocolInput) {
+    const labelClone = document.getElementById('lbl-clone');
+    if (labelClone) {
+      labelClone.setAttribute('for', uncheckedProtocolInput.id);
+    }
   }
 };
 
