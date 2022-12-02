@@ -1,5 +1,9 @@
 @import "variables.css";
 
+html {
+  color-scheme: light dark;
+}
+
 body {
   background-color: var(--main-background-color);
   box-sizing: border-box;
