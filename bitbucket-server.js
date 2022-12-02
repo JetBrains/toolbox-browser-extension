@@ -1,10 +1,9 @@
 import {observe} from 'selector-observer';
 import parseBitbucketUrl from 'parse-bitbucket-url';
+import jetBrainsIcon from '@jetbrains/logos/jetbrains/jetbrains.svg';
 
 import {
-  SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS,
-  DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
 } from './constants';
 
@@ -49,28 +48,12 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
     });
 });
 
-const fetchLanguages = () => new Promise(resolve => {
-  // we don't know how to obtain repo languages in stash
-  resolve(DEFAULT_LANGUAGE);
+const selectTools = () => new Promise(resolve => {
+  resolve(Object.values(SUPPORTED_TOOLS));
 });
 
-const selectTools = language => new Promise(resolve => {
-  // All languages in Bitbucket match the common list with an exception of HTML
-  const normalizedLanguage = language === 'html/css' ? 'html' : language;
-
-  const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
-  const normalizedToolIds = toolIds && toolIds.length > 0
-    ? toolIds
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  resolve(tools);
-});
-
-const fetchTools = bitbucketMetadata => fetchLanguages(bitbucketMetadata).then(selectTools);
+// we don't know how to obtain repo languages in stash
+const fetchTools = bitbucketMetadata => selectTools(bitbucketMetadata);
 
 const renderPageAction = bitbucketMetadata => new Promise(resolve => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -113,7 +96,7 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
   });
 };
 
-const createCloneButton = (tool, bitbucketMetadata) => {
+const createCloneButton = tool => {
   const title = `Clone in ${tool.name}`;
   const button = document.createElement('a');
   button.setAttribute('class', 'aui-nav-item');
@@ -132,8 +115,6 @@ const createCloneButton = (tool, bitbucketMetadata) => {
   button.appendChild(buttonIcon);
   button.appendChild(buttonLabel);
 
-  addCloneButtonEventHandler(button, bitbucketMetadata);
-
   return button;
 };
 
@@ -143,14 +124,30 @@ const renderCloneButtons = bitbucketMetadata => {
     return;
   }
 
+  const showCloneButtonsButtonContainer = document.createElement('li');
+  const showCloneButtonsButton = createCloneButton({
+    name: 'IDE',
+    icon: chrome.runtime.getURL(jetBrainsIcon)
+  });
+  showCloneButtonsButton.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('.js-toolbox-clone-repo').forEach(btn => {
+      btn.classList.toggle('hidden');
+    });
+  });
+  showCloneButtonsButtonContainer.appendChild(showCloneButtonsButton);
+  cloneElement.insertAdjacentElement('beforebegin', showCloneButtonsButtonContainer);
+
   fetchTools(bitbucketMetadata).
     then(tools => {
       tools.forEach(tool => {
         const buttonContainer = document.createElement('li');
-        buttonContainer.setAttribute('class', 'js-toolbox-clone-repo');
+        buttonContainer.setAttribute('class', 'js-toolbox-clone-repo hidden');
 
-        const button = createCloneButton(tool, bitbucketMetadata);
+        const button = createCloneButton(tool);
         buttonContainer.appendChild(button);
+
+        addCloneButtonEventHandler(button, bitbucketMetadata);
 
         cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
       });
@@ -169,18 +166,24 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
-    const filePathIndex = 6;
-    const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
-    let lineNumber = location.hash.replace('#', '');
-    if (lineNumber === '') {
-      lineNumber = null;
+    let filePath;
+    let lineNumber;
+    if (location.pathname.search('pull-requests') !== 0) {
+      filePath = location.hash.replace('#', '');
+    } else {
+      const filePathIndex = 6;
+      lineNumber = location.hash.replace('#', '');
+      if (lineNumber === '') {
+        lineNumber = null;
+      }
+      filePath = location.pathname.split('/').splice(filePathIndex).join('/');
     }
 
     callToolbox(getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 
-const createOpenButton = (tool, bitbucketMetadata) => {
+const createButtonWithToolIcon = tool => {
   const buttonContainer = document.createElement('div');
   buttonContainer.setAttribute('class', `aui-buttons ${OPEN_BUTTON_JS_CSS_CLASS}`);
 
@@ -197,7 +200,13 @@ const createOpenButton = (tool, bitbucketMetadata) => {
   button.appendChild(buttonIcon);
 
   buttonContainer.append(button);
-  addOpenButtonEventHandler(button, tool, bitbucketMetadata);
+
+  return buttonContainer;
+};
+
+const createOpenButton = (tool, bitbucketMetadata) => {
+  const buttonContainer = createButtonWithToolIcon(tool);
+  addOpenButtonEventHandler(buttonContainer.firstChild, tool, bitbucketMetadata);
 
   return buttonContainer;
 };
@@ -208,6 +217,113 @@ const setOpenButtonTooltips = () => {
   document.body.appendChild(tooltipScript);
 };
 
+
+const getLastSelectedToolKey = bitbucketMetadata => `last-used-tool-${bitbucketMetadata.repo}`;
+
+const getLastSelectedTool = bitbucketMetadata => {
+  const toolName = localStorage.getItem(getLastSelectedToolKey(bitbucketMetadata)) || 'idea';
+  for (const supportedToolsKey in SUPPORTED_TOOLS) {
+    if (SUPPORTED_TOOLS[supportedToolsKey].tag === toolName) {
+      return SUPPORTED_TOOLS[supportedToolsKey];
+    }
+  }
+  return SUPPORTED_TOOLS.idea;
+};
+
+const setLastSelectedTool = (toolTag, bitbucketMetadata) => {
+  localStorage.setItem(getLastSelectedToolKey(bitbucketMetadata), toolTag);
+};
+
+const createOpenButtonsMenu = (container, bitbucketMetadata, isCodeReview) => {
+  const openButtonContainer = document.createElement('div');
+  const diffActionsList = document.createElement('div');
+  diffActionsList.setAttribute('class', 'diff-actions-open-in-toolbox');
+  diffActionsList.setAttribute('style', 'position: relative; display: inline-flex; align-items: center;');
+  diffActionsList.append(openButtonContainer);
+  container.prepend(diffActionsList);
+
+  const createToolBtn = tool => {
+    const activeTool = createOpenButton(tool, bitbucketMetadata);
+    if (isCodeReview) {
+      activeTool.firstChild.setAttribute('style', 'font-size: 15px;');
+    }
+    openButtonContainer.append(activeTool);
+    return activeTool;
+  };
+  let activeTool = createToolBtn(getLastSelectedTool(bitbucketMetadata));
+
+  const toolSelect = document.createElement('div');
+  diffActionsList.append(toolSelect);
+  toolSelect.setAttribute('class', 'diff-actions-tool-select hidden');
+  toolSelect.setAttribute('style', 'position: absolute;' +
+    'z-index: 3;' +
+    'background: #fff;' +
+    'display: flex;' +
+    'flex-direction: column;' +
+    'border-radius: 3px;' +
+    'box-shadow: rgb(9 30 66 / 25%) 0px 4px 8px -2px, rgb(9 30 66 / 31%) 0px 0px 1px;\n' +
+    'padding: 5px 4px 0px;' +
+    'left: -4px;' +
+    'top: 37px;'
+  );
+
+  const tooglefileToolbarZIndex = () => {
+    const toolBar = document.querySelector('.file-toolbar');
+    // eslint-disable-next-line no-magic-numbers
+    toolBar.style.zIndex = toolBar.style.zIndex === '' ? 3 : '';
+  };
+
+  const toolSelectToggleButton = document.createElement('button');
+  toolSelectToggleButton.addEventListener('click', () => {
+    if (!isCodeReview) {
+      tooglefileToolbarZIndex();
+    }
+    toolSelect.classList.toggle('hidden');
+  });
+  toolSelectToggleButton.setAttribute('class', 'aui-button');
+  toolSelectToggleButton.setAttribute('style', 'background: transparent; padding: 2px;');
+  diffActionsList.append(toolSelectToggleButton);
+  const toolSelectToggleIcon = document.createElement('span');
+  toolSelectToggleIcon.setAttribute('class', 'aui-icon aui-icon-small aui-iconfont-chevron-right');
+  toolSelectToggleIcon.setAttribute('style', 'cursor: pointer; transform: rotate(90deg);');
+  if (!isCodeReview) {
+    toolSelectToggleIcon.style.marginBottom = '4px';
+  }
+  toolSelectToggleButton.append(toolSelectToggleIcon);
+
+  window.addEventListener('click', e => {
+    if (e.target !== container && !container.contains(e.target) && !toolSelect.classList.contains('hidden')) {
+      toolSelect.classList.add('hidden');
+      if (!isCodeReview) {
+        tooglefileToolbarZIndex();
+      }
+    }
+  });
+
+  fetchTools(bitbucketMetadata).then(tools => {
+    tools.forEach(tool => {
+      const toolSelectButtonContainer = createButtonWithToolIcon(tool, bitbucketMetadata);
+      toolSelectButtonContainer.firstChild.addEventListener('click', () => {
+        activeTool.remove();
+        activeTool = createToolBtn(tool);
+        setLastSelectedTool(tool.tag, bitbucketMetadata);
+        toolSelect.classList.add('hidden');
+        if (!isCodeReview) {
+          tooglefileToolbarZIndex();
+        }
+      });
+      toolSelectButtonContainer.setAttribute('style', 'margin: 0 0 5px;');
+      if (isCodeReview) {
+        toolSelectButtonContainer.style.fontSize = '15px';
+      }
+      toolSelect.append(toolSelectButtonContainer);
+    });
+    setOpenButtonTooltips();
+  }).catch(() => {
+    // do nothing
+  });
+};
+
 const openButtonsRendered = () => document.getElementsByClassName(OPEN_BUTTON_JS_CSS_CLASS).length > 0;
 
 const renderOpenButtons = bitbucketMetadata => {
@@ -216,17 +332,7 @@ const renderOpenButtons = bitbucketMetadata => {
   }
   const anchorElement = document.querySelector('.file-toolbar > .secondary > .aui-buttons:first-child');
   if (anchorElement) {
-    fetchTools(bitbucketMetadata).
-      then(tools => {
-        tools.forEach(tool => {
-          const action = createOpenButton(tool, bitbucketMetadata);
-          anchorElement.insertAdjacentElement('beforebegin', action);
-        });
-        setOpenButtonTooltips();
-      }).
-      catch(() => {
-        // do nothing
-      });
+    createOpenButtonsMenu(anchorElement, bitbucketMetadata);
   }
 };
 
@@ -236,7 +342,15 @@ const removeOpenButtons = () => {
   });
 };
 
-const startTrackingDOMChanges = bitbucketMetadata =>
+const renderOpenButtonsInCodeReview = bitbucketMetadata => {
+  const diffActionsContainer = document.querySelector('.diff-actions');
+  if (!diffActionsContainer) {
+    return;
+  }
+  createOpenButtonsMenu(diffActionsContainer, bitbucketMetadata, true);
+};
+
+const startTrackingDOMChanges = bitbucketMetadata => {
   observe('#file-content > .file-toolbar > .secondary > .aui-buttons > .file-blame', {
     add(/*el*/) {
       renderOpenButtons(bitbucketMetadata);
@@ -245,6 +359,13 @@ const startTrackingDOMChanges = bitbucketMetadata =>
       removeOpenButtons();
     }
   });
+
+  observe('.diff-actions', {
+    add(/*el*/) {
+      renderOpenButtonsInCodeReview(bitbucketMetadata);
+    }
+  });
+};
 
 const stopTrackingDOMChanges = observer => {
   if (observer) {
