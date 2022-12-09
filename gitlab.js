@@ -142,6 +142,8 @@ const removeCloneButtons = () => {
   });
 };
 
+const cloneButtonsRendered = () => document.getElementsByClassName(CLONE_BUTTON_GROUP_JS_CSS_CLASS).length > 0;
+
 const addCloneButtonEventHandler = (button, gitlabMetadata) => {
   button.addEventListener('click', e => {
     e.preventDefault();
@@ -175,6 +177,10 @@ const createCloneButton = (tool, gitlabMetadata) => {
 };
 
 const renderCloneButtons = (tools, gitlabMetadata) => {
+  if (cloneButtonsRendered()) {
+    return;
+  }
+
   const projectCloneHolder = document.querySelector('.project-clone-holder');
 
   if (projectCloneHolder) {
@@ -246,7 +252,13 @@ const createOpenButton = (tool, gitlabMetadata, filePath) => {
   return button;
 };
 
+const openButtonsRendered = () => document.getElementsByClassName(OPEN_BUTTON_GROUP_JS_CSS_CLASS).length > 0;
+
 const renderOpenButtons = (tools, gitlabMetadata, targetElement) => {
+  if (openButtonsRendered()) {
+    return;
+  }
+
   const buttonGroupAnchorElement = targetElement.querySelector('.file-actions .btn-group:last-child');
   if (buttonGroupAnchorElement) {
     const toolboxButtonGroup = document.createElement('div');
