@@ -35,8 +35,6 @@ const handleMessage = (message, sender, sendResponse) => {
       chrome.browserAction.setPopup({
         tabId: sender.tab.id,
         popup: chrome.runtime.getURL(uri)
-      }).then(() => {
-        // do nothing
       });
       break;
 
@@ -48,8 +46,6 @@ const handleMessage = (message, sender, sendResponse) => {
       chrome.browserAction.setPopup({
         tabId: sender.tab.id,
         popup: chrome.runtime.getURL('jetbrains-toolbox-disabled-popup.html')
-      }).then(() => {
-        // do nothing
       });
       break;
 
