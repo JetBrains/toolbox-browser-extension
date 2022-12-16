@@ -14,6 +14,7 @@ import {
   callToolbox
 } from './api/toolbox';
 
+const CLONE_CONTAINER_JS_CSS_CLASS = 'js-toolbox-clone-repo';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
 
 const fetchMetadata = () => new Promise((resolve, reject) => {
@@ -55,7 +56,7 @@ const fetchLanguages = () => new Promise(resolve => {
 });
 
 const selectTools = language => new Promise(resolve => {
-  // All languages in Bitbucket match the common list with an exception of HTML
+  // All languages in Bitbucket match the common list with an exception to HTML
   const normalizedLanguage = language === 'html/css' ? 'html' : language;
 
   const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
@@ -146,13 +147,17 @@ const renderCloneButtons = bitbucketMetadata => {
   fetchTools(bitbucketMetadata).
     then(tools => {
       tools.forEach(tool => {
-        const buttonContainer = document.createElement('li');
-        buttonContainer.setAttribute('class', 'js-toolbox-clone-repo');
+        const classEnding = tool.tag.replace('-', '');
+        const buttonContainerClass = `${CLONE_CONTAINER_JS_CSS_CLASS} ${CLONE_CONTAINER_JS_CSS_CLASS}-${classEnding}`;
+        if (document.getElementsByClassName(buttonContainerClass).length === 0) {
+          const buttonContainer = document.createElement('li');
+          buttonContainer.setAttribute('class', buttonContainerClass);
 
-        const button = createCloneButton(tool, bitbucketMetadata);
-        buttonContainer.appendChild(button);
+          const button = createCloneButton(tool, bitbucketMetadata);
+          buttonContainer.appendChild(button);
 
-        cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
+          cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
+        }
       });
     }).catch(() => {
       // do nothing
@@ -160,7 +165,7 @@ const renderCloneButtons = bitbucketMetadata => {
 };
 
 const removeCloneButtons = () => {
-  document.querySelectorAll('.js-toolbox-clone-repo').forEach(buttonContainer => {
+  document.querySelectorAll(`.${CLONE_CONTAINER_JS_CSS_CLASS}`).forEach(buttonContainer => {
     buttonContainer.remove();
   });
 };
