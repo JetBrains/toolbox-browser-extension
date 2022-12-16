@@ -22,12 +22,21 @@ chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
   modifyPagesInput.checked = data.allow;
 });
 
+chrome.runtime.sendMessage({type: 'get-logging'}, data => {
+  const loggingInput = document.querySelector('.js-logging-input');
+  loggingInput.checked = data.allow;
+});
+
 document.querySelector('.js-protocol-input-group').addEventListener('change', e => {
   chrome.runtime.sendMessage({type: 'save-protocol', protocol: e.target.value});
 });
 
 document.querySelector('.js-modify-pages-input').addEventListener('change', e => {
   chrome.runtime.sendMessage({type: 'save-modify-pages', allow: e.target.checked});
+});
+
+document.querySelector('.js-logging-input').addEventListener('change', e => {
+  chrome.runtime.sendMessage({type: 'save-logging', allow: e.target.checked});
 });
 
 chrome.runtime.onMessage.addListener(message => {

@@ -1,75 +1,61 @@
 import {CLONE_PROTOCOLS} from '../constants';
 
+import ensureLogger from './logger';
+
 const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',
-  MODIFY_PAGES: 'modify-pages'
+  MODIFY_PAGES: 'modify-pages',
+  LOGGING: 'logging'
 };
 
 const DEFAULTS = {
   PROTOCOL: CLONE_PROTOCOLS.HTTPS,
-  MODIFY_PAGES: true
+  MODIFY_PAGES: true,
+  LOGGING: false
 };
 
-const saveToStorage = (key, value) => new Promise((resolve, reject) => {
+const saveToStorage = (key, value) => new Promise(resolve => {
   chrome.storage.local.set({[key]: value}, () => {
     if (chrome.runtime.lastError) {
-      reject(chrome.runtime.lastError.message);
+      ensureLogger().error(chrome.runtime.lastError);
     } else {
-      resolve();
+      ensureLogger().info(`Saved the '${key}' setting, the new value is '${value}'`);
     }
+    resolve();
   });
 });
 
-const getFromStorage = key => new Promise((resolve, reject) => {
+const getFromStorage = (key, defaultValue) => new Promise(resolve => {
   chrome.storage.local.get([key], result => {
     if (chrome.runtime.lastError) {
-      reject(chrome.runtime.lastError.message);
+      ensureLogger().error(chrome.runtime.lastError);
+      resolve(defaultValue);
     } else {
       resolve(result[key]);
     }
   });
 });
 
-export function getProtocol() {
-  return new Promise(resolve => {
-    getFromStorage(STORAGE_ITEMS.PROTOCOL).
-      then(protocol => {
-        resolve(protocol || DEFAULTS.PROTOCOL);
-      }).
-      catch(() => {
-        resolve(DEFAULTS.PROTOCOL);
-      });
-  });
+export async function getProtocol() {
+  return await getFromStorage(STORAGE_ITEMS.PROTOCOL, DEFAULTS.PROTOCOL);
 }
 
-export function saveProtocol(protocol) {
-  return new Promise(resolve => {
-    saveToStorage(STORAGE_ITEMS.PROTOCOL, protocol).
-      then(resolve).
-      catch(() => {
-        resolve();
-      });
-  });
+export async function saveProtocol(protocol) {
+  return await saveToStorage(STORAGE_ITEMS.PROTOCOL, protocol);
 }
 
-export function getModifyPages() {
-  return new Promise(resolve => {
-    getFromStorage(STORAGE_ITEMS.MODIFY_PAGES).
-      then(allow => {
-        resolve(allow == null ? DEFAULTS.MODIFY_PAGES : allow);
-      }).
-      catch(() => {
-        resolve(DEFAULTS.MODIFY_PAGES);
-      });
-  });
+export async function getModifyPages() {
+  return await getFromStorage(STORAGE_ITEMS.MODIFY_PAGES, DEFAULTS.MODIFY_PAGES);
 }
 
-export function saveModifyPages(allow) {
-  return new Promise(resolve => {
-    saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow).
-      then(resolve).
-      catch(() => {
-        resolve();
-      });
-  });
+export async function saveModifyPages(allow) {
+  return await saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow);
+}
+
+export async function getLogging() {
+  return await getFromStorage(STORAGE_ITEMS.LOGGING, DEFAULTS.LOGGING);
+}
+
+export async function saveLogging(allow) {
+  return await saveToStorage(STORAGE_ITEMS.LOGGING, allow);
 }

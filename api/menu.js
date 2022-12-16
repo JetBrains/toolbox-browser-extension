@@ -227,7 +227,7 @@ function registerContentScripts() {
     });
 }
 
-export function createExtensionMenu() {
+export default function createExtensionMenu() {
   registerContentScripts();
   createMenu().catch(() => {
     // do nothing

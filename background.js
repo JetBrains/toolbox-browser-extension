@@ -2,9 +2,12 @@ import {
   getProtocol,
   saveProtocol,
   getModifyPages,
-  saveModifyPages
+  saveModifyPages,
+  getLogging,
+  saveLogging
 } from './api/storage';
-import {createExtensionMenu} from './api/menu';
+import createExtensionMenu from './api/menu';
+import ensureLogger from './api/logger';
 
 const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
@@ -23,71 +26,80 @@ const handleMessage = (message, sender, sendResponse) => {
         tabId: sender.tab.id,
         path: {128: 'icon-128.png'}
       });
-
       const {
         project,
         https,
         ssh
       } = message;
       const uri = encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
-      chrome.browserAction.setPopup(
-        {
-          tabId: sender.tab.id,
-          popup: chrome.runtime.getURL(uri)
-        }
-      );
+      chrome.browserAction.setPopup({
+        tabId: sender.tab.id,
+        popup: chrome.runtime.getURL(uri)
+      }).then(() => {
+        // do nothing
+      });
       break;
+
     case 'disable-page-action':
       chrome.browserAction.setIcon({
         tabId: sender.tab.id,
         path: {128: 'icon-disabled-128.png'}
       });
-      chrome.browserAction.setPopup(
-        {
-          tabId: sender.tab.id,
-          popup: chrome.runtime.getURL('jetbrains-toolbox-disabled-popup.html')
-        }
-      );
+      chrome.browserAction.setPopup({
+        tabId: sender.tab.id,
+        popup: chrome.runtime.getURL('jetbrains-toolbox-disabled-popup.html')
+      }).then(() => {
+        // do nothing
+      });
       break;
+
     case 'get-protocol':
       getProtocol().then(protocol => {
         sendResponse({protocol});
       });
       return true;
+
     case 'save-protocol':
-      saveProtocol(message.protocol).
-        then(() => {
-          // sync options page if it is open
-          chrome.runtime.sendMessage({
-            type: 'protocol-changed',
-            newValue: message.protocol
-          });
-        }).
-        catch(() => {
-        // do nothing
+      saveProtocol(message.protocol).then(() => {
+        // sync options page if it is open
+        chrome.runtime.sendMessage({
+          type: 'protocol-changed',
+          newValue: message.protocol
         });
+      });
       break;
+
     case 'get-modify-pages':
       getModifyPages().then(allow => {
         sendResponse({allow});
       });
       return true;
+
     case 'save-modify-pages':
-      saveModifyPages(message.allow).
-        then(() => {
-          chrome.tabs.query({}, tabs => {
-            tabs.forEach(t => {
-              chrome.tabs.sendMessage(t.id, {
-                type: 'modify-pages-changed',
-                newValue: message.allow
-              });
+      saveModifyPages(message.allow).then(() => {
+        chrome.tabs.query({}, tabs => {
+          tabs.forEach(t => {
+            chrome.tabs.sendMessage(t.id, {
+              type: 'modify-pages-changed',
+              newValue: message.allow
             });
           });
-        }).
-        catch(() => {
-          // do nothing
         });
+      });
       break;
+
+    case 'get-logging':
+      getLogging().then(allow => {
+        sendResponse({allow});
+      });
+      return true;
+
+    case 'save-logging':
+      saveLogging(message.allow).then(() => {
+        // do nothing
+      });
+      break;
+
     // no default
   }
 
@@ -98,3 +110,4 @@ chrome.runtime.onInstalled.addListener(handleInstalled);
 chrome.runtime.onMessage.addListener(handleMessage);
 
 createExtensionMenu();
+ensureLogger();
