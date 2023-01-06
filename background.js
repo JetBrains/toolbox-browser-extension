@@ -8,7 +8,7 @@ import {
 } from './api/storage';
 import createExtensionMenu from './api/menu';
 import ensureLogger from './api/logger';
-import {MESSAGES} from './api/messages';
+import {MESSAGES, response} from './api/messaging';
 
 const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
@@ -91,7 +91,7 @@ const handleMessage = (message, sender, sendResponse) => {
 
     case MESSAGES.GET_LOGGING:
       getLogging().then(allow => {
-        sendResponse({allow});
+        sendResponse(response(allow));
       });
       return true;
 

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import {MESSAGES} from './messages';
+import {MESSAGES} from './messaging';
 
 class Logger {
   #enabled;
