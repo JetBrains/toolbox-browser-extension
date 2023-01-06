@@ -20,12 +20,12 @@ chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
 });
 
 chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
-  const modifyPagesInput = document.querySelector('.js-modify-pages-input');
+  const modifyPagesInput = document.getElementById('chk-modify-page');
   modifyPagesInput.checked = data.allow;
 });
 
 chrome.runtime.sendMessage(m(MESSAGES.GET_LOGGING), data => {
-  const loggingInput = document.querySelector('.js-logging-input');
+  const loggingInput = document.getElementById('chk-logging');
   loggingInput.checked = data.allow;
 });
 
@@ -33,11 +33,11 @@ document.querySelector('.js-protocol-input-group').addEventListener('change', e 
   chrome.runtime.sendMessage({type: 'save-protocol', protocol: e.target.value});
 });
 
-document.querySelector('.js-modify-pages-input').addEventListener('change', e => {
+document.getElementById('chk-modify-page').addEventListener('change', e => {
   chrome.runtime.sendMessage({type: 'save-modify-pages', allow: e.target.checked});
 });
 
-document.querySelector('.js-logging-input').addEventListener('change', e => {
+document.getElementById('chk-logging').addEventListener('change', e => {
   chrome.runtime.sendMessage(m(MESSAGES.SAVE_LOGGING, e.target.checked));
 });
 

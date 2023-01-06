@@ -13,9 +13,9 @@
       <label id="lbl-clone">Clone with:</label>
     </div>
     <div class="option__input js-protocol-input-group">
-      <input id="rad-https" class="js-protocol-input" type="radio" name="protocol" value="HTTPS"> <label for="rad-https">HTTPS</label>
+      <label><input id="rad-https" class="js-protocol-input" type="radio" name="protocol" value="HTTPS"> HTTPS</label>
       /
-      <input id="rad-ssh" class="js-protocol-input" type="radio" name="protocol" value="SSH"> <label for="rad-ssh">SSH</label>
+      <label><input id="rad-ssh" class="js-protocol-input" type="radio" name="protocol" value="SSH"> SSH</label>
     </div>
   </div>
   <div class="option">
@@ -23,7 +23,7 @@
       <label for="chk-modify-page">Add additional buttons to web pages:</label>
     </div>
     <div class="option__input">
-      <input id="chk-modify-page" class="js-modify-pages-input" type="checkbox">
+      <input id="chk-modify-page" type="checkbox">
     </div>
   </div>
   <div class="option__description">
@@ -41,11 +41,11 @@
       <label for="chk-logging">Show debug statements in the browser console:</label>
     </div>
     <div class="option__input">
-      <input id="chk-logging" class="js-logging-input" type="checkbox">
+      <input id="chk-logging" type="checkbox">
     </div>
   </div>
   <div class="option__description">
-    Check to see debug information in the console of the background page. Slows down the extension!
+    Check to see debug information in the console of the background page. <strong>Slows down the extension!</strong>
   </div>
 </div>
 <script src="jetbrains-toolbox-options.js"></script>
