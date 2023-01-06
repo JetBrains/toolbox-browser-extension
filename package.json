@@ -7,7 +7,7 @@
     "prebuild": "eslint .",
     "build": "webpack --bail --mode production",
     "postbuild": "node distribution/generate-readme.js",
-    "build:dev": "webpack --bail --mode development --devtool inline-source-map",
+    "build:dev": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug",
     "watch": "webpack -w",
     "prepare": "husky install"
   },
