@@ -26,15 +26,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
-        options: {
-          babelrc: false,
-          presets: [
-            [
-              require('@babel/preset-env')
-            ]
-          ]
-        }
+        loader: 'babel-loader'
       },
       {
         test: /\.svg$/,
