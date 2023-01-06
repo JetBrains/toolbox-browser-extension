@@ -3,7 +3,7 @@ export const MESSAGES = {
   SAVE_LOGGING: 'save-logging'
 };
 
-class Message {
+export class Message {
   type;
   value;
 
@@ -13,4 +13,6 @@ class Message {
   }
 }
 
-export default Message;
+export default function m(type, value = null) {
+  return new Message(type, value);
+}

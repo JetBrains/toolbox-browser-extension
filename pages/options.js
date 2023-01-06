@@ -1,3 +1,5 @@
+import m, {MESSAGES} from '../api/messages';
+
 const selectProtocolInput = protocol => {
   const checkedProtocolInput = document.querySelector(`.js-protocol-input[value="${protocol}"]`);
   if (checkedProtocolInput) {
@@ -22,7 +24,7 @@ chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
   modifyPagesInput.checked = data.allow;
 });
 
-chrome.runtime.sendMessage({type: 'get-logging'}, data => {
+chrome.runtime.sendMessage(m(MESSAGES.GET_LOGGING), data => {
   const loggingInput = document.querySelector('.js-logging-input');
   loggingInput.checked = data.allow;
 });
@@ -36,7 +38,7 @@ document.querySelector('.js-modify-pages-input').addEventListener('change', e =>
 });
 
 document.querySelector('.js-logging-input').addEventListener('change', e => {
-  chrome.runtime.sendMessage({type: 'save-logging', allow: e.target.checked});
+  chrome.runtime.sendMessage(m(MESSAGES.SAVE_LOGGING, e.target.checked));
 });
 
 chrome.runtime.onMessage.addListener(message => {

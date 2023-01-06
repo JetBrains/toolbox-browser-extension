@@ -8,6 +8,7 @@ import {
 } from './api/storage';
 import createExtensionMenu from './api/menu';
 import ensureLogger from './api/logger';
+import {MESSAGES} from './api/messages';
 
 const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
@@ -15,6 +16,10 @@ const handleInstalled = () => {
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
     // eslint-disable-next-line no-void
     void chrome.runtime.lastError;
+  });
+
+  getLogging().then(allowLogging => {
+    ensureLogger().enable(allowLogging);
   });
 };
 
@@ -84,14 +89,14 @@ const handleMessage = (message, sender, sendResponse) => {
       });
       break;
 
-    case 'get-logging':
+    case MESSAGES.GET_LOGGING:
       getLogging().then(allow => {
         sendResponse({allow});
       });
       return true;
 
-    case 'save-logging':
-      saveLogging(message.allow).then(() => {
+    case MESSAGES.SAVE_LOGGING:
+      saveLogging(message.value).then(() => {
         // do nothing
       });
       break;

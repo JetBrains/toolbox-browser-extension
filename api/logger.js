@@ -35,12 +35,12 @@ class Logger {
 chrome.runtime.onMessage.addListener(message => {
   switch (message.type) {
     case MESSAGES.SAVE_LOGGING:
-      if (message.allow) {
-        ensureLogger().enable(message.allow);
+      if (message.value) {
+        ensureLogger().enable(message.value);
         ensureLogger().info('Logger is enabled');
       } else {
         ensureLogger().info('Logger is disabled');
-        ensureLogger().enable(message.allow);
+        ensureLogger().enable(message.value);
       }
       break;
     // no default
