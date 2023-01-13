@@ -14,7 +14,7 @@
   "dependencies": {
     "@jetbrains/logos": "^2.2.10",
     "bitbucket-url-to-object": "^0.3.0",
-    "content-scripts-register-polyfill": "^4.0.0",
+    "content-scripts-register-polyfill": "^4.0.1",
     "github-url-to-object": "^4.0.4",
     "parse-bitbucket-url": "^0.3.0",
     "selector-observer": "^2.1.6",
@@ -31,7 +31,7 @@
     "core-js": "^3.27.1",
     "eslint": "^8.31.0",
     "eslint-import-resolver-webpack": "^0.13.2",
-    "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-import": "^2.27.4",
     "husky": "^8.0.3",
     "imports-loader": "^4.0.1",
     "lint-staged": "^13.1.0",
