@@ -15,8 +15,8 @@ import {
 } from './constants';
 
 import {
-  getToolboxURN,
-  getToolboxNavURN,
+  getToolboxCloneUrl,
+  getToolboxNavigateUrl,
   callToolbox,
   parseLineNumber
 } from './api/toolbox';
@@ -166,8 +166,8 @@ const renderPageAction = githubMetadata => new Promise(resolve => {
         fetchTools(githubMetadata).then(sendResponse);
         return true;
       case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
+        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+        callToolbox(toolboxCloneUrl);
         break;
       // no default
     }
@@ -194,8 +194,8 @@ const addCloneButtonEventHandler = (btn, githubMetadata) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(githubMetadata)
         : getSshCloneUrl(githubMetadata);
-      const action = getToolboxURN(toolTag, cloneUrl);
-      callToolbox(action);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      callToolbox(toolboxCloneUrl);
     });
   });
 };
@@ -276,7 +276,7 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
     const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
     const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
 
-    callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.tag, repo, filePath, lineNumber));
   });
 };
 

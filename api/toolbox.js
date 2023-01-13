@@ -1,3 +1,5 @@
+import {MESSAGES, request} from './messaging';
+
 const convertNumberToIndex = number => number - 1;
 
 export const parseLineNumber = lineNumber => {
@@ -5,22 +7,25 @@ export const parseLineNumber = lineNumber => {
   return isNaN(parsedValue) ? 1 : parsedValue;
 };
 
-export function getToolboxURN(toolTag, cloneUrl) {
-  return `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
-}
+export const getToolboxCloneUrl = (toolTag, cloneUrl) =>
+  `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 
-export function getToolboxNavURN(toolTag, project, filePath, lineNumber = null) {
+export const getToolboxNavigateUrl = (toolTag, project, filePath, lineNumber = null) => {
   const lineIndex = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
   const columnIndex = convertNumberToIndex(1);
-  return `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}:${lineIndex}:${columnIndex}`;
-}
 
-export function callToolbox(action) {
+  return `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}:${lineIndex}:${columnIndex}`;
+};
+
+export const callToolbox = url => {
   const fakeAction = document.createElement('a');
   fakeAction.style.position = 'absolute';
   fakeAction.style.left = '-9999em';
-  fakeAction.href = action;
+  fakeAction.href = url;
   document.body.appendChild(fakeAction);
   fakeAction.click();
+
+  chrome.runtime.sendMessage(request(MESSAGES.LOG_INFO, `Called Toolbox with ${url}`));
+
   document.body.removeChild(fakeAction);
-}
+};

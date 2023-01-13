@@ -1,7 +1,5 @@
 /* eslint-disable no-console */
 
-import {MESSAGES} from './messaging';
-
 class Logger {
   #enabled;
 
@@ -19,8 +17,11 @@ class Logger {
     }
   }
 
-  warn(message) {
+  warn(message, error = null) {
     if (this.#enabled) {
+      if (error) {
+        this.error(error.message);
+      }
       console.warn(message);
     }
   }
@@ -31,21 +32,6 @@ class Logger {
     }
   }
 }
-
-chrome.runtime.onMessage.addListener(message => {
-  switch (message.type) {
-    case MESSAGES.SAVE_LOGGING:
-      if (message.value) {
-        logger().enable(message.value);
-        logger().info('Logger is enabled');
-      } else {
-        logger().info('Logger is disabled');
-        logger().enable(message.value);
-      }
-      break;
-    // no default
-  }
-});
 
 export default function logger() {
   if (!window.__logger__) {

@@ -9,8 +9,8 @@ import {
 } from './constants';
 
 import {
-  getToolboxURN,
-  getToolboxNavURN,
+  getToolboxCloneUrl,
+  getToolboxNavigateUrl,
   callToolbox,
   parseLineNumber
 } from './api/toolbox';
@@ -94,8 +94,8 @@ const renderPageAction = bitbucketMetadata => new Promise(resolve => {
         fetchTools(bitbucketMetadata).then(sendResponse);
         return true;
       case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
+        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+        callToolbox(toolboxCloneUrl);
         break;
       // no default
     }
@@ -180,8 +180,8 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(bitbucketMetadata.links)
         : getSshCloneUrl(bitbucketMetadata.links);
-      const action = getToolboxURN(toolTag, cloneUrl);
-      callToolbox(action);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      callToolbox(toolboxCloneUrl);
     });
   });
 };
@@ -253,7 +253,7 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
     const lineNumber = parseLineNumber(location.hash.replace('#lines-', ''));
 
-    callToolbox(getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 

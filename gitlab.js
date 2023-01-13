@@ -11,8 +11,8 @@ import {
 } from './constants';
 
 import {
-  getToolboxURN,
-  getToolboxNavURN,
+  getToolboxCloneUrl,
+  getToolboxNavigateUrl,
   callToolbox,
   parseLineNumber
 } from './api/toolbox';
@@ -126,8 +126,8 @@ const renderPageAction = gitlabMetadata => new Promise(resolve => {
         fetchTools(gitlabMetadata).then(sendResponse);
         return true;
       case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
+        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+        callToolbox(toolboxCloneUrl);
         break;
       // no default
     }
@@ -152,8 +152,8 @@ const addCloneButtonEventHandler = (button, gitlabMetadata) => {
     const {toolTag} = e.currentTarget.dataset;
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
-      const action = getToolboxURN(toolTag, cloneUrl);
-      callToolbox(action);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      callToolbox(toolboxCloneUrl);
     });
   });
 };
@@ -214,9 +214,7 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
       lineNumber = location.hash.replace('#L', '');
     }
 
-    const parsedLineNumber = parseLineNumber(lineNumber);
-
-    callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, parsedLineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
   });
 };
 
