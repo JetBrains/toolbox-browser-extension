@@ -36,18 +36,18 @@ chrome.runtime.onMessage.addListener(message => {
   switch (message.type) {
     case MESSAGES.SAVE_LOGGING:
       if (message.value) {
-        ensureLogger().enable(message.value);
-        ensureLogger().info('Logger is enabled');
+        logger().enable(message.value);
+        logger().info('Logger is enabled');
       } else {
-        ensureLogger().info('Logger is disabled');
-        ensureLogger().enable(message.value);
+        logger().info('Logger is disabled');
+        logger().enable(message.value);
       }
       break;
     // no default
   }
 });
 
-export default function ensureLogger() {
+export default function logger() {
   if (!window.__logger__) {
     window.__logger__ = new Logger();
   }

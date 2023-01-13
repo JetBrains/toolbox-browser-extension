@@ -7,10 +7,10 @@ import {
   saveLogging
 } from './api/storage';
 import createExtensionMenu from './api/menu';
-import ensureLogger from './api/logger';
+import logger from './api/logger';
 import {MESSAGES, response} from './api/messaging';
 
-const handleInstalled = () => {
+const handleInstalled = async () => {
   const manifest = chrome.runtime.getManifest();
   const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
@@ -18,9 +18,8 @@ const handleInstalled = () => {
     void chrome.runtime.lastError;
   });
 
-  getLogging().then(allowLogging => {
-    ensureLogger().enable(allowLogging);
-  });
+  const allowLogging = await getLogging();
+  logger().enable(allowLogging);
 };
 
 // eslint-disable-next-line complexity
@@ -111,4 +110,3 @@ chrome.runtime.onInstalled.addListener(handleInstalled);
 chrome.runtime.onMessage.addListener(handleMessage);
 
 createExtensionMenu();
-ensureLogger();

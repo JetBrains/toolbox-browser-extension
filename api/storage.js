@@ -1,6 +1,6 @@
 import {CLONE_PROTOCOLS} from '../constants';
 
-import ensureLogger from './logger';
+import logger from './logger';
 
 const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',
@@ -17,9 +17,9 @@ const DEFAULTS = {
 const saveToStorage = (key, value) => new Promise(resolve => {
   chrome.storage.local.set({[key]: value}, () => {
     if (chrome.runtime.lastError) {
-      ensureLogger().error(chrome.runtime.lastError);
+      logger().error(chrome.runtime.lastError);
     } else {
-      ensureLogger().info(`Saved the '${key}' setting, the new value is '${value}'`);
+      logger().info(`Saved the '${key}' setting, the new value is '${value}'`);
     }
     resolve();
   });
@@ -28,7 +28,7 @@ const saveToStorage = (key, value) => new Promise(resolve => {
 const getFromStorage = (key, defaultValue) => new Promise(resolve => {
   chrome.storage.local.get([key], result => {
     if (chrome.runtime.lastError) {
-      ensureLogger().error(chrome.runtime.lastError);
+      logger().error(chrome.runtime.lastError);
       resolve(defaultValue);
     } else {
       resolve(result[key]);
