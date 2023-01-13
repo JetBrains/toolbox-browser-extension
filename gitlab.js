@@ -15,7 +15,7 @@ import {
   getToolboxNavigateUrl,
   callToolbox,
   parseLineNumber
-} from './api/toolbox';
+} from './web-api/toolbox';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const CLONE_BUTTON_JS_CSS_CLASS = 'js-toolbox-clone-button';

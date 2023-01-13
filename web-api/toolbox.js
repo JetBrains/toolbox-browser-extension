@@ -1,4 +1,4 @@
-import {MESSAGES, request} from './messaging';
+import {MESSAGES, request} from '../api/messaging';
 
 const convertNumberToIndex = number => number - 1;
 

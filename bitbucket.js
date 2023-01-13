@@ -13,7 +13,7 @@ import {
   getToolboxNavigateUrl,
   callToolbox,
   parseLineNumber
-} from './api/toolbox';
+} from './web-api/toolbox';
 
 /* eslint-disable max-len */
 const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > div > button:last-child';

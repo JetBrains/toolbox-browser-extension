@@ -13,7 +13,7 @@ import {
   getToolboxNavigateUrl,
   callToolbox,
   parseLineNumber
-} from './api/toolbox';
+} from './web-api/toolbox';
 
 const CLONE_CONTAINER_JS_CSS_CLASS = 'js-toolbox-clone-repo';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
