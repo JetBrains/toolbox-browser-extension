@@ -33,7 +33,7 @@ const reloadTab = tabId => {
     if (chrome.runtime.lastError) {
       logger().warn(`Failed to reload tab ${tabId}`, chrome.runtime.lastError);
     } else {
-      logger().info(`Successfully reloaded tab ${tabId}`);
+      logger().info(`Reloaded tab ${tabId}`);
     }
   });
 };
@@ -50,7 +50,7 @@ const createMenu = (createProperties = {}) => {
     if (chrome.runtime.lastError) {
       logger().warn('Failed to remove the existing menu', chrome.runtime.lastError);
     } else {
-      logger().info('Successfully removed the existing menu');
+      logger().info('Removed the existing menu');
     }
 
     chrome.contextMenus.create({
@@ -64,7 +64,7 @@ const createMenu = (createProperties = {}) => {
       if (chrome.runtime.lastError) {
         logger().warn('Failed to create menu', chrome.runtime.lastError);
       } else {
-        logger().info('Successfully created menu');
+        logger().info('Created menu');
       }
     });
   });
@@ -103,7 +103,7 @@ const updateMenuItem = updateProperties => {
       );
     } else {
       logger().info(
-        `Successfully updated menu item ${MENU_ITEM_ID} with new properties: ${JSON.stringify(updateProperties)}`
+        `Updated menu item ${MENU_ITEM_ID} with new properties: ${JSON.stringify(updateProperties)}`
       );
     }
   });
@@ -152,8 +152,8 @@ const toggleDomainPermissions = (request, url) => new Promise((resolve, reject) 
   const updatePermissions = request ? chrome.permissions.request : chrome.permissions.remove;
   updatePermissions(permissions, success => {
     if (success) {
-      const action = request ? 'requested' : 'removed';
-      logger().info(`Successfully ${action} domain permissions for ${url}`);
+      const action = request ? 'Requested' : 'Removed';
+      logger().info(`${action} domain permissions for ${url}`);
       resolve();
     } else {
       const action = request ? 'request' : 'remove';

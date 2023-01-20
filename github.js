@@ -35,7 +35,7 @@ function fetchMetadata() {
     if (metadata) {
       chrome.runtime.sendMessage(request(
         MESSAGES.LOG_INFO,
-        `Successfully parsed repository metadata: ${JSON.stringify(metadata)}`
+        `Parsed repository metadata: ${JSON.stringify(metadata)}`
       ));
     } else {
       chrome.runtime.sendMessage(request(MESSAGES.LOG_ERROR, 'Failed to parse metadata'));
@@ -59,7 +59,7 @@ const parseResponse = async response => {
   if (Object.keys(parsedResponse).length > 0) {
     chrome.runtime.sendMessage(request(
       MESSAGES.LOG_INFO,
-      `Successfully parsed response: ${JSON.stringify(parsedResponse)}`
+      `Parsed response: ${JSON.stringify(parsedResponse)}`
     ));
     return parsedResponse;
   } else {
@@ -82,7 +82,7 @@ const convertBytesToPercents = languages => {
 
   chrome.runtime.sendMessage(request(
     MESSAGES.LOG_INFO,
-    `Successfully converted bytes to percents in languages: ${JSON.stringify(languages)}`
+    `Converted bytes to percents in languages: ${JSON.stringify(languages)}`
   ));
 
   return languages;
@@ -107,7 +107,7 @@ const extractLanguagesFromPage = async githubMetadata => {
 
       chrome.runtime.sendMessage(request(
         MESSAGES.LOG_INFO,
-        `Successfully scraped languages: ${JSON.stringify(allLanguages)}`
+        `Scraped languages: ${JSON.stringify(allLanguages)}`
       ));
 
       return allLanguages;
@@ -142,7 +142,7 @@ const extractLanguagesFromPage = async githubMetadata => {
 
     chrome.runtime.sendMessage(request(
       MESSAGES.LOG_INFO,
-      `Successfully scraped languages: ${JSON.stringify(allLanguages)}`
+      `Scraped languages: ${JSON.stringify(allLanguages)}`
     ));
     return allLanguages;
   } catch (error) {
