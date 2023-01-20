@@ -137,6 +137,14 @@ const handleMessage = (message, sender, sendResponse) => {
       logger().info(message.value);
       break;
 
+    case MESSAGES.LOG_WARN:
+      logger().warn(message.value);
+      break;
+
+    case MESSAGES.LOG_ERROR:
+      logger().error(message.value);
+      break;
+
     // no default
   }
 
