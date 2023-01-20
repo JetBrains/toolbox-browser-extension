@@ -20,6 +20,7 @@ import {
   callToolbox,
   parseLineNumber
 } from './web-api/toolbox';
+import {MESSAGES, request} from './api/messaging';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
@@ -28,30 +29,45 @@ const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
 const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR = '.js-blob-header .BtnGroup + div:not(.BtnGroup)';
 
 function fetchMetadata() {
-  return document.getElementById('repository-container-header') && gh(window.location.toString(), {enterprise: true});
+  const repositoryContainerHeader = document.getElementById('repository-container-header');
+  if (repositoryContainerHeader) {
+    const metadata = gh(window.location.toString(), {enterprise: true});
+    if (metadata) {
+      chrome.runtime.sendMessage(request(
+        MESSAGES.LOG_INFO,
+        `Successfully parsed repository metadata: ${JSON.stringify(metadata)}`
+      ));
+    } else {
+      chrome.runtime.sendMessage(request(MESSAGES.LOG_ERROR, 'Failed to parse metadata'));
+    }
+    return metadata;
+  } else {
+    chrome.runtime.sendMessage(request(MESSAGES.LOG_WARN, 'Missing repository container header'));
+    return null;
+  }
 }
 
-const checkResponseStatus = response => new Promise((resolve, reject) => {
-  if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
-    resolve(response);
-  } else {
-    reject();
+const throwIfInvalid = response => {
+  if (response.status < MIN_VALID_HTTP_STATUS || response.status > MAX_VALID_HTTP_STATUS) {
+    throw new Error(`HTTP request is invalid (response status: ${response.status})`);
   }
-});
+};
 
-const parseResponse = response => new Promise((resolve, reject) => {
-  response.json().then(result => {
-    if (Object.keys(result).length > 0) {
-      resolve(result);
-    } else {
-      reject();
-    }
-  }).catch(() => {
-    reject();
-  });
-});
+const parseResponse = async response => {
+  const parsedResponse = await response.json();
 
-const convertBytesToPercents = languages => new Promise(resolve => {
+  if (Object.keys(parsedResponse).length > 0) {
+    chrome.runtime.sendMessage(request(
+      MESSAGES.LOG_INFO,
+      `Successfully parsed response: ${JSON.stringify(parsedResponse)}`
+    ));
+    return parsedResponse;
+  } else {
+    throw new Error('Response is empty');
+  }
+};
+
+const convertBytesToPercents = languages => {
   const totalBytes = Object.
     values(languages).
     reduce((total, bytes) => total + bytes, 0);
@@ -64,64 +80,101 @@ const convertBytesToPercents = languages => new Promise(resolve => {
       languages[key] = parseFloat(percentString);
     });
 
-  resolve(languages);
-});
+  chrome.runtime.sendMessage(request(
+    MESSAGES.LOG_INFO,
+    `Successfully converted bytes to percents in languages: ${JSON.stringify(languages)}`
+  ));
 
-const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
-  // TBX-4762: private repos don't let use API, load root page and scrape languages off it
-  fetch(githubMetadata.clone_url).
-    then(response => response.text()).
-    then(htmlString => {
-      const parser = new DOMParser();
-      const htmlDocument = parser.parseFromString(htmlString, 'text/html');
-      const languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
-      if (languageElements.length === 0) {
-        // see if it's new UI as of 24.06.20
-        const newLanguageElements = htmlDocument.querySelectorAll(
-          '[data-ga-click="Repository, language stats search click, location:repo overview"]'
-        );
-        if (newLanguageElements.length > 0) {
-          const allLanguages = Array.from(newLanguageElements).reduce((acc, el) => {
-            const langEl = el.querySelector('span');
-            const percentEl = langEl.nextElementSibling;
-            acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-            return acc;
-          }, {});
-          if (Object.keys(allLanguages).length > 0) {
-            resolve(allLanguages);
-          } else {
-            resolve(DEFAULT_LANGUAGE_SET);
-          }
-        } else {
-          resolve(DEFAULT_LANGUAGE_SET);
-        }
-      } else {
-        const allLanguages = Array.from(languageElements).reduce((acc, el) => {
-          const percentEl = el.nextElementSibling;
-          acc[el.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-          return acc;
-        }, {});
-        resolve(allLanguages);
-      }
-    }).
-    catch(() => {
-      resolve(DEFAULT_LANGUAGE_SET);
-    });
-});
+  return languages;
+};
 
-const fetchLanguages = githubMetadata => new Promise(resolve => {
-  fetch(`${githubMetadata.api_url}/languages`).
-    then(checkResponseStatus).
-    then(parseResponse).
-    then(convertBytesToPercents).
-    then(resolve).
-    catch(() => {
-      extractLanguagesFromPage(githubMetadata).
-        then(resolve);
-    });
-});
+const extractLanguagesFromPage = async githubMetadata => {
+  try {
+    // TBX-4762: private repos don't let use API, load root page and scrape languages off it
+    const htmlResponse = await fetch(githubMetadata.clone_url);
+    const htmlString = await htmlResponse.text();
+    const parser = new DOMParser();
+    const htmlDocument = parser.parseFromString(htmlString, 'text/html');
 
-const selectTools = languages => new Promise(resolve => {
+    let languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
+
+    if (languageElements.length > 0) {
+      const allLanguages = Array.from(languageElements).reduce((acc, el) => {
+        const percentEl = el.nextElementSibling;
+        acc[el.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
+        return acc;
+      }, {});
+
+      chrome.runtime.sendMessage(request(
+        MESSAGES.LOG_INFO,
+        `Successfully scraped languages: ${JSON.stringify(allLanguages)}`
+      ));
+
+      return allLanguages;
+    }
+
+    // see if it's new UI as of 24.06.20
+    languageElements = htmlDocument.querySelectorAll(
+      '[data-ga-click="Repository, language stats search click, location:repo overview"]'
+    );
+
+    if (languageElements.length === 0) {
+      chrome.runtime.sendMessage(request(
+        MESSAGES.LOG_WARN,
+        'Failed to scrape languages from the root page, resolving to default languages'
+      ));
+      return DEFAULT_LANGUAGE_SET;
+    }
+
+    const allLanguages = Array.from(languageElements).reduce((acc, el) => {
+      const langEl = el.querySelector('span');
+      const percentEl = langEl.nextElementSibling;
+      acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
+      return acc;
+    }, {});
+    if (Object.keys(allLanguages).length === 0) {
+      chrome.runtime.sendMessage(request(
+        MESSAGES.LOG_WARN,
+        'Failed to scrape languages from the root page, resolving to default languages'
+      ));
+      return DEFAULT_LANGUAGE_SET;
+    }
+
+    chrome.runtime.sendMessage(request(
+      MESSAGES.LOG_INFO,
+      `Successfully scraped languages: ${JSON.stringify(allLanguages)}`
+    ));
+    return allLanguages;
+  } catch (error) {
+    chrome.runtime.sendMessage(request(MESSAGES.LOG_ERROR, error.message));
+    chrome.runtime.sendMessage(request(
+      MESSAGES.LOG_WARN,
+      'Failed to scrape languages from the root page, resolving to default languages'
+    ));
+    return DEFAULT_LANGUAGE_SET;
+  }
+};
+
+const fetchLanguages = async githubMetadata => {
+  try {
+    const response = await fetch(`${githubMetadata.api_url}/languages`);
+    throwIfInvalid(response);
+    const languages = await parseResponse(response);
+    return convertBytesToPercents(languages);
+  } catch (error) {
+    chrome.runtime.sendMessage(request(
+      MESSAGES.LOG_ERROR,
+      error.message
+    ));
+    chrome.runtime.sendMessage(request(
+      MESSAGES.LOG_WARN,
+      'Failed to fetch languages, trying to scrape them from the root page'
+    ));
+    return await extractLanguagesFromPage(githubMetadata);
+  }
+};
+
+const selectTools = languages => {
   const overallPoints = Object.
     values(languages).
     reduce((overall, current) => overall + current, 0);
@@ -137,18 +190,32 @@ const selectTools = languages => new Promise(resolve => {
       return acc;
     }, []);
 
-  const normalizedToolIds = selectedToolIds.length > 0
-    ? Array.from(new Set(selectedToolIds))
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+  const selectDefaultLanguage = selectedToolIds.length === 0;
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+  if (selectDefaultLanguage) {
+    chrome.runtime.sendMessage(request(
+      MESSAGES.LOG_INFO,
+      `The language usage rate is too low, sticking to default language (${DEFAULT_LANGUAGE})`
+    ));
+  }
 
-  resolve(tools);
-});
+  const normalizedToolIds = selectDefaultLanguage
+    ? SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE]
+    : Array.from(new Set(selectedToolIds));
 
-const fetchTools = githubMetadata => fetchLanguages(githubMetadata).then(selectTools);
+  const tools = normalizedToolIds.sort().map(toolId => SUPPORTED_TOOLS[toolId]);
+  chrome.runtime.sendMessage(request(
+    MESSAGES.LOG_INFO,
+    `Selected tools: ${tools.map(t => t.name).join(', ')}`
+  ));
+
+  return tools;
+};
+
+const fetchTools = async githubMetadata => {
+  const languages = await fetchLanguages(githubMetadata);
+  return selectTools(languages);
+};
 
 const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
 const getSshCloneUrl =
