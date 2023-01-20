@@ -140,8 +140,9 @@ const updateMenu = tabId => {
             });
         });
     }).
-    catch(error => {
-      logger().warn(`Failed to get the URL opened in tab ${tabId}`, error);
+    catch((/*error*/) => {
+      // lots of these errors which is quite obvious, suppress them
+      // logger().warn(`Failed to get the URL opened in tab ${tabId}`, error);
       updateMenuItem({enabled: false, checked: false});
     });
 };
@@ -229,15 +230,12 @@ const handleMenuItemClick = (info, tab) => {
 };
 
 const handleTabActivated = activeInfo => {
-  logger().info(`Tab ${activeInfo.tabId} is activated`);
-
   activeTabId = activeInfo.tabId;
   updateMenu(activeInfo.tabId);
 };
 
 const handleTabUpdated = (tabId, changeInfo) => {
   if (activeTabId === tabId && changeInfo.status === 'complete') {
-    logger().info(`Tab ${tabId} is updated`);
     updateMenu(tabId);
   }
 };
