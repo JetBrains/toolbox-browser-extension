@@ -73,7 +73,6 @@ module.exports = {
         {from: 'manifest.json'},
         {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
         {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
-        {from: 'icons/studio.svg', to: 'studio.svg'},
         {from: 'popups/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
         {from: 'popups/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
         {from: 'pages/options-extra-buttons-dark.png', to: 'options-extra-buttons-dark.png'},

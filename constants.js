@@ -7,6 +7,7 @@ import rubymineIcon from '@jetbrains/logos/rubymine/rubymine.svg';
 import webstormIcon from '@jetbrains/logos/webstorm/webstorm.svg';
 import riderIcon from '@jetbrains/logos/rider/rider.svg';
 import golandIcon from '@jetbrains/logos/goland/goland.svg';
+import androidStudioIcon from '@jetbrains/logos/android-studio/android-studio.svg';
 
 export const DEFAULT_LANGUAGE = 'java';
 
@@ -85,7 +86,7 @@ export const SUPPORTED_TOOLS = {
   studio: {
     name: 'Android Studio',
     tag: 'studio',
-    icon: chrome.runtime.getURL('studio.svg')
+    icon: androidStudioIcon
   }
 };
 
