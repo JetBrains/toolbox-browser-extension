@@ -21,6 +21,7 @@ import {
   parseLineNumber
 } from './web-api/toolbox';
 import {MESSAGES, request} from './api/messaging';
+import {logger} from './web-api/logger';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
@@ -33,12 +34,9 @@ function fetchMetadata() {
   if (repositoryContainerHeader) {
     const metadata = gh(window.location.toString(), {enterprise: true});
     if (metadata) {
-      chrome.runtime.sendMessage(request(
-        MESSAGES.LOG_INFO,
-        `Parsed repository metadata: ${JSON.stringify(metadata)}`
-      ));
+      logger().info(`Parsed repository metadata: ${JSON.stringify(metadata)}`);
     } else {
-      chrome.runtime.sendMessage(request(MESSAGES.LOG_ERROR, 'Failed to parse metadata'));
+      logger().error('Failed to parse metadata');
     }
     return metadata;
   } else {

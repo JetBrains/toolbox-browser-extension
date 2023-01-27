@@ -1,4 +1,4 @@
-import {MESSAGES, request} from '../api/messaging';
+import {logger} from './logger';
 
 const convertNumberToIndex = number => number - 1;
 
@@ -25,7 +25,7 @@ export const callToolbox = url => {
   document.body.appendChild(fakeAction);
   fakeAction.click();
 
-  chrome.runtime.sendMessage(request(MESSAGES.LOG_INFO, `Called Toolbox with ${url}`));
+  logger().info(`Called Toolbox with ${url}`);
 
   document.body.removeChild(fakeAction);
 };
