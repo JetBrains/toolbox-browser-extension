@@ -8,7 +8,7 @@ import {
 } from './api/storage';
 import createExtensionMenu from './api/menu';
 import logger from './api/logger';
-import {MESSAGES, response} from './api/messaging';
+import {MESSAGES, request, response} from './api/messaging';
 
 const handleInstalled = async () => {
   const allowLogging = await getLogging();
@@ -123,13 +123,12 @@ const handleMessage = (message, sender, sendResponse) => {
 
     case MESSAGES.SAVE_LOGGING:
       saveLogging(message.value).then(() => {
-        if (!message.value) {
-          logger().info('Logger is disabled');
-        }
-        logger().enable(message.value);
-        if (message.value) {
-          logger().info('Logger is enabled');
-        }
+        // broadcast the new value to content scripts to enable/disable web-logger
+        chrome.tabs.query({}, tabs => {
+          tabs.forEach(t => {
+            chrome.tabs.sendMessage(t.id, request(MESSAGES.SAVE_LOGGING, message.value));
+          });
+        });
       });
       break;
 
