@@ -7,7 +7,7 @@ import {
   saveLogging
 } from './api/storage';
 import createExtensionMenu from './api/menu';
-import logger from './api/logger';
+import logger from './api/consoleLogger';
 import {MESSAGES, request, response} from './api/messaging';
 
 const handleInstalled = async () => {
@@ -122,11 +122,15 @@ const handleMessage = (message, sender, sendResponse) => {
       return true;
 
     case MESSAGES.SAVE_LOGGING:
-      saveLogging(message.value).then(() => {
-        // broadcast the new value to content scripts to enable/disable web-logger
+      const allowLogging = message.value;
+
+      saveLogging(allowLogging).then(() => {
+        logger().enable(allowLogging);
+
+        // broadcast the new value to content scripts to toggle the web-logger
         chrome.tabs.query({}, tabs => {
           tabs.forEach(t => {
-            chrome.tabs.sendMessage(t.id, request(MESSAGES.SAVE_LOGGING, message.value));
+            chrome.tabs.sendMessage(t.id, request(MESSAGES.TOGGLE_WEB_LOGGER, allowLogging));
           });
         });
       });
