@@ -21,7 +21,7 @@ import {
   parseLineNumber
 } from './web-api/toolbox';
 import {MESSAGES, request} from './api/messaging';
-import logger from './web-api/webLogger';
+import logger from './web-api/web-logger';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';

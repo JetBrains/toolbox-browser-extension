@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime';
 import 'content-scripts-register-polyfill';
 import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
 
-import logger from './consoleLogger';
+import logger from './console-logger';
 
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
 const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';

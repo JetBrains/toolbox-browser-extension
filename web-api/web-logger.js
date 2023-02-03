@@ -1,5 +1,5 @@
 import {MESSAGES, request} from '../api/messaging';
-import {AbstractLogger, LOG_MESSAGE_TYPE} from '../api/abstractLogger';
+import {AbstractLogger, LOG_MESSAGE_TYPE} from '../api/abstract-logger';
 
 class WebLogger extends AbstractLogger {
   constructor(enabled = false) {

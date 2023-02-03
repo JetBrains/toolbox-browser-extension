@@ -1,6 +1,6 @@
 import {CLONE_PROTOCOLS} from '../constants';
 
-import logger from './consoleLogger';
+import logger from './console-logger';
 
 const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',

@@ -7,7 +7,7 @@ import {
   saveLogging
 } from './api/storage';
 import createExtensionMenu from './api/menu';
-import logger from './api/consoleLogger';
+import logger from './api/console-logger';
 import {MESSAGES, request, response} from './api/messaging';
 
 const handleInstalled = async () => {

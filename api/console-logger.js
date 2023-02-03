@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 
-import {AbstractLogger, LOG_MESSAGE_TYPE} from './abstractLogger';
+import {AbstractLogger, LOG_MESSAGE_TYPE} from './abstract-logger';
 
 class ConsoleLogger extends AbstractLogger {
   constructor(enabled = false) {

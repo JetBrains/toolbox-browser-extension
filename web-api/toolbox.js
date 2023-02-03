@@ -1,4 +1,4 @@
-import logger from './webLogger';
+import logger from './web-logger';
 
 const convertNumberToIndex = number => number - 1;
 
