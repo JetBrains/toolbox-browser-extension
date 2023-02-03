@@ -6,7 +6,7 @@ class WebLogger extends AbstractLogger {
     super(enabled);
 
     chrome.runtime.onMessage.addListener(message => {
-      if (message.type === MESSAGES.TOGGLE_WEB_LOGGER) {
+      if (message.type === MESSAGES.ENABLE_WEB_LOGGER) {
         this.enable(message.value);
       }
     });

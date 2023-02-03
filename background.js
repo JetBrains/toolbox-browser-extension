@@ -130,7 +130,7 @@ const handleMessage = (message, sender, sendResponse) => {
         // broadcast the new value to content scripts to toggle the web-logger
         chrome.tabs.query({}, tabs => {
           tabs.forEach(t => {
-            chrome.tabs.sendMessage(t.id, request(MESSAGES.TOGGLE_WEB_LOGGER, allowLogging));
+            chrome.tabs.sendMessage(t.id, request(MESSAGES.ENABLE_WEB_LOGGER, allowLogging));
           });
         });
       });
