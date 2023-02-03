@@ -1,4 +1,4 @@
-import logger from './web-logger';
+import {info} from './web-logger';
 
 const convertNumberToIndex = number => number - 1;
 
@@ -25,7 +25,7 @@ export const callToolbox = url => {
   document.body.appendChild(fakeAction);
   fakeAction.click();
 
-  logger().info(`Called Toolbox with ${url}`);
+  info(`Called Toolbox with ${url}`);
 
   document.body.removeChild(fakeAction);
 };

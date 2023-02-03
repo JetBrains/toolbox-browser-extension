@@ -28,6 +28,7 @@ class ConsoleLogger extends AbstractLogger {
 
 const consoleLogger = new ConsoleLogger();
 
-export default function logger() {
-  return consoleLogger;
-}
+export const enableLogger = enable => consoleLogger.enable(enable);
+export const info = message => consoleLogger.info(message);
+export const warn = (message, error = null) => consoleLogger.warn(message, error);
+export const error = message => consoleLogger.error(message);

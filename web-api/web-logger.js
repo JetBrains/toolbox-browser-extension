@@ -37,7 +37,6 @@ chrome.runtime.sendMessage(request(MESSAGES.GET_LOGGING), response => {
   webLogger.enable(response.value);
 });
 
-export default function logger() {
-  return webLogger;
-}
-
+export const info = message => webLogger.info(message);
+export const warn = (message, error = null) => webLogger.warn(message, error);
+export const error = message => webLogger.error(message);

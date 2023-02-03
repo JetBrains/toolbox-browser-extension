@@ -7,20 +7,20 @@ import {
   saveLogging
 } from './api/storage';
 import createExtensionMenu from './api/menu';
-import logger from './api/console-logger';
+import {enableLogger, info, warn, error} from './api/console-logger';
 import {MESSAGES, request, response} from './api/messaging';
 
 const handleInstalled = async () => {
   const allowLogging = await getLogging();
-  logger().enable(allowLogging);
+  enableLogger(allowLogging);
 
   const manifest = chrome.runtime.getManifest();
   const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
   chrome.runtime.setUninstallURL(uninstallUrl, () => {
     if (chrome.runtime.lastError) {
-      logger().error(`Failed to set uninstall URL: ${chrome.runtime.lastError}`);
+      error(`Failed to set uninstall URL: ${chrome.runtime.lastError}`);
     } else {
-      logger().info(`Uninstall URL is set to ${uninstallUrl}`);
+      info(`Uninstall URL is set to ${uninstallUrl}`);
     }
   });
 };
@@ -34,9 +34,9 @@ const handleMessage = (message, sender, sendResponse) => {
         path: {128: 'icon-128.png'}
       }, () => {
         if (chrome.runtime.lastError) {
-          logger().error(`Failed to set action icon: ${chrome.runtime.lastError}`);
+          error(`Failed to set action icon: ${chrome.runtime.lastError}`);
         } else {
-          logger().info('Action icon is enabled');
+          info('Action icon is enabled');
         }
       });
       const {
@@ -50,9 +50,9 @@ const handleMessage = (message, sender, sendResponse) => {
         popup: chrome.runtime.getURL(url)
       }, () => {
         if (chrome.runtime.lastError) {
-          logger().error(`Failed to set action popup: ${chrome.runtime.lastError}`);
+          error(`Failed to set action popup: ${chrome.runtime.lastError}`);
         } else {
-          logger().info(`Action popup is enabled and set to ${url}`);
+          info(`Action popup is enabled and set to ${url}`);
         }
       });
       break;
@@ -63,9 +63,9 @@ const handleMessage = (message, sender, sendResponse) => {
         path: {128: 'icon-disabled-128.png'}
       }, () => {
         if (chrome.runtime.lastError) {
-          logger().error(`Failed to set action icon: ${chrome.runtime.lastError}`);
+          error(`Failed to set action icon: ${chrome.runtime.lastError}`);
         } else {
-          logger().info('Action icon is disabled');
+          info('Action icon is disabled');
         }
       });
       chrome.browserAction.setPopup({
@@ -73,9 +73,9 @@ const handleMessage = (message, sender, sendResponse) => {
         popup: chrome.runtime.getURL('jetbrains-toolbox-disabled-popup.html')
       }, () => {
         if (chrome.runtime.lastError) {
-          logger().error(`Failed to set action popup: ${chrome.runtime.lastError}`);
+          error(`Failed to set action popup: ${chrome.runtime.lastError}`);
         } else {
-          logger().info('Action popup is disabled');
+          info('Action popup is disabled');
         }
       });
       break;
@@ -125,7 +125,7 @@ const handleMessage = (message, sender, sendResponse) => {
       const allowLogging = message.value;
 
       saveLogging(allowLogging).then(() => {
-        logger().enable(allowLogging);
+        enableLogger(allowLogging);
 
         // broadcast the new value to content scripts to toggle the web-logger
         chrome.tabs.query({}, tabs => {
@@ -137,15 +137,15 @@ const handleMessage = (message, sender, sendResponse) => {
       break;
 
     case MESSAGES.LOG_INFO:
-      logger().info(message.value);
+      info(message.value);
       break;
 
     case MESSAGES.LOG_WARN:
-      logger().warn(message.value);
+      warn(message.value);
       break;
 
     case MESSAGES.LOG_ERROR:
-      logger().error(message.value);
+      error(message.value);
       break;
 
     // no default

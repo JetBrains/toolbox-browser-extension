@@ -2,7 +2,7 @@ import 'regenerator-runtime/runtime';
 import 'content-scripts-register-polyfill';
 import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
 
-import logger from './console-logger';
+import {info, warn} from './console-logger';
 
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
 const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';
@@ -31,9 +31,9 @@ const getDomain = url => {
 const reloadTab = tabId => {
   chrome.tabs.executeScript(tabId, {code: 'window.location.reload()'}, () => {
     if (chrome.runtime.lastError) {
-      logger().warn(`Failed to reload tab ${tabId}`, chrome.runtime.lastError);
+      warn(`Failed to reload tab ${tabId}`, chrome.runtime.lastError);
     } else {
-      logger().info(`Reloaded tab ${tabId}`);
+      info(`Reloaded tab ${tabId}`);
     }
   });
 };
@@ -48,9 +48,9 @@ const createMenu = (createProperties = {}) => {
   ];
   chrome.contextMenus.removeAll(() => {
     if (chrome.runtime.lastError) {
-      logger().warn('Failed to remove the existing menu', chrome.runtime.lastError);
+      warn('Failed to remove the existing menu', chrome.runtime.lastError);
     } else {
-      logger().info('Removed the existing menu');
+      info('Removed the existing menu');
     }
 
     chrome.contextMenus.create({
@@ -62,9 +62,9 @@ const createMenu = (createProperties = {}) => {
       documentUrlPatterns
     }, () => {
       if (chrome.runtime.lastError) {
-        logger().warn('Failed to create menu', chrome.runtime.lastError);
+        warn('Failed to create menu', chrome.runtime.lastError);
       } else {
-        logger().info('Created menu');
+        info('Created menu');
       }
     });
   });
@@ -97,12 +97,12 @@ const updateMenuItem = updateProperties => {
     ...updateProperties
   }, () => {
     if (chrome.runtime.lastError) {
-      logger().warn(
+      warn(
         `Failed to update menu item ${MENU_ITEM_ID} with new properties: ${JSON.stringify(updateProperties)}`,
         chrome.runtime.lastError,
       );
     } else {
-      logger().info(
+      info(
         `Updated menu item ${MENU_ITEM_ID} with new properties: ${JSON.stringify(updateProperties)}`
       );
     }
@@ -122,27 +122,27 @@ const updateMenu = tabId => {
                 updateMenuItem({enabled: true, checked: additionalGranted});
               }).
               catch(additionalError => {
-                logger().warn(`Failed to check if additional permissions for ${tabUrl} are granted`, additionalError);
+                warn(`Failed to check if additional permissions for ${tabUrl} are granted`, additionalError);
                 updateMenuItem({enabled: false, checked: false});
               });
           }
         }).
         catch(manifestError => {
-          logger().warn(`Failed to check if manifest permissions for ${tabUrl} are granted`, manifestError);
+          warn(`Failed to check if manifest permissions for ${tabUrl} are granted`, manifestError);
 
           additionalPermissionGranted(tabUrl).
             then(additionalGranted => {
               updateMenuItem({enabled: true, checked: additionalGranted});
             }).
             catch(additionalError => {
-              logger().warn(`Failed to check if additional permissions for ${tabUrl} are granted`, additionalError);
+              warn(`Failed to check if additional permissions for ${tabUrl} are granted`, additionalError);
               updateMenuItem({enabled: false, checked: false});
             });
         });
     }).
     catch((/*error*/) => {
       // lots of these errors which is quite obvious, suppress them
-      // logger().warn(`Failed to get the URL opened in tab ${tabId}`, error);
+      // warn(`Failed to get the URL opened in tab ${tabId}`, error);
       updateMenuItem({enabled: false, checked: false});
     });
 };
@@ -153,11 +153,11 @@ const toggleDomainPermissions = (request, url) => new Promise((resolve, reject) 
   updatePermissions(permissions, success => {
     if (success) {
       const action = request ? 'Requested' : 'Removed';
-      logger().info(`${action} domain permissions for ${url}`);
+      info(`${action} domain permissions for ${url}`);
       resolve();
     } else {
       const action = request ? 'request' : 'remove';
-      logger().warn(`Failed to ${action} domain permissions for ${url}`, chrome.runtime.lastError);
+      warn(`Failed to ${action} domain permissions for ${url}`, chrome.runtime.lastError);
       reject();
     }
   });
@@ -179,11 +179,11 @@ const registerEnterpriseContentScripts = domainMatch => new Promise((resolve, re
         prevUnregistrator.unregister();
       }
       contentScriptUnregistrators.set(domainMatch, newUnregistrator);
-      logger().info(`Registered enterprise content scripts for ${domainMatch}`);
+      info(`Registered enterprise content scripts for ${domainMatch}`);
       resolve();
     }).
     catch(() => {
-      logger().warn(`Failed to register enterprise content scripts for ${domainMatch}`, chrome.runtime.lastError);
+      warn(`Failed to register enterprise content scripts for ${domainMatch}`, chrome.runtime.lastError);
       reject();
     });
 });
@@ -193,27 +193,27 @@ const unregisterEnterpriseContentScripts = domainMatch => {
     const unregistrator = contentScriptUnregistrators.get(domainMatch);
     unregistrator.unregister();
 
-    logger().info(`Unregistered enterprise content scripts for ${domainMatch}`);
+    info(`Unregistered enterprise content scripts for ${domainMatch}`);
 
     contentScriptUnregistrators.delete(domainMatch);
   } else {
-    logger().warn(`Missing the unregistrator of enterprise content scripts for ${domainMatch}`);
+    warn(`Missing the unregistrator of enterprise content scripts for ${domainMatch}`);
   }
 };
 
-const handleMenuItemClick = (info, tab) => {
-  if (info.menuItemId !== MENU_ITEM_ID) {
+const handleMenuItemClick = (onClickData, tab) => {
+  if (onClickData.menuItemId !== MENU_ITEM_ID) {
     return;
   }
 
-  logger().info(`The ${MENU_ITEM_ID} menu item was clicked`);
+  info(`The ${MENU_ITEM_ID} menu item was clicked`);
 
   if (tab.url.startsWith('chrome://')) {
     updateMenu(tab.id);
     return;
   }
 
-  const requestPermissions = info.checked;
+  const requestPermissions = onClickData.checked;
   toggleDomainPermissions(requestPermissions, tab.url).then(() => {
     const domainMatch = generateDomainMatch(tab.url);
     if (requestPermissions) {

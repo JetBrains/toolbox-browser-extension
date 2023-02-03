@@ -20,8 +20,7 @@ import {
   callToolbox,
   parseLineNumber
 } from './web-api/toolbox';
-import {MESSAGES, request} from './api/messaging';
-import logger from './web-api/web-logger';
+import {info, warn, error} from './web-api/web-logger';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
@@ -34,13 +33,13 @@ function fetchMetadata() {
   if (repositoryContainerHeader) {
     const metadata = gh(window.location.toString(), {enterprise: true});
     if (metadata) {
-      logger().info(`Parsed repository metadata: ${JSON.stringify(metadata)}`);
+      info(`Parsed repository metadata: ${JSON.stringify(metadata)}`);
     } else {
-      logger().error('Failed to parse metadata');
+      error('Failed to parse metadata');
     }
     return metadata;
   } else {
-    chrome.runtime.sendMessage(request(MESSAGES.LOG_WARN, 'Missing repository container header'));
+    warn('Missing repository container header');
     return null;
   }
 }
@@ -54,15 +53,12 @@ const throwIfInvalid = response => {
 const parseResponse = async response => {
   const parsedResponse = await response.json();
 
-  if (Object.keys(parsedResponse).length > 0) {
-    chrome.runtime.sendMessage(request(
-      MESSAGES.LOG_INFO,
-      `Parsed response: ${JSON.stringify(parsedResponse)}`
-    ));
-    return parsedResponse;
-  } else {
+  if (Object.keys(parsedResponse).length === 0) {
     throw new Error('Response is empty');
   }
+
+  info(`Parsed response: ${JSON.stringify(parsedResponse)}`);
+  return parsedResponse;
 };
 
 const convertBytesToPercents = languages => {
@@ -78,10 +74,7 @@ const convertBytesToPercents = languages => {
       languages[key] = parseFloat(percentString);
     });
 
-  chrome.runtime.sendMessage(request(
-    MESSAGES.LOG_INFO,
-    `Converted bytes to percents in languages: ${JSON.stringify(languages)}`
-  ));
+  info(`Converted bytes to percents in languages: ${JSON.stringify(languages)}`);
 
   return languages;
 };
@@ -103,24 +96,18 @@ const extractLanguagesFromPage = async githubMetadata => {
         return acc;
       }, {});
 
-      chrome.runtime.sendMessage(request(
-        MESSAGES.LOG_INFO,
-        `Scraped languages: ${JSON.stringify(allLanguages)}`
-      ));
+      info(`Scraped languages: ${JSON.stringify(allLanguages)}`);
 
       return allLanguages;
     }
 
-    // see if it's new UI as of 24.06.20
+    // see if it is new UI as of 24.06.20
     languageElements = htmlDocument.querySelectorAll(
       '[data-ga-click="Repository, language stats search click, location:repo overview"]'
     );
 
     if (languageElements.length === 0) {
-      chrome.runtime.sendMessage(request(
-        MESSAGES.LOG_WARN,
-        'Failed to scrape languages from the root page, resolving to default languages'
-      ));
+      warn('Failed to scrape languages from the root page, resolving to default languages');
       return DEFAULT_LANGUAGE_SET;
     }
 
@@ -130,25 +117,16 @@ const extractLanguagesFromPage = async githubMetadata => {
       acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
       return acc;
     }, {});
+
     if (Object.keys(allLanguages).length === 0) {
-      chrome.runtime.sendMessage(request(
-        MESSAGES.LOG_WARN,
-        'Failed to scrape languages from the root page, resolving to default languages'
-      ));
+      warn('Failed to scrape languages from the root page, resolving to default languages');
       return DEFAULT_LANGUAGE_SET;
     }
 
-    chrome.runtime.sendMessage(request(
-      MESSAGES.LOG_INFO,
-      `Scraped languages: ${JSON.stringify(allLanguages)}`
-    ));
+    info(`Scraped languages: ${JSON.stringify(allLanguages)}`);
     return allLanguages;
-  } catch (error) {
-    chrome.runtime.sendMessage(request(MESSAGES.LOG_ERROR, error.message));
-    chrome.runtime.sendMessage(request(
-      MESSAGES.LOG_WARN,
-      'Failed to scrape languages from the root page, resolving to default languages'
-    ));
+  } catch (e) {
+    warn('Failed to scrape languages from the root page, resolving to default languages', e);
     return DEFAULT_LANGUAGE_SET;
   }
 };
@@ -159,15 +137,8 @@ const fetchLanguages = async githubMetadata => {
     throwIfInvalid(response);
     const languages = await parseResponse(response);
     return convertBytesToPercents(languages);
-  } catch (error) {
-    chrome.runtime.sendMessage(request(
-      MESSAGES.LOG_ERROR,
-      error.message
-    ));
-    chrome.runtime.sendMessage(request(
-      MESSAGES.LOG_WARN,
-      'Failed to fetch languages, trying to scrape them from the root page'
-    ));
+  } catch (e) {
+    warn('Failed to fetch languages, trying to scrape them from the root page', e);
     return await extractLanguagesFromPage(githubMetadata);
   }
 };
@@ -191,10 +162,7 @@ const selectTools = languages => {
   const selectDefaultLanguage = selectedToolIds.length === 0;
 
   if (selectDefaultLanguage) {
-    chrome.runtime.sendMessage(request(
-      MESSAGES.LOG_INFO,
-      `The language usage rate is too low, sticking to default language (${DEFAULT_LANGUAGE})`
-    ));
+    info(`The language usage rate is too low, sticking to default language (${DEFAULT_LANGUAGE})`);
   }
 
   const normalizedToolIds = selectDefaultLanguage
@@ -202,10 +170,8 @@ const selectTools = languages => {
     : Array.from(new Set(selectedToolIds));
 
   const tools = normalizedToolIds.sort().map(toolId => SUPPORTED_TOOLS[toolId]);
-  chrome.runtime.sendMessage(request(
-    MESSAGES.LOG_INFO,
-    `Selected tools: ${tools.map(t => t.name).join(', ')}`
-  ));
+
+  info(`Selected tools: ${tools.map(t => t.name).join(', ')}`);
 
   return tools;
 };

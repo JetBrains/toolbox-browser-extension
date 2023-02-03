@@ -1,6 +1,6 @@
 import {CLONE_PROTOCOLS} from '../constants';
 
-import logger from './console-logger';
+import {info, warn} from './console-logger';
 
 const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',
@@ -17,12 +17,12 @@ const DEFAULTS = {
 const saveToStorage = (key, value) => new Promise(resolve => {
   chrome.storage.local.set({[key]: value}, () => {
     if (chrome.runtime.lastError) {
-      logger().warn(
+      warn(
         `Failed to save the new value '${value}' of the '${key}' setting to storage`,
         chrome.runtime.lastError
       );
     } else {
-      logger().info(`Saved the '${key}' setting to storage, the new value is '${value}'`);
+      info(`Saved the '${key}' setting to storage, the new value is '${value}'`);
     }
     resolve();
   });
@@ -31,14 +31,14 @@ const saveToStorage = (key, value) => new Promise(resolve => {
 const getFromStorage = (key, defaultValue) => new Promise(resolve => {
   chrome.storage.local.get([key], result => {
     if (chrome.runtime.lastError) {
-      logger().warn(
+      warn(
         `Failed to get the '${key}' setting, returning the default value '${defaultValue}'`,
         chrome.runtime.lastError
       );
       resolve(defaultValue);
     } else {
       const value = result[key];
-      logger().info(`Extracted the '${key}' setting from storage, the value is '${value}'`);
+      info(`Extracted the '${key}' setting from storage, the value is '${value}'`);
       resolve(value);
     }
   });
