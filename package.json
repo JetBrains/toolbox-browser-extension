@@ -14,11 +14,11 @@
   "dependencies": {
     "@jetbrains/logos": "^2.2.10",
     "bitbucket-url-to-object": "^0.3.0",
-    "content-scripts-register-polyfill": "^4.0.1",
+    "content-scripts-register-polyfill": "^4.0.2",
     "github-url-to-object": "^4.0.4",
     "parse-bitbucket-url": "^0.3.0",
     "selector-observer": "^2.1.6",
-    "webext-additional-permissions": "^2.3.0"
+    "webext-additional-permissions": "^2.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
@@ -29,7 +29,7 @@
     "babel-loader": "^9.1.2",
     "copy-webpack-plugin": "^11.0.0",
     "core-js": "^3.27.2",
-    "eslint": "^8.32.0",
+    "eslint": "^8.33.0",
     "eslint-import-resolver-webpack": "^0.13.2",
     "eslint-plugin-import": "^2.27.5",
     "husky": "^8.0.3",
