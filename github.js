@@ -178,6 +178,9 @@ const selectTools = languages => {
 
 const fetchTools = async githubMetadata => {
   const languages = await fetchLanguages(githubMetadata);
+
+  info(`Fetched languages: ${JSON.stringify(languages)}`);
+
   return selectTools(languages);
 };
 
@@ -213,6 +216,9 @@ const removeCloneButtons = () => {
   const cloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (cloneButtonGroup) {
     cloneButtonGroup.parentElement.removeChild(cloneButtonGroup);
+    info('Removed the clone buttons');
+  } else {
+    info('No clone buttons found, nothing to remove');
   }
 };
 
@@ -221,6 +227,9 @@ const addCloneButtonEventHandler = (btn, githubMetadata) => {
     e.preventDefault();
 
     const {toolTag} = e.currentTarget.dataset;
+
+    info(`The clone button (${toolTag}) was clicked`);
+
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(githubMetadata)
@@ -229,9 +238,13 @@ const addCloneButtonEventHandler = (btn, githubMetadata) => {
       callToolbox(toolboxCloneUrl);
     });
   });
+
+  info(`Added click handler for the clone button (${btn.dataset.toolTag})`);
 };
 
 const createCloneButton = (tool, githubMetadata, small = true) => {
+  info(`Creating the clone button (${tool.tag})`);
+
   const button = document.createElement('a');
   button.setAttribute(
     'class',
@@ -256,18 +269,24 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
 };
 
 const renderCloneButtons = (tools, githubMetadata) => {
+  info(`Rendering the clone buttons (${tools.map(t => t.tag).join(', ')})`);
+
   let getRepoController = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
   getRepoController = getRepoController
     ? getRepoController.parentElement
     : document.querySelector('.js-get-repo-select-menu');
 
   if (getRepoController) {
+    info('Repo controller is found');
+
     const toolboxCloneButtonGroup = document.createElement('div');
     toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
     tools.forEach(tool => {
       const btn = createCloneButton(tool, githubMetadata);
       toolboxCloneButtonGroup.appendChild(btn);
+
+      info(`Embedded the clone button (${tool.tag})`);
     });
 
     getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
@@ -275,6 +294,8 @@ const renderCloneButtons = (tools, githubMetadata) => {
     // new UI as of 24.06.20
     getRepoController = document.querySelector('get-repo');
     if (getRepoController) {
+      info('The repo controller element is found');
+
       const summary = getRepoController.querySelector('summary');
       // the Code tab contains the green Code button (primary),
       // the Pull requests tab contains the ordinary Code button (outlined)
@@ -291,9 +312,13 @@ const renderCloneButtons = (tools, githubMetadata) => {
       tools.forEach(tool => {
         const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
         toolboxCloneButtonGroup.appendChild(btn);
+
+        info(`Embedded the clone button (${tool.tag})`);
       });
 
       getRepoController.parentElement.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+    } else {
+      info('Missing the repo controller element, nowhere to render the clone buttons');
     }
   }
 };
@@ -302,6 +327,8 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
+    info(`The open button/menu item (${tool.tag}) was clicked`);
+
     const {user, repo, branch} = githubMetadata;
     const normalizedBranch = branch.split('/').shift();
     const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
@@ -309,28 +336,44 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
 
     callToolbox(getToolboxNavigateUrl(tool.tag, repo, filePath, lineNumber));
   });
+
+  info(`Added click handler for the open button/menu item (${tool.tag})`);
 };
 
 // when navigating with back and forward buttons
 // we have to re-create open actions b/c their click handlers got lost somehow
 const removeOpenButtons = () => {
   const actions = document.querySelectorAll(`.${OPEN_BUTTON_JS_CSS_CLASS}`);
-  actions.forEach(action => {
-    action.parentElement.removeChild(action);
-  });
+  if (actions.length > 0) {
+    actions.forEach(action => {
+      action.parentElement.removeChild(action);
+    });
+    info('Removed the open buttons');
+  } else {
+    info('No open buttons found, nothing to remove');
+  }
 
   const menuItems = document.querySelectorAll(`.${OPEN_MENU_ITEM_JS_CSS_CLASS}`);
-  menuItems.forEach(item => {
-    item.parentElement.removeChild(item);
-  });
+  if (menuItems.length > 0) {
+    menuItems.forEach(item => {
+      item.parentElement.removeChild(item);
+    });
+    info('Removed the open menu items');
+  } else {
+    info('No open menu items found, nothing to remove');
+  }
 };
 
 const removePageButtons = () => {
+  info('Removing the page buttons');
+
   removeCloneButtons();
   removeOpenButtons();
 };
 
 const createOpenButton = (tool, githubMetadata) => {
+  info(`Creating the open button (${tool.tag})`);
+
   const action = document.createElement('a');
   action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`);
   action.setAttribute('aria-label', `Open this file in ${tool.name}`);
@@ -349,6 +392,8 @@ const createOpenButton = (tool, githubMetadata) => {
 };
 
 const createOpenMenuItem = (tool, first, githubMetadata) => {
+  info(`Creating the open menu item (${tool.tag})`);
+
   const menuItem = document.createElement('a');
   menuItem.setAttribute('class', 'dropdown-item');
   menuItem.setAttribute('role', 'menu-item');
@@ -365,6 +410,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
       blobToolbar.removeAttribute('open');
     }
   });
+  info(`Added click handler for the open menu item (${tool.tag}), closing the blob toolbar dropdown element`);
 
   const menuItemContainer = document.createElement('li');
   menuItemContainer.setAttribute('class', OPEN_MENU_ITEM_JS_CSS_CLASS);
@@ -374,6 +420,8 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
+  info(`Rendering the open buttons (${tools.map(t => t.tag).join(', ')})`);
+
   const actionAnchorElement = document.querySelector(BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR);
   const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
@@ -382,27 +430,39 @@ const renderOpenButtons = (tools, githubMetadata) => {
     if (actionAnchorElement) {
       const action = createOpenButton(tool, githubMetadata);
       actionAnchorFragment.appendChild(action);
+
+      info(`Embedded the open button (${tool.tag})`);
     }
     if (blobToolbarDropdown) {
       const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
       blobToolbarDropdown.appendChild(menuItem);
+
+      info(`Embedded the open menu item (${tool.tag})`);
     }
   });
+
   if (actionAnchorElement) {
     actionAnchorElement.append(actionAnchorFragment);
+  } else {
+    info('Missing the action anchor element, nowhere to render the open buttons');
+  }
+  if (!blobToolbarDropdown) {
+    info('Missing the blob toolbar dropdown element, nowhere to render the open menu items');
   }
 };
 
-const renderPageButtons = githubMetadata => {
-  fetchTools(githubMetadata).
-    then(tools => {
-      removePageButtons();
-      renderCloneButtons(tools, githubMetadata);
-      renderOpenButtons(tools, githubMetadata);
-    }).
-    catch(() => {
-      // do nothing
-    });
+const renderPageButtons = async githubMetadata => {
+  try {
+    info('Rendering the page buttons');
+
+    const tools = await fetchTools(githubMetadata);
+
+    removePageButtons();
+    renderCloneButtons(tools, githubMetadata);
+    renderOpenButtons(tools, githubMetadata);
+  } catch (e) {
+    warn('Failed to render the page buttons', e);
+  }
 };
 
 const startTrackingDOMChanges = githubMetadata =>
@@ -410,7 +470,10 @@ const startTrackingDOMChanges = githubMetadata =>
     `get-repo, ${BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR}`,
     {
       add() {
-        renderPageButtons(githubMetadata);
+        info('Detected the place to render the page buttons');
+        renderPageButtons(githubMetadata).then(() => {
+          // nothing to do here
+        });
       },
       remove() {
         removePageButtons();
@@ -421,10 +484,15 @@ const startTrackingDOMChanges = githubMetadata =>
 const stopTrackingDOMChanges = observer => {
   if (observer) {
     observer.abort();
+    info('Stopped tracking DOM changes');
+  } else {
+    info('Missing the observer, tracking DOM changes, nothing to stop');
   }
 };
 
 const enablePageAction = githubMetadata => {
+  info('Enabling the page action');
+
   chrome.runtime.sendMessage({
     type: 'enable-page-action',
     project: githubMetadata.repo,
@@ -434,6 +502,8 @@ const enablePageAction = githubMetadata => {
 };
 
 const disablePageAction = () => {
+  info('Disabling the page action');
+
   chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 

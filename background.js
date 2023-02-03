@@ -34,9 +34,9 @@ const handleMessage = (message, sender, sendResponse) => {
         path: {128: 'icon-128.png'}
       }, () => {
         if (chrome.runtime.lastError) {
-          error(`Failed to set action icon: ${chrome.runtime.lastError}`);
+          error(`Failed to set the page action icon: ${chrome.runtime.lastError}`);
         } else {
-          info('Action icon is enabled');
+          info('The page action icon is set to enabled');
         }
       });
       const {
@@ -44,15 +44,16 @@ const handleMessage = (message, sender, sendResponse) => {
         https,
         ssh
       } = message;
-      const url = encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
+      const enabledPopupUrl =
+        encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
       chrome.browserAction.setPopup({
         tabId: sender.tab.id,
-        popup: chrome.runtime.getURL(url)
+        popup: chrome.runtime.getURL(enabledPopupUrl)
       }, () => {
         if (chrome.runtime.lastError) {
-          error(`Failed to set action popup: ${chrome.runtime.lastError}`);
+          error(`Failed to set the page action popup: ${chrome.runtime.lastError}`);
         } else {
-          info(`Action popup is enabled and set to ${url}`);
+          info(`The page action popup is set to ${enabledPopupUrl}`);
         }
       });
       break;
@@ -63,19 +64,20 @@ const handleMessage = (message, sender, sendResponse) => {
         path: {128: 'icon-disabled-128.png'}
       }, () => {
         if (chrome.runtime.lastError) {
-          error(`Failed to set action icon: ${chrome.runtime.lastError}`);
+          error(`Failed to set the page action icon: ${chrome.runtime.lastError}`);
         } else {
-          info('Action icon is disabled');
+          info('The page action is set to disabled');
         }
       });
+      const disabledPopupUrl = encodeURI('jetbrains-toolbox-disabled-popup.html');
       chrome.browserAction.setPopup({
         tabId: sender.tab.id,
-        popup: chrome.runtime.getURL('jetbrains-toolbox-disabled-popup.html')
+        popup: chrome.runtime.getURL(disabledPopupUrl)
       }, () => {
         if (chrome.runtime.lastError) {
-          error(`Failed to set action popup: ${chrome.runtime.lastError}`);
+          error(`Failed to set the page action popup: ${chrome.runtime.lastError}`);
         } else {
-          info('Action popup is disabled');
+          info(`The page action popup is set to ${disabledPopupUrl}`);
         }
       });
       break;
