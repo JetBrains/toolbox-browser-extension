@@ -189,30 +189,6 @@ const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
 const getSshCloneUrl =
   githubMetadata => `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
 
-let handleMessage = null;
-
-const renderPageAction = githubMetadata => new Promise(resolve => {
-  if (handleMessage && chrome.runtime.onMessage.hasListener(handleMessage)) {
-    chrome.runtime.onMessage.removeListener(handleMessage);
-  }
-  handleMessage = (message, sender, sendResponse) => {
-    switch (message.type) {
-      case 'get-tools':
-        fetchTools(githubMetadata).then(sendResponse);
-        return true;
-      case 'perform-action':
-        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxCloneUrl);
-        break;
-      // no default
-    }
-    return undefined;
-  };
-  chrome.runtime.onMessage.addListener(handleMessage);
-
-  resolve();
-});
-
 const removeCloneButtons = () => {
   const cloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (cloneButtonGroup) {
@@ -366,7 +342,7 @@ const removeOpenButtons = () => {
 };
 
 const removePageButtons = () => {
-  info('Removing the page buttons');
+  info('Removing the embedded page buttons if any');
 
   removeCloneButtons();
   removeOpenButtons();
@@ -466,28 +442,28 @@ const renderPageButtons = async githubMetadata => {
   }
 };
 
-const startTrackingDOMChanges = githubMetadata =>
-  observe(
+const startTrackingDOMChanges = githubMetadata => {
+  info('Started observing DOM');
+
+  return observe(
     `get-repo, ${BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR}`,
     {
       add() {
-        info('Detected the place to render the page buttons');
+        info('Found a place to embed the page buttons');
         renderPageButtons(githubMetadata).then(() => {
           // nothing to do here
         });
-      },
-      remove() {
-        removePageButtons();
       }
     }
   );
+};
 
 const stopTrackingDOMChanges = observer => {
   if (observer) {
     observer.abort();
-    info('Stopped tracking DOM changes');
+    info('Stopped observing DOM');
   } else {
-    info('Missing the observer, tracking DOM changes, nothing to stop');
+    info('Missing the observer, observing DOM, nothing to stop');
   }
 };
 
@@ -508,173 +484,126 @@ const disablePageAction = () => {
   chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 
-class GitHubObserver {
+class AbstractGitHubObserver {
   constructor() {
-    if (this.constructor === GitHubObserver) {
-      throw new Error('Abstract classes can\'t be instantiated.');
+    if (this.constructor === AbstractGitHubObserver) {
+      throw new Error('Abstract classes can\'t be instantiated');
     }
   }
 
   // eslint-disable-next-line no-unused-vars
   observe(onChange) {
-    this._throwNotImplemented(this.observe);
+    this.#throwNotImplemented(this.observe);
   }
 
   abort() {
-    this._throwNotImplemented(this.abort);
+    this.#throwNotImplemented(this.abort);
   }
 
-  _throwNotImplemented(method) {
-    throw new Error(`Method '${method.name}' is not implemented.`);
+  #throwNotImplemented(method) {
+    throw new Error(`Method '${method.name}' is not implemented`);
   }
 }
 
-class DomObserver extends GitHubObserver {
+class DomObserver extends AbstractGitHubObserver {
+  #observer;
+
   constructor() {
     super();
 
-    this._observer = null;
-  }
-
-  // eslint-disable-next-line no-magic-numbers
-  static DEFAULT_TIMEOUT = 150;
-
-  _debounce(callback, timeout = DomObserver.DEFAULT_TIMEOUT) {
-    let timer;
-
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(
-        () => {
-          callback.apply(this, args);
-        },
-        timeout
-      );
-    };
+    this.#observer = null;
   }
 
   observe(onChange) {
-    if (this._observer !== null) {
+    if (this.#observer !== null) {
       return;
     }
 
-    const onChangeDebounced = this._debounce(onChange);
+    const observerName = this.constructor.name;
 
-    this._observer = new MutationObserver(mutationList => {
-      for (const mutation of mutationList) {
-        if (
-          mutation.type === 'attributes' &&
-          (mutation.attributeName === 'aria-busy' || mutation.attributeName === 'data-turbo-loaded')
-        ) {
-          onChangeDebounced();
-        }
-      }
-    });
+    info(`${observerName}: started observing DOM`);
 
-    this._observer.observe(document.querySelector('html'), {attributes: true});
-
-    this._observer = observe(
+    this.#observer = observe(
       '#repository-container-header',
       {
         add() {
-          onChangeDebounced();
+          info(`${observerName}: found repository container header`);
+          onChange();
         },
         remove() {
-          onChangeDebounced();
+          info(`${observerName}: repository container header is not found`);
+          onChange();
         }
       }
     );
   }
 
   abort() {
-    this._observer?.disconnect();
+    this.#observer?.abort();
+    this.#observer = null;
 
-    this._observer = null;
+    info(`${this.constructor.name}: stopped observing DOM`);
   }
 }
 
-class HistoryObserver extends GitHubObserver {
+class ProjectObserver extends AbstractGitHubObserver {
+  #isObserving;
+  #metadata;
+  #domObserver;
+
   constructor() {
     super();
 
-    this._handlePopState = null;
-  }
-
-  observe(onChange) {
-    if (this._handlePopState !== null) {
-      return;
-    }
-
-    this._handlePopState = () => {
-      setTimeout(onChange);
-    };
-
-    window.addEventListener('popstate', this._handlePopState);
-  }
-
-  abort() {
-    if (this._handlePopState === null) {
-      return;
-    }
-
-    window.removeEventListener('popstate', this._handlePopState);
-
-    this._handlePopState = null;
-  }
-}
-
-class ProjectObserver extends GitHubObserver {
-  constructor() {
-    super();
-
-    this._isObserving = false;
-    this._metadata = null;
-    this._domObserver = null;
-    this._historyObserver = null;
+    this.#isObserving = false;
+    this.#metadata = null;
+    this.#domObserver = null;
   }
 
   observe(onProjectEnter, onProjectLeave) {
-    if (this._isObserving) {
+    if (this.#isObserving) {
       return;
     }
 
-    this._isObserving = true;
-    this._metadata = fetchMetadata();
+    info(`${this.constructor.name}: started observing projects`);
 
-    if (this._metadata) {
-      onProjectEnter(this._metadata);
+    this.#isObserving = true;
+    this.#metadata = fetchMetadata();
+
+    if (this.#metadata) {
+      info(`${this.constructor.name}: entered a project`);
+      onProjectEnter(this.#metadata);
     } else {
+      info(`${this.constructor.name}: left a project`);
       onProjectLeave();
     }
 
     const handleChange = () => {
       const metadata = fetchMetadata();
-      const enteredProject = Boolean(metadata) && (!this._metadata || metadata.clone_url !== this._metadata.clone_url);
-      const leftProject = Boolean(this._metadata) && (!metadata || this._metadata.clone_url !== metadata.clone_url);
+      const enteredProject = Boolean(metadata) && (!this.#metadata || metadata.clone_url !== this.#metadata.clone_url);
+      const leftProject = Boolean(this.#metadata) && (!metadata || this.#metadata.clone_url !== metadata.clone_url);
 
       if (enteredProject) {
+        info(`${this.constructor.name}: entered a project`);
         onProjectEnter(metadata);
       } else if (leftProject) {
+        info(`${this.constructor.name}: left a project`);
         onProjectLeave();
       }
 
-      this._metadata = metadata;
+      this.#metadata = metadata;
     };
 
-    this._domObserver = new DomObserver();
-    this._historyObserver = new HistoryObserver();
+    this.#domObserver = new DomObserver();
 
-    this._domObserver.observe(handleChange);
-    // this._historyObserver.observe(handleChange);
+    this.#domObserver.observe(handleChange);
   }
 
   abort() {
-    if (this._isObserving) {
-      this._domObserver.abort();
-      this._historyObserver.abort();
+    if (this.#isObserving) {
+      this.#domObserver.abort();
+      this.#domObserver = null;
 
-      this._domObserver = null;
-      this._historyObserver = null;
+      info(`${this.constructor.name}: stopped observing projects`);
     }
   }
 }
@@ -683,7 +612,7 @@ const toolboxify = () => {
   let githubMetadata = null;
   let DOMObserver = null;
 
-  const handleInnerMessage = message => {
+  const handleInnerMessage = (message, sender, sendResponse) => {
     switch (message.type) {
       case 'modify-pages-changed':
         if (message.newValue) {
@@ -692,8 +621,16 @@ const toolboxify = () => {
           stopTrackingDOMChanges(DOMObserver);
         }
         break;
+      case 'get-tools':
+        fetchTools(githubMetadata).then(sendResponse);
+        return true;
+      case 'perform-action':
+        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+        callToolbox(toolboxCloneUrl);
+        break;
       // no default
     }
+    return undefined;
   };
 
   const projectObserver = new ProjectObserver();
@@ -701,13 +638,11 @@ const toolboxify = () => {
     metadata => {
       githubMetadata = metadata;
 
-      renderPageAction(metadata).then(() => {
-        enablePageAction(metadata);
-      });
+      enablePageAction(metadata);
 
       chrome.runtime.sendMessage({type: 'get-modify-pages'}, response => {
         if (response.allow) {
-          DOMObserver = startTrackingDOMChanges(githubMetadata);
+          DOMObserver = startTrackingDOMChanges(metadata);
         }
         chrome.runtime.onMessage.addListener(handleInnerMessage);
       });
