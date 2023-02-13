@@ -3,6 +3,7 @@ import 'content-scripts-register-polyfill';
 import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
 
 import {info, warn} from './console-logger';
+import {f} from './format';
 
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
 const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';
@@ -98,13 +99,11 @@ const updateMenuItem = updateProperties => {
   }, () => {
     if (chrome.runtime.lastError) {
       warn(
-        `Failed to update menu item ${MENU_ITEM_ID} with new properties: ${JSON.stringify(updateProperties)}`,
+        f`Failed to update menu item ${MENU_ITEM_ID} with new properties: ${updateProperties}`,
         chrome.runtime.lastError,
       );
     } else {
-      info(
-        `Updated menu item ${MENU_ITEM_ID} with new properties: ${JSON.stringify(updateProperties)}`
-      );
+      info(f`Updated menu item ${MENU_ITEM_ID} with new properties: ${updateProperties}`);
     }
   });
 };

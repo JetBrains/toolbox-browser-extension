@@ -21,6 +21,7 @@ import {
   parseLineNumber
 } from './web-api/toolbox';
 import {info, warn, error} from './web-api/web-logger';
+import {f} from './api/format';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
@@ -33,7 +34,7 @@ function fetchMetadata() {
   if (repositoryContainerHeader) {
     const metadata = gh(window.location.toString(), {enterprise: true});
     if (metadata) {
-      info(`Parsed repository metadata: ${JSON.stringify(metadata)}`);
+      info(f`Parsed repository metadata: ${metadata}`);
     } else {
       error('Failed to parse metadata');
     }
@@ -57,7 +58,7 @@ const parseResponse = async response => {
     throw new Error('Response is empty');
   }
 
-  info(`Parsed response: ${JSON.stringify(parsedResponse)}`);
+  info(f`Parsed response: ${parsedResponse}`);
   return parsedResponse;
 };
 
@@ -74,7 +75,7 @@ const convertBytesToPercents = languages => {
       languages[key] = parseFloat(percentString);
     });
 
-  info(`Converted bytes to percents in languages: ${JSON.stringify(languages)}`);
+  info(f`Converted bytes to percents in languages: ${languages}`);
 
   return languages;
 };
@@ -96,7 +97,7 @@ const extractLanguagesFromPage = async githubMetadata => {
         return acc;
       }, {});
 
-      info(`Scraped languages: ${JSON.stringify(allLanguages)}`);
+      info(f`Scraped languages: ${allLanguages}`);
 
       return allLanguages;
     }
@@ -123,7 +124,7 @@ const extractLanguagesFromPage = async githubMetadata => {
       return DEFAULT_LANGUAGE_SET;
     }
 
-    info(`Scraped languages: ${JSON.stringify(allLanguages)}`);
+    info(f`Scraped languages: ${allLanguages}`);
     return allLanguages;
   } catch (e) {
     warn('Failed to scrape languages from the root page, resolving to default languages', e);
@@ -171,7 +172,7 @@ const selectTools = languages => {
 
   const tools = normalizedToolIds.sort().map(toolId => SUPPORTED_TOOLS[toolId]);
 
-  info(`Selected tools: ${tools.map(t => t.name).join(', ')}`);
+  info(f`Selected tools: ${tools.map(t => t.name)}`);
 
   return tools;
 };
@@ -179,7 +180,7 @@ const selectTools = languages => {
 const fetchTools = async githubMetadata => {
   const languages = await fetchLanguages(githubMetadata);
 
-  info(`Fetched languages: ${JSON.stringify(languages)}`);
+  info(f`Fetched languages: ${languages}`);
 
   return selectTools(languages);
 };
@@ -269,7 +270,7 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
 };
 
 const renderCloneButtons = (tools, githubMetadata) => {
-  info(`Rendering the clone buttons (${tools.map(t => t.tag).join(', ')})`);
+  info(f`Rendering the clone buttons (${tools.map(t => t.tag)})`);
 
   let getRepoController = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
   getRepoController = getRepoController
@@ -420,7 +421,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
-  info(`Rendering the open buttons (${tools.map(t => t.tag).join(', ')})`);
+  info(f`Rendering the open buttons (${tools.map(t => t.tag)})`);
 
   const actionAnchorElement = document.querySelector(BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR);
   const actionAnchorFragment = document.createDocumentFragment();
