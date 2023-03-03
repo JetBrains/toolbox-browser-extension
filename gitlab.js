@@ -16,6 +16,8 @@ import {
   callToolbox,
   parseLineNumber
 } from './web-api/toolbox';
+import {info, warn} from './web-api/web-logger';
+import {f} from './api/format';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const CLONE_BUTTON_JS_CSS_CLASS = 'js-toolbox-clone-button';
@@ -26,6 +28,7 @@ const extractProjectIdFromPage = document => {
   if (dataProjectId) {
     return dataProjectId;
   }
+
   const homePanelMetadataElement = document.querySelector('.home-panel-metadata') || {children: []};
   const projectIdElement =
     Array.prototype.find.call(homePanelMetadataElement.children, c => c.textContent.includes('Project ID'));
@@ -34,63 +37,72 @@ const extractProjectIdFromPage = document => {
     : null;
 };
 
-const getProjectId = () => new Promise((resolve, reject) => {
+const getProjectId = async () => {
+  info('Trying to find the project ID on the current page');
+
   let projectId = extractProjectIdFromPage(document);
   if (projectId) {
-    resolve(projectId);
-  } else {
-    const {findFile, project} = document.body.dataset;
-    // we treat 'project' as a boolean flag saying
-    // we are able to get the project repo url
-    if (findFile && project) {
-      const [repoPath] = findFile.split('/-/find_file/');
-      const repoUrl = `${location.origin}${repoPath}`;
-      fetch(repoUrl).
-        then(response => response.text()).
-        then(htmlString => {
-          const parser = new DOMParser();
-          const htmlDocument = parser.parseFromString(htmlString, 'text/html');
-          projectId = extractProjectIdFromPage(htmlDocument);
-          if (projectId === null) {
-            reject();
-          } else {
-            resolve(projectId);
-          }
-        });
-    } else {
-      reject();
+    info(`Found the project ID: ${projectId}`);
+    return projectId;
+  }
+
+  const {findFile, project} = document.body.dataset;
+  // we treat the presence of 'project' as a boolean flag saying we are able to get the project repo url
+  if (findFile && project) {
+    info('Trying to load the root project page and find the project ID there');
+
+    const [repoPath] = findFile.split('/-/find_file/');
+    const repoUrl = `${location.origin}${repoPath}`;
+    const response = await fetch(repoUrl);
+    const htmlString = await response.text();
+    const parser = new DOMParser();
+    const htmlDocument = parser.parseFromString(htmlString, 'text/html');
+    projectId = extractProjectIdFromPage(htmlDocument);
+    if (projectId) {
+      info(`Found the project ID: ${projectId}`);
+      return projectId;
     }
   }
-});
 
-const fetchMetadata = () => new Promise((resolve, reject) => {
-  getProjectId().
-    then(id => {
-      fetch(`${location.origin}/api/v4/projects/${id}`).
-        then(r => r.json()).
-        then(meta => {
-          resolve({
-            ssh: meta.ssh_url_to_repo,
-            https: meta.http_url_to_repo,
-            id: meta.id,
-            repo: meta.path
-          });
-        });
-    }).
-    catch(() => {
-      reject();
-    });
-});
+  info('Project ID is not found');
+  return null;
+};
 
-const fetchLanguages = gitlabMetadata => new Promise(resolve => {
-  fetch(`${location.origin}/api/v4/projects/${gitlabMetadata.id}/languages`).then(response => {
-    resolve(response.json());
-  }).catch(() => {
-    resolve(DEFAULT_LANGUAGE_SET);
-  });
-});
+const fetchMetadata = async () => {
+  try {
+    const projectId = await getProjectId();
+    if (!projectId) {
+      return null;
+    }
 
-const selectTools = languages => new Promise(resolve => {
+    const response = await fetch(`${location.origin}/api/v4/projects/${projectId}`);
+    const metadata = await response.json();
+
+    return {
+      ssh: metadata.ssh_url_to_repo,
+      https: metadata.http_url_to_repo,
+      id: metadata.id,
+      repo: metadata.path
+    };
+  } catch (e) {
+    warn('Failed to fetch the metadata', e);
+    return null;
+  }
+};
+
+const fetchLanguages = async gitlabMetadata => {
+  try {
+    const response = await fetch(`${location.origin}/api/v4/projects/${gitlabMetadata.id}/languages`);
+    const languages = await response.json();
+    info(f`Fetched languages: ${languages}`);
+    return languages;
+  } catch (e) {
+    warn('Failed to fetch languages, resolving to default languages', e);
+    return DEFAULT_LANGUAGE_SET;
+  }
+};
+
+const selectTools = async languages => {
   const overallPoints = Object.
     values(languages).
     reduce((overall, current) => overall + current, 0);
@@ -106,18 +118,27 @@ const selectTools = languages => new Promise(resolve => {
       return acc;
     }, []);
 
-  const normalizedToolIds = selectedToolIds.length > 0
-    ? Array.from(new Set(selectedToolIds))
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+  const selectDefaultLanguage = selectedToolIds.length === 0;
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+  if (selectDefaultLanguage) {
+    info(`The language usage rate is too low, sticking to default language (${DEFAULT_LANGUAGE})`);
+  }
 
-  resolve(tools);
-});
+  const normalizedToolIds = selectDefaultLanguage
+    ? SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE]
+    : Array.from(new Set(selectedToolIds));
 
-const fetchTools = gitlabMetadata => fetchLanguages(gitlabMetadata).then(selectTools);
+  const tools = normalizedToolIds.sort().map(toolId => SUPPORTED_TOOLS[toolId]);
+
+  info(f`Selected tools: ${tools.map(t => t.name)}`);
+
+  return tools;
+};
+
+const fetchTools = async gitlabMetadata => {
+  const languages = await fetchLanguages(gitlabMetadata);
+  return selectTools(languages);
+};
 
 const renderPageAction = gitlabMetadata => new Promise(resolve => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -138,9 +159,15 @@ const renderPageAction = gitlabMetadata => new Promise(resolve => {
 });
 
 const removeCloneButtons = () => {
-  document.querySelectorAll(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`).forEach(button => {
-    button.remove();
-  });
+  const cloneButtons = document.querySelectorAll(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+  if (cloneButtons.length > 0) {
+    cloneButtons.forEach(button => {
+      button.remove();
+    });
+    info('Removed the clone buttons');
+  } else {
+    info('No clone buttons found, nothing to remove');
+  }
 };
 
 const cloneButtonsRendered = () => document.getElementsByClassName(CLONE_BUTTON_GROUP_JS_CSS_CLASS).length > 0;
