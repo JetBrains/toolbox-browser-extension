@@ -64,30 +64,23 @@ const getProjectId = async () => {
     }
   }
 
-  info('Project ID is not found');
-  return null;
+  throw new Error('Project ID is not found');
 };
 
 const fetchMetadata = async () => {
-  try {
-    const projectId = await getProjectId();
-    if (!projectId) {
-      return null;
-    }
+  const projectId = await getProjectId();
 
-    const response = await fetch(`${location.origin}/api/v4/projects/${projectId}`);
-    const metadata = await response.json();
+  const response = await fetch(`${location.origin}/api/v4/projects/${projectId}`);
+  const metadata = await response.json();
 
-    return {
-      ssh: metadata.ssh_url_to_repo,
-      https: metadata.http_url_to_repo,
-      id: metadata.id,
-      repo: metadata.path
-    };
-  } catch (e) {
-    warn('Failed to fetch the metadata', e);
-    return null;
-  }
+  info(f`Parsed the repository metadata: ${metadata}`);
+
+  return {
+    ssh: metadata.ssh_url_to_repo,
+    https: metadata.http_url_to_repo,
+    id: metadata.id,
+    repo: metadata.path
+  };
 };
 
 const fetchLanguages = async gitlabMetadata => {
@@ -140,24 +133,6 @@ const fetchTools = async gitlabMetadata => {
   return selectTools(languages);
 };
 
-const renderPageAction = gitlabMetadata => new Promise(resolve => {
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    switch (message.type) {
-      case 'get-tools':
-        fetchTools(gitlabMetadata).then(sendResponse);
-        return true;
-      case 'perform-action':
-        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxCloneUrl);
-        break;
-      // no default
-    }
-    return undefined;
-  });
-
-  resolve();
-});
-
 const removeCloneButtons = () => {
   const cloneButtons = document.querySelectorAll(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (cloneButtons.length > 0) {
@@ -177,15 +152,22 @@ const addCloneButtonEventHandler = (button, gitlabMetadata) => {
     e.preventDefault();
 
     const {toolTag} = e.currentTarget.dataset;
+
+    info(`The clone button (${toolTag}) was clicked`);
+
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
       const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
       callToolbox(toolboxCloneUrl);
     });
   });
+
+  info(`Added click handler for the clone button (${button.dataset.toolTag})`);
 };
 
 const createCloneButton = (tool, gitlabMetadata) => {
+  info(`Creating the clone button (${tool.tag})`);
+
   const button = document.createElement('a');
   button.setAttribute('class', `btn btn-default gl-button has-tooltip ${CLONE_BUTTON_JS_CSS_CLASS}`);
   button.dataset.title = `Clone in ${tool.name}`;
@@ -206,21 +188,30 @@ const createCloneButton = (tool, gitlabMetadata) => {
 
 const renderCloneButtons = (tools, gitlabMetadata) => {
   if (cloneButtonsRendered()) {
+    info('The clone buttons are already rendered');
     return;
   }
+
+  info(f`Rendering the clone buttons (${tools.map(t => t.tag)})`);
 
   const projectCloneHolder = document.querySelector('.project-clone-holder');
 
   if (projectCloneHolder) {
+    info('The project clone holder is found');
+
     const buttonGroup = document.createElement('div');
     buttonGroup.setAttribute('class', `btn-group ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
 
     tools.forEach(tool => {
       const button = createCloneButton(tool, gitlabMetadata);
       buttonGroup.append(button);
+
+      info(`Embedded the clone button (${tool.tag})`);
     });
 
     projectCloneHolder.insertAdjacentElement('beforebegin', buttonGroup);
+  } else {
+    info('Missing the project clone holder element, nowhere to render the clone buttons');
   }
 };
 
@@ -229,6 +220,8 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
 
   buttonElement.addEventListener('click', e => {
     e.preventDefault();
+
+    info(`The open button (${tool.tag}) was clicked`);
 
     const filePath = e.currentTarget.dataset.filePath;
     let lineNumber = '';
@@ -243,9 +236,13 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
 
     callToolbox(getToolboxNavigateUrl(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
   });
+
+  info(`Added click handler for the open button (${tool.tag})`);
 };
 
 const createOpenButton = (tool, gitlabMetadata, filePath) => {
+  info(`Creating the open button (${tool.tag})`);
+
   const button = document.createElement('button');
   button.setAttribute('class', 'btn btn-default btn-md gl-button btn-icon');
   button.setAttribute('type', 'button');
@@ -274,53 +271,67 @@ const openButtonsRendered = targetElement =>
 
 const renderOpenButtons = (tools, gitlabMetadata, targetElement) => {
   if (openButtonsRendered(targetElement)) {
+    info('The open buttons are already rendered');
     return;
   }
 
+  info(f`Rendering the open buttons (${tools.map(t => t.tag)})`);
+
   const buttonGroupAnchorElement = targetElement.querySelector('.file-actions .btn-group:last-child');
   if (buttonGroupAnchorElement) {
-    const toolboxButtonGroup = document.createElement('div');
-    toolboxButtonGroup.setAttribute('class', `btn-group ml-2 ${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
-    toolboxButtonGroup.setAttribute('role', 'group');
-
     const copyFilePathButton = targetElement.querySelector('.file-header-content button[id^="clipboard-button"]');
     if (copyFilePathButton) {
-      try {
-        const {text: filePath} = JSON.parse(copyFilePathButton.dataset.clipboardText);
-        if (filePath) {
-          tools.forEach(tool => {
-            const action = createOpenButton(tool, gitlabMetadata, filePath);
-            toolboxButtonGroup.appendChild(action);
-          });
+      const toolboxButtonGroup = document.createElement('div');
+      toolboxButtonGroup.setAttribute('class', `btn-group ml-2 ${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
+      toolboxButtonGroup.setAttribute('role', 'group');
 
-          buttonGroupAnchorElement.insertAdjacentElement('afterend', toolboxButtonGroup);
-        }
-      } catch {
-        // do nothing
+      const {text: filePath} = JSON.parse(copyFilePathButton.dataset.clipboardText);
+      if (filePath) {
+        tools.forEach(tool => {
+          const action = createOpenButton(tool, gitlabMetadata, filePath);
+          toolboxButtonGroup.appendChild(action);
+        });
+
+        buttonGroupAnchorElement.insertAdjacentElement('afterend', toolboxButtonGroup);
+      } else {
+        info('Missing the file path in the copy file path button, unable to create the open buttons');
       }
+    } else {
+      info('The copy file path button is not found, nowhere to render the open buttons');
     }
+  } else {
+    info('The button group in the file actions element is not found, nowhere to render the open buttons');
   }
 };
 
-const startTrackingDOMChanges = gitlabMetadata =>
-  observe(
+const startTrackingDOMChanges = gitlabMetadata => {
+  info('Started observing DOM');
+
+  return observe(
     '.file-holder',
     {
       add(el) {
+        info('Found the file holder element to embed the open buttons to');
         fetchTools(gitlabMetadata).then(tools => {
           renderOpenButtons(tools, gitlabMetadata, el);
         });
       }
     }
   );
+};
 
 const stopTrackingDOMChanges = observer => {
   if (observer) {
     observer.abort();
+    info('Stopped observing DOM');
+  } else {
+    info('Missing the observer, observing DOM, nothing to stop');
   }
 };
 
 const enablePageAction = gitlabMetadata => {
+  info('Enabling the page action');
+
   chrome.runtime.sendMessage({
     type: 'enable-page-action',
     project: gitlabMetadata.repo,
@@ -330,6 +341,8 @@ const enablePageAction = gitlabMetadata => {
 };
 
 const disablePageAction = () => {
+  info('Disabling the page action');
+
   chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 
@@ -338,9 +351,7 @@ const toolboxify = () => {
 
   fetchMetadata().
     then(metadata => {
-      renderPageAction(metadata).then(() => {
-        enablePageAction(metadata);
-      });
+      enablePageAction(metadata);
 
       chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
         if (data.allow) {
@@ -349,7 +360,8 @@ const toolboxify = () => {
           });
           DOMObserver = startTrackingDOMChanges(metadata);
         }
-        chrome.runtime.onMessage.addListener(message => {
+
+        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           switch (message.type) {
             case 'modify-pages-changed':
               if (message.newValue) {
@@ -362,12 +374,21 @@ const toolboxify = () => {
                 stopTrackingDOMChanges(DOMObserver);
               }
               break;
-            // no default
+            case 'get-tools':
+              fetchTools(metadata).then(sendResponse);
+              return true;
+            case 'perform-action':
+              const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+              callToolbox(toolboxCloneUrl);
+              break;
+              // no default
           }
+          return undefined;
         });
       });
     }).
-    catch(() => {
+    catch(e => {
+      warn('Failed to fetch the metadata', e);
       disablePageAction();
     });
 };

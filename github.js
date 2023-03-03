@@ -254,7 +254,7 @@ const renderCloneButtons = (tools, githubMetadata) => {
     : document.querySelector('.js-get-repo-select-menu');
 
   if (getRepoController) {
-    info('Repo controller is found');
+    info('The repo controller element is found');
 
     const toolboxCloneButtonGroup = document.createElement('div');
     toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
