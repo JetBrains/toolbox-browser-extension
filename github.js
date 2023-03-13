@@ -203,7 +203,7 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
   const button = document.createElement('a');
   button.setAttribute(
     'class',
-    `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item d-flex`
+    `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item m-0`
   );
   button.setAttribute('href', '#');
   button.setAttribute('aria-label', `Clone in ${tool.name}`);
@@ -243,18 +243,25 @@ const renderCloneButtons = (tools, githubMetadata) => {
     // new UI as of 24.06.20
     getRepoController = document.querySelector('get-repo');
     if (getRepoController) {
+      const summary = getRepoController.querySelector('summary');
+      // the Code tab contains the green Code button (primary),
+      // the Pull requests tab contains the ordinary Code button (outlined)
+      const isOnCodeTab = summary && summary.classList.contains('btn-primary');
+
       const toolboxCloneButtonGroup = document.createElement('div');
-      const isOnPullRequestsTab = document.querySelector('#pull-requests-tab[aria-current="page"]');
       toolboxCloneButtonGroup.setAttribute(
         'class',
-        `BtnGroup ${isOnPullRequestsTab ? 'ml-1' : 'mr-2'} d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
+        `BtnGroup ${isOnCodeTab
+          ? 'ml-2'
+          : 'ml-1 flex-md-order-2'} ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
       );
+
       tools.forEach(tool => {
-        const btn = createCloneButton(tool, githubMetadata, false);
+        const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
         toolboxCloneButtonGroup.appendChild(btn);
       });
 
-      getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+      getRepoController.parentElement.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
     }
   }
 };
