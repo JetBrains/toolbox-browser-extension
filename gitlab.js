@@ -221,13 +221,6 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
   });
 };
 
-const removeOpenButtons = targetElement => {
-  const openButtonGroup = targetElement.querySelector(`.${OPEN_BUTTON_GROUP_JS_CSS_CLASS}`);
-  if (openButtonGroup) {
-    openButtonGroup.remove();
-  }
-};
-
 const createOpenButton = (tool, gitlabMetadata, filePath) => {
   const button = document.createElement('button');
   button.setAttribute('class', 'btn btn-default btn-md gl-button btn-icon');
@@ -252,10 +245,11 @@ const createOpenButton = (tool, gitlabMetadata, filePath) => {
   return button;
 };
 
-const openButtonsRendered = () => document.getElementsByClassName(OPEN_BUTTON_GROUP_JS_CSS_CLASS).length > 0;
+const openButtonsRendered = targetElement =>
+  targetElement.getElementsByClassName(OPEN_BUTTON_GROUP_JS_CSS_CLASS).length > 0;
 
 const renderOpenButtons = (tools, gitlabMetadata, targetElement) => {
-  if (openButtonsRendered()) {
+  if (openButtonsRendered(targetElement)) {
     return;
   }
 
@@ -292,9 +286,6 @@ const startTrackingDOMChanges = gitlabMetadata =>
         fetchTools(gitlabMetadata).then(tools => {
           renderOpenButtons(tools, gitlabMetadata, el);
         });
-      },
-      remove(el) {
-        removeOpenButtons(el);
       }
     }
   );
