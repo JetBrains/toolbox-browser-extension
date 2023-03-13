@@ -5,7 +5,6 @@ const path = require('path');
 
 const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = {
@@ -84,12 +83,6 @@ module.exports = {
         {from: 'styles/popup.css', to: 'popup.css'},
         {from: 'styles/variables.css', to: 'variables.css'}
       ]
-    }),
-    new LicenseChecker({
-      format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})
-${mod.license.name} (${mod.license.url})`).join('\n\n'),
-      filename: 'third-party-licences.txt',
-      exclude: /@jetbrains[\/|\\]logos/
     })
   ]
 };
