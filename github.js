@@ -246,14 +246,14 @@ const renderCloneButtons = (tools, githubMetadata) => {
       const summary = getRepoController.querySelector('summary');
       // the Code tab contains the green Code button (primary),
       // the Pull requests tab contains the ordinary Code button (outlined)
-      const isOnCodeTab = summary && summary.classList.contains('btn-primary');
+      const isOnCodeTab = summary && summary.classList.contains('Button--primary');
 
       const toolboxCloneButtonGroup = document.createElement('div');
       toolboxCloneButtonGroup.setAttribute(
         'class',
         `BtnGroup ${isOnCodeTab
-          ? 'ml-2'
-          : 'ml-1 flex-md-order-2'} ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
+          ? 'd-block ml-2'
+          : 'flex-md-order-2'} ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
       );
 
       tools.forEach(tool => {
