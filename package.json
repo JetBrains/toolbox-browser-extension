@@ -12,7 +12,7 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@jetbrains/logos": "^2.2.13",
+    "@jetbrains/logos": "^2.2.14",
     "bitbucket-url-to-object": "^0.3.0",
     "content-scripts-register-polyfill": "^4.0.2",
     "github-url-to-object": "^4.0.4",
@@ -21,14 +21,14 @@
     "webext-additional-permissions": "^2.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.21.3",
+    "@babel/core": "^7.21.4",
     "@babel/eslint-parser": "^7.21.3",
-    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-env": "^7.21.4",
     "@jetbrains/eslint-config": "^5.3.1",
     "babel-loader": "^9.1.2",
     "copy-webpack-plugin": "^11.0.0",
     "core-js": "^3.29.1",
-    "eslint": "^8.36.0",
+    "eslint": "^8.37.0",
     "eslint-import-resolver-webpack": "^0.13.2",
     "eslint-plugin-import": "^2.27.5",
     "husky": "^8.0.3",
@@ -38,7 +38,7 @@
     "node-polyfill-webpack-plugin": "^2.0.1",
     "regenerator-runtime": "^0.13.11",
     "terser-webpack-plugin": "^5.3.7",
-    "webpack": "^5.76.3",
+    "webpack": "^5.77.0",
     "webpack-cli": "^5.0.1"
   },
   "lint-staged": {
