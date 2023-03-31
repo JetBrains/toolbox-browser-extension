@@ -163,7 +163,7 @@ const selectTools = languages => {
   const selectDefaultLanguage = selectedToolIds.length === 0;
 
   if (selectDefaultLanguage) {
-    info(`The language usage rate is too low, sticking to default language (${DEFAULT_LANGUAGE})`);
+    info(`The language usage rate is too low, sticking to the default language (${DEFAULT_LANGUAGE})`);
   }
 
   const normalizedToolIds = selectDefaultLanguage
@@ -480,7 +480,6 @@ const enablePageAction = githubMetadata => {
 
 const disablePageAction = () => {
   info('Disabling the page action');
-
   chrome.runtime.sendMessage({type: 'disable-page-action'});
 };
 
