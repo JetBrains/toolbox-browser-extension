@@ -210,7 +210,7 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
         lineNumber = hashParts.pop();
       }
     } else {
-      lineNumber = location.hash.replace('#L', '');
+      lineNumber = location.hash.replace('#L', '').split('-')[0];
     }
 
     if (lineNumber === '') {
