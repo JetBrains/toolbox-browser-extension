@@ -11,7 +11,8 @@ import {
 import {
   getToolboxURN,
   getToolboxNavURN,
-  callToolbox
+  callToolbox,
+  parseLineNumber
 } from './api/toolbox';
 
 const CLONE_CONTAINER_JS_CSS_CLASS = 'js-toolbox-clone-repo';
@@ -176,10 +177,7 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
 
     const filePathIndex = 6;
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
-    let lineNumber = location.hash.replace('#', '');
-    if (lineNumber === '') {
-      lineNumber = null;
-    }
+    const lineNumber = parseLineNumber(location.hash.replace('#', ''));
 
     callToolbox(getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
   });

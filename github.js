@@ -17,7 +17,8 @@ import {
 import {
   getToolboxURN,
   getToolboxNavURN,
-  callToolbox
+  callToolbox,
+  parseLineNumber
 } from './api/toolbox';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
@@ -273,10 +274,7 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
     const {user, repo, branch} = githubMetadata;
     const normalizedBranch = branch.split('/').shift();
     const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
-    let lineNumber = location.hash.replace('#L', '');
-    if (lineNumber === '') {
-      lineNumber = null;
-    }
+    const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
 
     callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
   });

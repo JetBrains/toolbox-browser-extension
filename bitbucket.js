@@ -11,7 +11,8 @@ import {
 import {
   getToolboxURN,
   getToolboxNavURN,
-  callToolbox
+  callToolbox,
+  parseLineNumber
 } from './api/toolbox';
 
 /* eslint-disable max-len */
@@ -250,10 +251,7 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
 
     const filePathIndex = 5;
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
-    let lineNumber = location.hash.replace('#lines-', '');
-    if (lineNumber === '') {
-      lineNumber = null;
-    }
+    const lineNumber = parseLineNumber(location.hash.replace('#lines-', ''));
 
     callToolbox(getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
   });

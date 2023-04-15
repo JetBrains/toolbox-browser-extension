@@ -1,5 +1,10 @@
 const convertNumberToIndex = number => number - 1;
 
+export const parseLineNumber = lineNumber => {
+  const parsedValue = parseInt(lineNumber, 10);
+  return isNaN(parsedValue) ? 1 : parsedValue;
+};
+
 export function getToolboxURN(toolTag, cloneUrl) {
   return `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 }

@@ -13,7 +13,8 @@ import {
 import {
   getToolboxURN,
   getToolboxNavURN,
-  callToolbox
+  callToolbox,
+  parseLineNumber
 } from './api/toolbox';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
@@ -213,11 +214,9 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
       lineNumber = location.hash.replace('#L', '');
     }
 
-    if (lineNumber === '') {
-      lineNumber = null;
-    }
+    const parsedLineNumber = parseLineNumber(lineNumber);
 
-    callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavURN(tool.tag, gitlabMetadata.repo, filePath, parsedLineNumber));
   });
 };
 
