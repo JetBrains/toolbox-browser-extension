@@ -41,7 +41,7 @@ readme.write(`3. \`git checkout \'${branch}\'\`\n`);
 readme.write(`4. \`git reset --hard \'${longSHA}\'\`\n`);
 readme.write('5. \`yarn install\`\n');
 readme.write('6. \`yarn build\`\n');
-readme.write('\n   The built code is saved in the \'dist\' subfolder:  \n');
+readme.write('\n   The built code is saved in the \'dist\' subdirectory:  \n');
 readme.write('\n7. \`cd \'dist\'\`');
 
 readme.end();
