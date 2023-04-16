@@ -1,11 +1,10 @@
 {
   "parser": "@babel/eslint-parser",
   "parserOptions": {
+    "ecmaVersion": "latest",
     "requireConfigFile": false,
     "babelOptions": {
-      "babelrc": false,
-      "configFile": false,
-      "presets": ["@babel/preset-env"]
+      "configFile": "./babel.config.json"
     }
   },
   "extends": [
@@ -20,7 +19,8 @@
       "ignoredNodes": ["TemplateLiteral", "SwitchCase"]
     }]
   },
-  "globals": {
-    "chrome": "readonly"
+  "env": {
+    "es2022": true,
+    "webextensions": true
   }
 }
