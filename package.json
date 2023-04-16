@@ -6,10 +6,11 @@
   "scripts": {
     "prebuild": "eslint .",
     "build": "webpack --bail --mode production",
-    "postbuild": "node distribution/generate-readme.js | node distribution/generate-license-list.js",
+    "postbuild": "node .scripts/generate-readme.js | node .scripts/generate-license-list.js",
     "build:dev": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug",
     "watch": "webpack -w",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "postinstall": "node .scripts/ensure-core.js"
   },
   "dependencies": {
     "@jetbrains/logos": "^2.2.16",

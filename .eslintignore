@@ -1,4 +1,2 @@
-build
 dist
-distribution/generate-readme.js
-distribution/generate-license-list.js
+.scripts
