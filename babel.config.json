@@ -10,5 +10,6 @@
         "corejs": "3.30"
       }
     ]
-  ]
+  ],
+  "sourceType": "unambiguous"
 }
