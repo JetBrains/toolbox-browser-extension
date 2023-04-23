@@ -234,7 +234,9 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
       lineNumber = location.hash.replace('#L', '');
     }
 
-    callToolbox(getToolboxNavigateUrl(tool.tag, gitlabMetadata.repo, filePath, lineNumber));
+    const parsedLineNumber = parseLineNumber(lineNumber);
+
+    callToolbox(getToolboxNavigateUrl(tool.tag, gitlabMetadata.repo, filePath, parsedLineNumber));
   });
 
   info(`Added click handler for the open button (${tool.tag})`);

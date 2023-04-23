@@ -100,7 +100,7 @@ const updateMenuItem = updateProperties => {
     if (chrome.runtime.lastError) {
       warn(
         f`Failed to update menu item ${MENU_ITEM_ID} with new properties: ${updateProperties}`,
-        chrome.runtime.lastError,
+        chrome.runtime.lastError
       );
     } else {
       info(f`Updated menu item ${MENU_ITEM_ID} with new properties: ${updateProperties}`);
