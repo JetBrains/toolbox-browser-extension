@@ -40,3 +40,4 @@ chrome.runtime.sendMessage(request(MESSAGES.GET_LOGGING), response => {
 export const info = message => webLogger.info(message);
 export const warn = (message, error = null) => webLogger.warn(message, error);
 export const error = message => webLogger.error(message);
+

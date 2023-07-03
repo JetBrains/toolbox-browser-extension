@@ -9,6 +9,18 @@ import {
 import createExtensionMenu from './api/menu';
 import {enableLogger, info, warn, error} from './api/console-logger';
 import {MESSAGES, request, response} from './api/messaging';
+import {getToolboxAppState, TOOLBOX_APP_STATUS} from './api/toolbox';
+
+const INSTALL_TOOLBOX_URL = 'https://www.jetbrains.com/toolbox-app';
+
+const setInstallPopup = () => {
+  chrome.browserAction.setIcon({
+    path: {128: 'icon-disabled-128.png'}
+  });
+  chrome.browserAction.setPopup({
+    popup: chrome.runtime.getURL('jetbrains-toolbox-install-popup.html')
+  });
+};
 
 const handleInstalled = async () => {
   const allowLogging = await getLogging();
@@ -23,6 +35,21 @@ const handleInstalled = async () => {
       info(`Uninstall URL is set to ${uninstallUrl}`);
     }
   });
+
+  const state = await getToolboxAppState();
+  switch (state.status) {
+    case TOOLBOX_APP_STATUS.NOT_INSTALLED:
+      chrome.tabs.create({url: INSTALL_TOOLBOX_URL});
+      setInstallPopup();
+      error(state.error.message);
+      break;
+    case TOOLBOX_APP_STATUS.INSTALLED_ERROR:
+      warn('Toolbox App is installed, but errored up', state.error);
+      break;
+    default:
+      info('Toolbox App is installed');
+      break;
+  }
 };
 
 // eslint-disable-next-line complexity
