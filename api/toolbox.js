@@ -28,7 +28,7 @@ export const TOOLBOX_APP_STATUS = {
 const sendNativeMessage = request => new Promise((resolve, reject) => {
   chrome.runtime.sendNativeMessage(APPLICATION_NAME, request, response => {
     if (chrome.runtime.lastError) {
-      reject(chrome.runtime.lastError.message);
+      reject(chrome.runtime.lastError);
     } else {
       resolve(response);
     }
