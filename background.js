@@ -9,7 +9,7 @@ import {
 import createExtensionMenu from './api/menu';
 import {enableLogger, info, warn, error} from './api/console-logger';
 import {MESSAGES, request, response} from './api/messaging';
-import {getToolboxAppState, TOOLBOX_APP_STATUS} from './api/toolbox';
+import {getToolboxAppState, TOOLBOX_APP_STATUS} from './api/toolbox-client';
 
 const INSTALL_TOOLBOX_URL = 'https://www.jetbrains.com/toolbox-app';
 
