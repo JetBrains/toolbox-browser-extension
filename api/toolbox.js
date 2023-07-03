@@ -1,5 +1,4 @@
 const APPLICATION_NAME = 'com.jetbrains.toolbox';
-const REQUEST_ID = 'request-id';
 
 const MESSAGES = {
   GET_CAPABILITIES: 'get-capabilities'
@@ -36,7 +35,9 @@ const sendNativeMessage = request => new Promise((resolve, reject) => {
   });
 });
 
-const request = (message, args = {}) => ({method: message, arguments: args, id: REQUEST_ID});
+const requestId = () => crypto.randomUUID();
+
+const request = (message, args = {}) => ({method: message, arguments: args, id: requestId()});
 
 export const getCapabilities = async () => await sendNativeMessage(request(MESSAGES.GET_CAPABILITIES));
 
