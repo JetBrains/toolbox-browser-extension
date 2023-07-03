@@ -1,18 +1,9 @@
 const APPLICATION_NAME = 'com.jetbrains.toolbox';
 
 const MESSAGES = {
-  GET_CAPABILITIES: 'get-capabilities'
+  GET_CAPABILITIES: 'get-capabilities',
+  GET_INSTALLED_TOOLS: 'get-installed-tools'
 };
-
-export class ToolboxAppState {
-  status;
-  error;
-
-  constructor(status, error = null) {
-    this.status = status;
-    this.error = error;
-  }
-}
 
 export const RESPONSE_STATUS = {
   OK: 'ok',
@@ -25,6 +16,32 @@ export const TOOLBOX_APP_STATUS = {
   NOT_INSTALLED: 'not-installed'
 };
 
+export class ToolboxAppState {
+  status;
+  error;
+
+  constructor(status, error = null) {
+    this.status = status;
+    this.error = error;
+  }
+}
+
+class Request {
+  method;
+  arguments;
+  id;
+
+  constructor(message, args = {}) {
+    this.method = message;
+    this.arguments = args;
+    this.id = Request.requestId();
+  }
+
+  static requestId() {
+    return crypto.randomUUID();
+  }
+}
+
 const sendNativeMessage = request => new Promise((resolve, reject) => {
   chrome.runtime.sendNativeMessage(APPLICATION_NAME, request, response => {
     if (chrome.runtime.lastError) {
@@ -35,11 +52,9 @@ const sendNativeMessage = request => new Promise((resolve, reject) => {
   });
 });
 
-const requestId = () => crypto.randomUUID();
+export const getCapabilities = () => sendNativeMessage(new Request(MESSAGES.GET_CAPABILITIES));
 
-const request = (message, args = {}) => ({method: message, arguments: args, id: requestId()});
-
-export const getCapabilities = async () => await sendNativeMessage(request(MESSAGES.GET_CAPABILITIES));
+export const getInstalledTools = () => sendNativeMessage(new Request(MESSAGES.GET_INSTALLED_TOOLS));
 
 export const getToolboxAppState = async () => {
   try {
