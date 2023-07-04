@@ -1,5 +1,3 @@
-import {DEFAULT_ICONS} from '../constants';
-
 function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
   const toolAction = document.createElement('button');
   toolAction.setAttribute('type', 'button');
@@ -12,8 +10,8 @@ function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
 
   const icon = document.createElement('img');
   icon.setAttribute('class', 'tool-action__icon');
-  icon.setAttribute('alt', tool.name);
-  icon.setAttribute('src', DEFAULT_ICONS[tool.tag]);
+  icon.setAttribute('alt', `${tool.name} icon`);
+  icon.setAttribute('src', tool.defaultIcon);
 
   const actionText = document.createElement('div');
   actionText.setAttribute('class', 'tool-action__text');
@@ -70,13 +68,13 @@ chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
   protocolInput.checked = true;
 });
 
-chrome.runtime.sendMessage({type: 'get-installed-tools'}, data => {
-  if (data == null) {
+chrome.runtime.sendMessage({type: 'get-installed-tools'}, tools => {
+  if (!tools || tools.length === 0) {
     return;
   }
 
   const fragment = document.createDocumentFragment();
-  data.tools.forEach(tool => {
+  tools.forEach(tool => {
     fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
   });
   document.querySelector('.js-tool-action-placeholder').remove();

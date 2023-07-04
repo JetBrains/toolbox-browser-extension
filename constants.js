@@ -1,12 +1,12 @@
-import ideaIcon from '@jetbrains/logos/intellij-idea/intellij-idea.svg';
 import appcodeIcon from '@jetbrains/logos/appcode/appcode.svg';
 import clionIcon from '@jetbrains/logos/clion/clion.svg';
-import pycharmIcon from '@jetbrains/logos/pycharm/pycharm.svg';
+import golandIcon from '@jetbrains/logos/goland/goland.svg';
+import ideaIcon from '@jetbrains/logos/intellij-idea/intellij-idea.svg';
 import phpstormIcon from '@jetbrains/logos/phpstorm/phpstorm.svg';
+import pycharmIcon from '@jetbrains/logos/pycharm/pycharm.svg';
+import riderIcon from '@jetbrains/logos/rider/rider.svg';
 import rubymineIcon from '@jetbrains/logos/rubymine/rubymine.svg';
 import webstormIcon from '@jetbrains/logos/webstorm/webstorm.svg';
-import riderIcon from '@jetbrains/logos/rider/rider.svg';
-import golandIcon from '@jetbrains/logos/goland/goland.svg';
 
 export const DEFAULT_LANGUAGE = 'java';
 
@@ -82,18 +82,6 @@ export const SUPPORTED_TOOLS = {
     tag: 'goland',
     icon: golandIcon
   }
-};
-
-export const DEFAULT_ICONS = {
-  idea: ideaIcon,
-  appcode: appcodeIcon,
-  clion: clionIcon,
-  pycharm: pycharmIcon,
-  'php-storm': phpstormIcon,
-  rubymine: rubymineIcon,
-  'web-storm': webstormIcon,
-  rd: rubymineIcon,
-  goland: golandIcon
 };
 
 export const USAGE_THRESHOLD = 0.05;

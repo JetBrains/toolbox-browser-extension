@@ -110,9 +110,7 @@ const handleMessage = (message, sender, sendResponse) => {
       break;
 
     case 'get-installed-tools':
-      getInstalledTools().then(result => {
-        sendResponse({tools: result.tools});
-      }).catch(e => {
+      getInstalledTools().then(sendResponse).catch(e => {
         error(e.message);
       });
       return true;
