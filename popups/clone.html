@@ -122,8 +122,9 @@
       width: 100%;
     }
 
-    .protocol + .tool-actions {
-      margin-top: 0.5rem;
+    .protocol + .tool-actions,
+    .protocol + .tool-information {
+      margin-top: 1rem;
     }
 
     .tool-action_placeholder .tool-action__icon,
@@ -147,6 +148,14 @@
       width: 8.8rem;
       height: 0.5rem;
       margin-top: 0.5rem;
+    }
+
+    .tool-information {
+      padding: 0 var(--body-h-padding);
+    }
+
+    .tool-information:empty {
+      display: none;
     }
   </style>
 </head>
@@ -177,6 +186,7 @@
       </div>
     </div>
   </div>
+  <div class="tool-information js-tool-information"></div>
   <script src="jetbrains-toolbox-clone-popup.js" defer></script>
 </body>
 

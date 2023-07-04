@@ -13,6 +13,16 @@ import {getInstalledTools, getToolboxAppState, TOOLBOX_APP_STATUS} from './api/t
 
 const INSTALL_TOOLBOX_URL = 'https://www.jetbrains.com/toolbox-app';
 
+class ToolsResponse {
+  tools;
+  errorMessage;
+
+  constructor(tools, errorMessage = null) {
+    this.tools = tools;
+    this.errorMessage = errorMessage;
+  }
+}
+
 const setInstallPopup = () => {
   chrome.browserAction.setIcon({
     path: {128: 'icon-disabled-128.png'}
@@ -110,9 +120,15 @@ const handleMessage = (message, sender, sendResponse) => {
       break;
 
     case 'get-installed-tools':
-      getInstalledTools().then(sendResponse).catch(e => {
-        error(e.message);
-      });
+      getInstalledTools().
+        then(tools => {
+          info(`Installed tools are: ${tools}`);
+          sendResponse(new ToolsResponse(tools));
+        }).
+        catch(e => {
+          error(`Failed to get installed tools: ${e.message}`);
+          sendResponse(new ToolsResponse([], e.message));
+        });
       return true;
 
     case 'get-protocol':

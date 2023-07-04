@@ -130,13 +130,10 @@ export const getCapabilities = () => sendNativeMessage(new Request(MESSAGES.GET_
 
 export const getInstalledTools = async () => {
   const result = await sendNativeMessage(new Request(MESSAGES.GET_INSTALLED_TOOLS));
-  if (result.tools.length > 0) {
-    return result.tools.map(tool => ({
-      ...tool,
-      defaultIcon: getDefaultIcon(tool.tag, tool.isEap)
-    }));
-  }
-  return [];
+  return result.tools.map(tool => ({
+    ...tool,
+    defaultIcon: getDefaultIcon(tool.tag, tool.isEap)
+  }));
 };
 
 export const getToolboxAppState = async () => {

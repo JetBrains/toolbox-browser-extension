@@ -68,15 +68,19 @@ chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
   protocolInput.checked = true;
 });
 
-chrome.runtime.sendMessage({type: 'get-installed-tools'}, tools => {
-  if (!tools || tools.length === 0) {
-    return;
+chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
+  if (toolsResponse.errorMessage) {
+    const errorTextElement = document.createTextNode(toolsResponse.errorMessage);
+    document.querySelector('.js-tool-information').append(errorTextElement);
+  } else if (toolsResponse.tools.length === 0) {
+    const noToolsTextElement = document.createTextNode('No tools installed');
+    document.querySelector('.js-tool-information').append(noToolsTextElement);
+  } else {
+    const fragment = document.createDocumentFragment();
+    toolsResponse.tools.forEach(tool => {
+      fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
+    });
+    document.querySelector('.js-tool-actions').append(fragment);
   }
-
-  const fragment = document.createDocumentFragment();
-  tools.forEach(tool => {
-    fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
-  });
   document.querySelector('.js-tool-action-placeholder').remove();
-  document.querySelector('.js-tool-actions').append(fragment);
 });
