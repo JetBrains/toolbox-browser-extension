@@ -20,13 +20,13 @@ function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
 
   const toolName = document.createElement('div');
   toolName.setAttribute('class', 'tool-action__tool');
-  toolName.textContent = `${tool.name} ${tool.version}`;
+  toolName.textContent = tool.name;
   actionText.appendChild(toolName);
 
-  const projectName = document.createElement('div');
-  projectName.setAttribute('class', 'tool-action__project');
-  projectName.textContent = project;
-  actionText.appendChild(projectName);
+  const version = document.createElement('div');
+  version.setAttribute('class', 'tool-action__version');
+  version.textContent = tool.version;
+  actionText.appendChild(version);
 
   toolAction.append(icon);
   toolAction.append(actionText);
