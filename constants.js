@@ -84,6 +84,18 @@ export const SUPPORTED_TOOLS = {
   }
 };
 
+export const DEFAULT_ICONS = {
+  idea: ideaIcon,
+  appcode: appcodeIcon,
+  clion: clionIcon,
+  pycharm: pycharmIcon,
+  'php-storm': phpstormIcon,
+  rubymine: rubymineIcon,
+  'web-storm': webstormIcon,
+  rd: rubymineIcon,
+  goland: golandIcon
+};
+
 export const USAGE_THRESHOLD = 0.05;
 export const HUNDRED_PERCENT = 100;
 export const MAX_DECIMALS = 2;

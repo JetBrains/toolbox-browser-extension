@@ -46,8 +46,10 @@ const sendNativeMessage = request => new Promise((resolve, reject) => {
   chrome.runtime.sendNativeMessage(APPLICATION_NAME, request, response => {
     if (chrome.runtime.lastError) {
       reject(chrome.runtime.lastError);
+    } else if (response.status === RESPONSE_STATUS.OK) {
+      resolve(response.result);
     } else {
-      resolve(response);
+      reject(response.error);
     }
   });
 });

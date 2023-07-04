@@ -9,7 +9,7 @@ import {
 import createExtensionMenu from './api/menu';
 import {enableLogger, info, warn, error} from './api/console-logger';
 import {MESSAGES, request, response} from './api/messaging';
-import {getToolboxAppState, TOOLBOX_APP_STATUS} from './api/toolbox-client';
+import {getInstalledTools, getToolboxAppState, TOOLBOX_APP_STATUS} from './api/toolbox-client';
 
 const INSTALL_TOOLBOX_URL = 'https://www.jetbrains.com/toolbox-app';
 
@@ -108,6 +108,14 @@ const handleMessage = (message, sender, sendResponse) => {
         }
       });
       break;
+
+    case 'get-installed-tools':
+      getInstalledTools().then(result => {
+        sendResponse({tools: result.tools});
+      }).catch(e => {
+        error(e.message);
+      });
+      return true;
 
     case 'get-protocol':
       getProtocol().then(protocol => {

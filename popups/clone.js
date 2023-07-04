@@ -1,3 +1,5 @@
+import {DEFAULT_ICONS} from '../constants';
+
 function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
   const toolAction = document.createElement('button');
   toolAction.setAttribute('type', 'button');
@@ -11,14 +13,14 @@ function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
   const icon = document.createElement('img');
   icon.setAttribute('class', 'tool-action__icon');
   icon.setAttribute('alt', tool.name);
-  icon.setAttribute('src', tool.icon);
+  icon.setAttribute('src', DEFAULT_ICONS[tool.tag]);
 
   const actionText = document.createElement('div');
   actionText.setAttribute('class', 'tool-action__text');
 
   const toolName = document.createElement('div');
   toolName.setAttribute('class', 'tool-action__tool');
-  toolName.textContent = tool.name;
+  toolName.textContent = `${tool.name} ${tool.version}`;
   actionText.appendChild(toolName);
 
   const projectName = document.createElement('div');
@@ -63,22 +65,20 @@ inputs.forEach(input => {
   });
 });
 
-chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-  chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
-    const protocolInput = document.querySelector(`.js-protocol-input[value="${data.protocol}"]`);
-    protocolInput.checked = true;
-  });
+chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
+  const protocolInput = document.querySelector(`.js-protocol-input[value="${data.protocol}"]`);
+  protocolInput.checked = true;
+});
 
-  chrome.tabs.sendMessage(tabs[0].id, {type: 'get-tools'}, tools => {
-    if (tools == null) {
-      return;
-    }
+chrome.runtime.sendMessage({type: 'get-installed-tools'}, data => {
+  if (data == null) {
+    return;
+  }
 
-    const fragment = document.createDocumentFragment();
-    tools.forEach(tool => {
-      fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
-    });
-    document.querySelector('.js-tool-action-placeholder').remove();
-    document.querySelector('.js-tool-actions').append(fragment);
+  const fragment = document.createDocumentFragment();
+  data.tools.forEach(tool => {
+    fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
   });
+  document.querySelector('.js-tool-action-placeholder').remove();
+  document.querySelector('.js-tool-actions').append(fragment);
 });
