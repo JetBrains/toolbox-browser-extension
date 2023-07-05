@@ -38,8 +38,13 @@ const getFromStorage = (key, defaultValue) => new Promise(resolve => {
       resolve(defaultValue);
     } else {
       const value = result[key];
-      info(`Extracted the '${key}' setting from storage, the value is '${value}'`);
-      resolve(value);
+      if (value == null) {
+        info(`No '${key}' setting is present in storage yet, returning the default value '${defaultValue}'`);
+        resolve(defaultValue);
+      } else {
+        info(`Extracted the '${key}' setting from storage, the value is '${value}'`);
+        resolve(value);
+      }
     }
   });
 });
