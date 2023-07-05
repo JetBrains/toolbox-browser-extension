@@ -86,15 +86,15 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
+    const {toolId, toolTag} = e.currentTarget.dataset;
 
-    info(`The clone button (${toolTag}) was clicked`);
+    info(`The clone button (${toolTag}:${toolId}) was clicked`);
 
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(bitbucketMetadata.links)
         : getSshCloneUrl(bitbucketMetadata.links);
-      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolId, cloneUrl);
       callToolbox(toolboxCloneUrl);
     });
   });
@@ -103,13 +103,14 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
 };
 
 const createCloneButton = (tool, bitbucketMetadata) => {
-  info(`Creating the clone button (${tool.tag})`);
+  info(`Creating the clone button (${tool.tag}:${tool.id})`);
 
   const title = `Clone in ${tool.name} ${tool.version}`;
   const button = document.createElement('a');
   button.setAttribute('class', 'aui-nav-item');
   button.setAttribute('href', '#');
   button.setAttribute('original-title', title);
+  button.dataset.toolId = tool.id;
   button.dataset.toolTag = tool.tag;
 
   const buttonIcon = document.createElement('span');
@@ -150,9 +151,9 @@ const renderCloneButtons = bitbucketMetadata => {
 
           cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
 
-          info(`Embedded the clone button (${tool.tag})`);
+          info(`Embedded the clone button (${tool.tag}:${tool.id})`);
         } else {
-          info(`The clone button (${tool.tag}) is already rendered`);
+          info(`The clone button (${tool.tag}:${tool.id}) is already rendered`);
         }
       });
     }).
@@ -178,20 +179,20 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
-    info(`The open button (${tool.tag}) was clicked`);
+    info(`The open button (${tool.tag}:${tool.id}) was clicked`);
 
     const filePathIndex = 6;
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
     const lineNumber = parseLineNumber(location.hash.replace('#', ''));
 
-    callToolbox(getToolboxNavigateUrl(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.id, bitbucketMetadata.repo, filePath, lineNumber));
   });
 
-  info(`Added click handler for the open button (${tool.tag})`);
+  info(`Added click handler for the open button (${tool.tag}:${tool.id})`);
 };
 
 const createOpenButton = (tool, bitbucketMetadata) => {
-  info(`Creating the open button (${tool.tag})`);
+  info(`Creating the open button (${tool.tag}:${tool.id})`);
 
   const buttonContainer = document.createElement('div');
   buttonContainer.setAttribute('class', `aui-buttons ${OPEN_BUTTON_JS_CSS_CLASS}`);
@@ -237,7 +238,7 @@ const renderOpenButtons = bitbucketMetadata => {
         tools.forEach(tool => {
           const action = createOpenButton(tool, bitbucketMetadata);
           anchorElement.insertAdjacentElement('beforebegin', action);
-          info(`Embedded the open button (${tool.tag})`);
+          info(`Embedded the open button (${tool.tag}:${tool.id})`);
         });
       }).
       catch(e => {
@@ -329,7 +330,7 @@ const toolboxify = () => {
               break;
 
             case 'perform-action':
-              const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+              const toolboxCloneUrl = getToolboxCloneUrl(message.toolId, message.cloneUrl);
               callToolbox(toolboxCloneUrl);
               break;
 

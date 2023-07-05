@@ -62,15 +62,15 @@ const addCloneButtonEventHandler = (btn, githubMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
+    const {toolId, toolTag} = e.currentTarget.dataset;
 
-    info(`The clone button (${toolTag}) was clicked`);
+    info(`The clone button (${toolTag}:${toolId}) was clicked`);
 
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(githubMetadata)
         : getSshCloneUrl(githubMetadata);
-      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolId, cloneUrl);
       callToolbox(toolboxCloneUrl);
     });
   });
@@ -79,7 +79,7 @@ const addCloneButtonEventHandler = (btn, githubMetadata) => {
 };
 
 const createCloneButton = (tool, githubMetadata, small = true) => {
-  info(`Creating the clone button (${tool.tag})`);
+  info(`Creating the clone button (${tool.tag}:${tool.id})`);
 
   const button = document.createElement('a');
   button.setAttribute(
@@ -89,6 +89,7 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
   button.setAttribute('href', '#');
   button.setAttribute('aria-label', `Clone in ${tool.name} ${tool.version}`);
   button.setAttribute('style', 'align-items:center');
+  button.dataset.toolId = tool.id;
   button.dataset.toolTag = tool.tag;
 
   const buttonIcon = document.createElement('img');
@@ -122,7 +123,7 @@ const renderCloneButtons = (tools, githubMetadata) => {
       const btn = createCloneButton(tool, githubMetadata);
       toolboxCloneButtonGroup.appendChild(btn);
 
-      info(`Embedded the clone button (${tool.tag})`);
+      info(`Embedded the clone button (${tool.tag}:${tool.id})`);
     });
 
     getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
@@ -149,7 +150,7 @@ const renderCloneButtons = (tools, githubMetadata) => {
         const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
         toolboxCloneButtonGroup.appendChild(btn);
 
-        info(`Embedded the clone button (${tool.tag})`);
+        info(`Embedded the clone button (${tool.tag}:${tool.id})`);
       });
 
       getRepoController.parentElement.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
@@ -163,17 +164,17 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
   domElement.addEventListener('click', e => {
     e.preventDefault();
 
-    info(`The open button/menu item (${tool.tag}) was clicked`);
+    info(`The open button/menu item (${tool.tag}:${tool.id}) was clicked`);
 
     const {user, repo, branch} = githubMetadata;
     const normalizedBranch = branch.split('/').shift();
     const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
     const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
 
-    callToolbox(getToolboxNavigateUrl(tool.tag, repo, filePath, lineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.id, repo, filePath, lineNumber));
   });
 
-  info(`Added click handler for the open button/menu item (${tool.tag})`);
+  info(`Added click handler for the open button/menu item (${tool.tag}:${tool.id})`);
 };
 
 // when navigating with back and forward buttons
@@ -208,7 +209,7 @@ const removePageButtons = () => {
 };
 
 const createOpenButton = (tool, githubMetadata) => {
-  info(`Creating the open button (${tool.tag})`);
+  info(`Creating the open button (${tool.tag}:${tool.id})`);
 
   const action = document.createElement('a');
   action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`);
@@ -228,7 +229,7 @@ const createOpenButton = (tool, githubMetadata) => {
 };
 
 const createOpenMenuItem = (tool, first, githubMetadata) => {
-  info(`Creating the open menu item (${tool.tag})`);
+  info(`Creating the open menu item (${tool.tag}:${tool.id})`);
 
   const menuItem = document.createElement('a');
   menuItem.setAttribute('class', 'dropdown-item');
@@ -246,7 +247,9 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
       blobToolbar.removeAttribute('open');
     }
   });
-  info(`Added click handler for the open menu item (${tool.tag}), closing the blob toolbar dropdown element`);
+  info(
+    `Added click handler for the open menu item (${tool.tag}:${tool.id}), closing the blob toolbar dropdown element`
+  );
 
   const menuItemContainer = document.createElement('li');
   menuItemContainer.setAttribute('class', OPEN_MENU_ITEM_JS_CSS_CLASS);
@@ -256,7 +259,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
-  info(f`Rendering the open buttons (${tools.map(t => t.tag)})`);
+  info(f`Rendering the open buttons (${tools.map(t => `${t.tag}:${t.id}`)})`);
 
   const actionAnchorElement = document.querySelector(BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR);
   const actionAnchorFragment = document.createDocumentFragment();
@@ -267,13 +270,13 @@ const renderOpenButtons = (tools, githubMetadata) => {
       const action = createOpenButton(tool, githubMetadata);
       actionAnchorFragment.appendChild(action);
 
-      info(`Embedded the open button (${tool.tag})`);
+      info(`Embedded the open button (${tool.tag}:${tool.id})`);
     }
     if (blobToolbarDropdown) {
       const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
       blobToolbarDropdown.appendChild(menuItem);
 
-      info(`Embedded the open menu item (${tool.tag})`);
+      info(`Embedded the open menu item (${tool.tag}:${tool.id})`);
     }
   });
 
@@ -480,7 +483,7 @@ const toolboxify = () => {
         }
         break;
       case 'perform-action':
-        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+        const toolboxCloneUrl = getToolboxCloneUrl(message.toolId, message.cloneUrl);
         callToolbox(toolboxCloneUrl);
         break;
       // no default

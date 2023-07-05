@@ -68,7 +68,7 @@ const renderPageAction = () => new Promise(resolve => {
   onMessageHandler = message => {
     switch (message.type) {
       case 'perform-action':
-        const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+        const toolboxCloneUrl = getToolboxCloneUrl(message.toolId, message.cloneUrl);
         callToolbox(toolboxCloneUrl);
         break;
       // no default
@@ -149,12 +149,12 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
   btn.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
+    const {toolId} = e.currentTarget.dataset;
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
         ? getHttpsCloneUrl(bitbucketMetadata.links)
         : getSshCloneUrl(bitbucketMetadata.links);
-      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolId, cloneUrl);
       callToolbox(toolboxCloneUrl);
     });
   });
@@ -164,7 +164,7 @@ const createCloneButton = (tool, cloneButton, bitbucketMetadata) => {
   const button = document.createElement('a');
   button.setAttribute('class', `${cloneButton.className} jt-button ${CLONE_BUTTON_JS_CSS_CLASS}`);
   button.setAttribute('href', '#');
-  button.dataset.toolTag = tool.tag;
+  button.dataset.toolId = tool.id;
 
   const buttonIcon = document.createElement('img');
   buttonIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
@@ -227,7 +227,7 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
     const lineNumber = parseLineNumber(location.hash.replace('#lines-', ''));
 
-    callToolbox(getToolboxNavigateUrl(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.id, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 
@@ -281,15 +281,13 @@ const startTrackingDOMChanges = () => {
   const cloneButtonsObserver = observe(cloneButtonSelectors.join(', '), {
     add(el) {
       if (el.textContent.includes('Clone')) {
-        fetchMetadata().then(metadata => {
-          fetchTools().
-            then(tools => {
-              renderCloneButtons(tools, metadata, el);
-            }).
-            catch(e => {
-              warn('Failed to render the clone buttons', e);
-            });
-        });
+        Promise.all([fetchMetadata(), fetchTools()]).
+          then(([metadata, tools]) => {
+            renderCloneButtons(tools, metadata, el);
+          }).
+          catch(e => {
+            warn('Failed to render the clone buttons', e);
+          });
       }
     },
     remove(/*el*/) {
@@ -299,15 +297,13 @@ const startTrackingDOMChanges = () => {
 
   const openButtonsObserver = observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
     add(/*el*/) {
-      fetchMetadata().then(metadata => {
-        fetchTools().
-          then(tools => {
-            renderOpenButtons(tools, metadata);
-          }).
-          catch(e => {
-            warn('Failed to render the open buttons', e);
-          });
-      });
+      Promise.all([fetchMetadata(), fetchTools()]).
+        then(([metadata, tools]) => {
+          renderOpenButtons(tools, metadata);
+        }).
+        catch(e => {
+          warn('Failed to render the open buttons', e);
+        });
     },
     remove(/*el*/) {
       removeOpenButtons();

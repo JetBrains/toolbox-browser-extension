@@ -7,14 +7,14 @@ export const parseLineNumber = lineNumber => {
   return isNaN(parsedValue) ? 1 : parsedValue;
 };
 
-export const getToolboxCloneUrl = (toolTag, cloneUrl) =>
-  `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
+export const getToolboxCloneUrl = (toolId, cloneUrl) =>
+  `jetbrains://${toolId}.tool/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 
-export const getToolboxNavigateUrl = (toolTag, project, filePath, lineNumber = null) => {
-  const lineIndex = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
-  const columnIndex = convertNumberToIndex(1);
+export const getToolboxNavigateUrl = (toolId, project, filePath, lineNumber = null) => {
+  const line = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
+  const column = convertNumberToIndex(1);
 
-  return `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}:${lineIndex}:${columnIndex}`;
+  return `jetbrains://${toolId}.tool/navigate/reference?project=${project}&path=${filePath}:${line}:${column}`;
 };
 
 export const callToolbox = url => {

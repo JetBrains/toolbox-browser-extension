@@ -104,13 +104,13 @@ const addCloneButtonEventHandler = (button, gitlabMetadata) => {
   button.addEventListener('click', e => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
+    const {toolId, toolTag} = e.currentTarget.dataset;
 
-    info(`The clone button (${toolTag}) was clicked`);
+    info(`The clone button (${toolTag}:${toolId}) was clicked`);
 
     chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
       const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS ? gitlabMetadata.https : gitlabMetadata.ssh;
-      const toolboxCloneUrl = getToolboxCloneUrl(toolTag, cloneUrl);
+      const toolboxCloneUrl = getToolboxCloneUrl(toolId, cloneUrl);
       callToolbox(toolboxCloneUrl);
     });
   });
@@ -119,12 +119,13 @@ const addCloneButtonEventHandler = (button, gitlabMetadata) => {
 };
 
 const createCloneButton = (tool, gitlabMetadata) => {
-  info(`Creating the clone button (${tool.tag})`);
+  info(`Creating the clone button (${tool.tag}:${tool.id})`);
 
   const button = document.createElement('a');
   button.setAttribute('class', `btn btn-default gl-button has-tooltip ${CLONE_BUTTON_JS_CSS_CLASS}`);
   button.dataset.title = `Clone in ${tool.name} ${tool.version}`;
   button.dataset.originalTitle = button.dataset.title;
+  button.dataset.toolId = tool.id;
   button.dataset.toolTag = tool.tag;
   button.setAttribute('aria-label', button.dataset.title);
 
@@ -159,7 +160,7 @@ const renderCloneButtons = (tools, gitlabMetadata) => {
       const button = createCloneButton(tool, gitlabMetadata);
       buttonGroup.append(button);
 
-      info(`Embedded the clone button (${tool.tag})`);
+      info(`Embedded the clone button (${tool.tag}:${tool.id})`);
     });
 
     projectCloneHolder.insertAdjacentElement('beforebegin', buttonGroup);
@@ -174,7 +175,7 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
   buttonElement.addEventListener('click', e => {
     e.preventDefault();
 
-    info(`The open button (${tool.tag}) was clicked`);
+    info(`The open button (${tool.tag}:${tool.id}) was clicked`);
 
     const filePath = e.currentTarget.dataset.filePath;
     let lineNumber = '';
@@ -189,14 +190,14 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
 
     const parsedLineNumber = parseLineNumber(lineNumber);
 
-    callToolbox(getToolboxNavigateUrl(tool.tag, gitlabMetadata.repo, filePath, parsedLineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.id, gitlabMetadata.repo, filePath, parsedLineNumber));
   });
 
-  info(`Added click handler for the open button (${tool.tag})`);
+  info(`Added click handler for the open button (${tool.tag}:${tool.id})`);
 };
 
 const createOpenButton = (tool, gitlabMetadata, filePath) => {
-  info(`Creating the open button (${tool.tag})`);
+  info(`Creating the open button (${tool.tag}:${tool.id})`);
 
   const button = document.createElement('button');
   button.setAttribute('class', 'btn btn-default btn-md gl-button btn-icon');
@@ -342,7 +343,7 @@ const toolboxify = () => {
               }
               break;
             case 'perform-action':
-              const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
+              const toolboxCloneUrl = getToolboxCloneUrl(message.toolId, message.cloneUrl);
               callToolbox(toolboxCloneUrl);
               break;
               // no default

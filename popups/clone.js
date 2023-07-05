@@ -4,7 +4,7 @@ function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
   toolAction.setAttribute('class', 'tool-action');
   toolAction.dataset.https = httpsUrl;
   toolAction.dataset.ssh = sshUrl;
-  toolAction.dataset.tag = tool.tag;
+  toolAction.dataset.toolId = tool.id;
 
   setToolActionClickHandler(toolAction);
 
@@ -39,11 +39,11 @@ function setToolActionClickHandler(action) {
     const toolAction = e.currentTarget;
 
     chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-      const toolTag = toolAction.dataset.tag;
+      const {toolId} = toolAction.dataset;
       const protocolInput = document.querySelector('.js-protocol-input:checked');
       const protocol = protocolInput.value.toLowerCase();
       const cloneUrl = toolAction.dataset[protocol];
-      chrome.tabs.sendMessage(tabs[0].id, {type: 'perform-action', toolTag, cloneUrl});
+      chrome.tabs.sendMessage(tabs[0].id, {type: 'perform-action', toolId, cloneUrl});
     });
   });
 }
