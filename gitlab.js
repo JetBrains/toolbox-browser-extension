@@ -1,14 +1,7 @@
 /** @author Johannes Tegnér <johannes@jitesoft.com> */
 import {observe} from 'selector-observer';
 
-import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
-  USAGE_THRESHOLD,
-  DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET,
-  CLONE_PROTOCOLS
-} from './constants';
+import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
@@ -83,55 +76,15 @@ const fetchMetadata = async () => {
   };
 };
 
-const fetchLanguages = async gitlabMetadata => {
-  try {
-    const response = await fetch(`${location.origin}/api/v4/projects/${gitlabMetadata.id}/languages`);
-    const languages = await response.json();
-    info(f`Fetched languages: ${languages}`);
-    return languages;
-  } catch (e) {
-    warn('Failed to fetch languages, resolving to default languages', e);
-    return DEFAULT_LANGUAGE_SET;
-  }
-};
-
-const selectTools = async languages => {
-  const overallPoints = Object.
-    values(languages).
-    reduce((overall, current) => overall + current, 0);
-
-  const filterLang = language =>
-    SUPPORTED_LANGUAGES[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
-
-  const selectedToolIds = Object.
-    keys(languages).
-    filter(filterLang).
-    reduce((acc, key) => {
-      acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
-      return acc;
-    }, []);
-
-  const selectDefaultLanguage = selectedToolIds.length === 0;
-
-  if (selectDefaultLanguage) {
-    info(`The language usage rate is too low, sticking to default language (${DEFAULT_LANGUAGE})`);
-  }
-
-  const normalizedToolIds = selectDefaultLanguage
-    ? SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE]
-    : Array.from(new Set(selectedToolIds));
-
-  const tools = normalizedToolIds.sort().map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  info(f`Selected tools: ${tools.map(t => t.name)}`);
-
-  return tools;
-};
-
-const fetchTools = async gitlabMetadata => {
-  const languages = await fetchLanguages(gitlabMetadata);
-  return selectTools(languages);
-};
+const fetchTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
+    if (toolsResponse.errorMessage) {
+      reject(new Error(toolsResponse.errorMessage));
+    } else {
+      resolve(toolsResponse.tools);
+    }
+  });
+});
 
 const removeCloneButtons = () => {
   const cloneButtons = document.querySelectorAll(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
@@ -170,14 +123,14 @@ const createCloneButton = (tool, gitlabMetadata) => {
 
   const button = document.createElement('a');
   button.setAttribute('class', `btn btn-default gl-button has-tooltip ${CLONE_BUTTON_JS_CSS_CLASS}`);
-  button.dataset.title = `Clone in ${tool.name}`;
+  button.dataset.title = `Clone in ${tool.name} ${tool.version}`;
   button.dataset.originalTitle = button.dataset.title;
   button.dataset.toolTag = tool.tag;
   button.setAttribute('aria-label', button.dataset.title);
 
   const buttonIcon = document.createElement('img');
-  buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
+  buttonIcon.setAttribute('src', tool.defaultIcon);
   buttonIcon.setAttribute('class', 'gl-icon s16');
   button.appendChild(buttonIcon);
 
@@ -259,7 +212,7 @@ const createOpenButton = (tool, gitlabMetadata, filePath) => {
 
   const buttonIcon = document.createElement('img');
   buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('src', tool.defaultIcon);
   buttonIcon.setAttribute('class', 'gl-icon s16');
   button.appendChild(buttonIcon);
 
@@ -314,9 +267,13 @@ const startTrackingDOMChanges = gitlabMetadata => {
     {
       add(el) {
         info('Found the file holder element to embed the open buttons to');
-        fetchTools(gitlabMetadata).then(tools => {
-          renderOpenButtons(tools, gitlabMetadata, el);
-        });
+        fetchTools().
+          then(tools => {
+            renderOpenButtons(tools, gitlabMetadata, el);
+          }).
+          catch(e => {
+            warn('Failed to render the open buttons', e);
+          });
       }
     }
   );
@@ -357,28 +314,33 @@ const toolboxify = () => {
 
       chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
         if (data.allow) {
-          fetchTools(metadata).then(tools => {
-            renderCloneButtons(tools, metadata);
-          });
+          fetchTools().
+            then(tools => {
+              renderCloneButtons(tools, metadata);
+            }).
+            catch(e => {
+              warn('Failed to render the clone buttons', e);
+            });
           DOMObserver = startTrackingDOMChanges(metadata);
         }
 
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        chrome.runtime.onMessage.addListener(message => {
           switch (message.type) {
             case 'modify-pages-changed':
               if (message.newValue) {
-                fetchTools(metadata).then(tools => {
-                  renderCloneButtons(tools, metadata);
-                });
+                fetchTools().
+                  then(tools => {
+                    renderCloneButtons(tools, metadata);
+                  }).
+                  catch(e => {
+                    warn('Failed to render the clone buttons', e);
+                  });
                 DOMObserver = startTrackingDOMChanges(metadata);
               } else {
                 removeCloneButtons();
                 stopTrackingDOMChanges(DOMObserver);
               }
               break;
-            case 'get-tools':
-              fetchTools(metadata).then(sendResponse);
-              return true;
             case 'perform-action':
               const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
               callToolbox(toolboxCloneUrl);

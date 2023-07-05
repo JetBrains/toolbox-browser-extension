@@ -1,18 +1,7 @@
 import {observe} from 'selector-observer';
 import gh from 'github-url-to-object';
 
-import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
-  USAGE_THRESHOLD,
-  HUNDRED_PERCENT,
-  MAX_DECIMALS,
-  MIN_VALID_HTTP_STATUS,
-  MAX_VALID_HTTP_STATUS,
-  DEFAULT_LANGUAGE,
-  DEFAULT_LANGUAGE_SET,
-  CLONE_PROTOCOLS
-} from './constants';
+import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
@@ -45,145 +34,15 @@ function fetchMetadata() {
   }
 }
 
-const throwIfInvalid = response => {
-  if (response.status < MIN_VALID_HTTP_STATUS || response.status > MAX_VALID_HTTP_STATUS) {
-    throw new Error(`HTTP request is invalid (response status: ${response.status})`);
-  }
-};
-
-const parseResponse = async response => {
-  const parsedResponse = await response.json();
-
-  if (Object.keys(parsedResponse).length === 0) {
-    throw new Error('Response is empty');
-  }
-
-  info(f`Parsed response: ${parsedResponse}`);
-  return parsedResponse;
-};
-
-const convertBytesToPercents = languages => {
-  const totalBytes = Object.
-    values(languages).
-    reduce((total, bytes) => total + bytes, 0);
-
-  Object.
-    keys(languages).
-    forEach(key => {
-      const percentFloat = languages[key] / totalBytes * HUNDRED_PERCENT;
-      const percentString = percentFloat.toFixed(MAX_DECIMALS);
-      languages[key] = parseFloat(percentString);
-    });
-
-  info(f`Converted bytes to percents in languages: ${languages}`);
-
-  return languages;
-};
-
-const extractLanguagesFromPage = async githubMetadata => {
-  try {
-    // TBX-4762: private repos don't let use API, load root page and scrape languages off it
-    const htmlResponse = await fetch(githubMetadata.clone_url);
-    const htmlString = await htmlResponse.text();
-    const parser = new DOMParser();
-    const htmlDocument = parser.parseFromString(htmlString, 'text/html');
-
-    let languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
-
-    if (languageElements.length > 0) {
-      const allLanguages = Array.from(languageElements).reduce((acc, el) => {
-        const percentEl = el.nextElementSibling;
-        acc[el.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-        return acc;
-      }, {});
-
-      info(f`Scraped languages: ${allLanguages}`);
-
-      return allLanguages;
+const fetchTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
+    if (toolsResponse.errorMessage) {
+      reject(new Error(toolsResponse.errorMessage));
+    } else {
+      resolve(toolsResponse.tools);
     }
-
-    // see if it is new UI as of 24.06.20
-    languageElements = htmlDocument.querySelectorAll(
-      '[data-ga-click="Repository, language stats search click, location:repo overview"]'
-    );
-
-    if (languageElements.length === 0) {
-      warn('Failed to scrape languages from the root page, resolving to default languages');
-      return DEFAULT_LANGUAGE_SET;
-    }
-
-    const allLanguages = Array.from(languageElements).reduce((acc, el) => {
-      const langEl = el.querySelector('span');
-      const percentEl = langEl.nextElementSibling;
-      acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-      return acc;
-    }, {});
-
-    if (Object.keys(allLanguages).length === 0) {
-      warn('Failed to scrape languages from the root page, resolving to default languages');
-      return DEFAULT_LANGUAGE_SET;
-    }
-
-    info(f`Scraped languages: ${allLanguages}`);
-    return allLanguages;
-  } catch (e) {
-    warn('Failed to scrape languages from the root page, resolving to default languages', e);
-    return DEFAULT_LANGUAGE_SET;
-  }
-};
-
-const fetchLanguages = async githubMetadata => {
-  try {
-    const response = await fetch(`${githubMetadata.api_url}/languages`);
-    throwIfInvalid(response);
-    const languages = await parseResponse(response);
-    return convertBytesToPercents(languages);
-  } catch (e) {
-    warn('Failed to fetch languages, trying to scrape them from the root page', e);
-    return await extractLanguagesFromPage(githubMetadata);
-  }
-};
-
-const selectTools = languages => {
-  const overallPoints = Object.
-    values(languages).
-    reduce((overall, current) => overall + current, 0);
-
-  const filterLang = language =>
-    SUPPORTED_LANGUAGES[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
-
-  const selectedToolIds = Object.
-    keys(languages).
-    filter(filterLang).
-    reduce((acc, key) => {
-      acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
-      return acc;
-    }, []);
-
-  const selectDefaultLanguage = selectedToolIds.length === 0;
-
-  if (selectDefaultLanguage) {
-    info(`The language usage rate is too low, sticking to the default language (${DEFAULT_LANGUAGE})`);
-  }
-
-  const normalizedToolIds = selectDefaultLanguage
-    ? SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE]
-    : Array.from(new Set(selectedToolIds));
-
-  const tools = normalizedToolIds.sort().map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  info(f`Selected tools: ${tools.map(t => t.name)}`);
-
-  return tools;
-};
-
-const fetchTools = async githubMetadata => {
-  const languages = await fetchLanguages(githubMetadata);
-
-  info(f`Fetched languages: ${languages}`);
-
-  return selectTools(languages);
-};
+  });
+});
 
 const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
 const getSshCloneUrl =
@@ -228,13 +87,13 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
     `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item m-0`
   );
   button.setAttribute('href', '#');
-  button.setAttribute('aria-label', `Clone in ${tool.name}`);
+  button.setAttribute('aria-label', `Clone in ${tool.name} ${tool.version}`);
   button.setAttribute('style', 'align-items:center');
   button.dataset.toolTag = tool.tag;
 
   const buttonIcon = document.createElement('img');
-  buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
+  buttonIcon.setAttribute('src', tool.defaultIcon);
   buttonIcon.setAttribute('width', '16');
   buttonIcon.setAttribute('height', '16');
   buttonIcon.setAttribute('style', 'vertical-align:text-top');
@@ -353,12 +212,12 @@ const createOpenButton = (tool, githubMetadata) => {
 
   const action = document.createElement('a');
   action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`);
-  action.setAttribute('aria-label', `Open this file in ${tool.name}`);
+  action.setAttribute('aria-label', `Open this file in ${tool.name} ${tool.version}`);
   action.setAttribute('href', '#');
 
   const actionIcon = document.createElement('img');
-  actionIcon.setAttribute('alt', tool.name);
-  actionIcon.setAttribute('src', tool.icon);
+  actionIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
+  actionIcon.setAttribute('src', tool.defaultIcon);
   actionIcon.setAttribute('width', '16');
   actionIcon.setAttribute('height', '16');
   action.appendChild(actionIcon);
@@ -432,7 +291,7 @@ const renderPageButtons = async githubMetadata => {
   try {
     info('Rendering the page buttons');
 
-    const tools = await fetchTools(githubMetadata);
+    const tools = await fetchTools();
 
     removePageButtons();
     renderCloneButtons(tools, githubMetadata);
@@ -611,7 +470,7 @@ const toolboxify = () => {
   let githubMetadata = null;
   let DOMObserver = null;
 
-  const handleInnerMessage = (message, sender, sendResponse) => {
+  const handleInnerMessage = message => {
     switch (message.type) {
       case 'modify-pages-changed':
         if (message.newValue) {
@@ -620,9 +479,6 @@ const toolboxify = () => {
           stopTrackingDOMChanges(DOMObserver);
         }
         break;
-      case 'get-tools':
-        fetchTools(githubMetadata).then(sendResponse);
-        return true;
       case 'perform-action':
         const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
         callToolbox(toolboxCloneUrl);

@@ -1,12 +1,7 @@
 import {observe} from 'selector-observer';
 import parseBitbucketUrl from 'parse-bitbucket-url';
 
-import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
-  DEFAULT_LANGUAGE,
-  CLONE_PROTOCOLS
-} from './constants';
+import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
@@ -59,34 +54,15 @@ const fetchMetadata = async () => {
   return metadata;
 };
 
-const fetchLanguages = () => {
-  info('We don\'t know yet how to get the repo language on Bitbucket Server, sticking to the default language');
-  return DEFAULT_LANGUAGE;
-};
-
-const selectTools = language => {
-  // All languages in Bitbucket match the common list with an exception to HTML
-  const normalizedLanguage = language === 'html/css' ? 'html' : language;
-
-  const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
-  if (!toolIds) {
-    warn(`No tools found for language ${normalizedLanguage}, sticking to the default language`);
-  }
-  const normalizedToolIds = toolIds ? toolIds : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  info(f`Selected tools: ${tools}`);
-
-  return tools;
-};
-
-const fetchTools = bitbucketMetadata => {
-  const language = fetchLanguages(bitbucketMetadata);
-  return selectTools(language);
-};
+const fetchTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
+    if (toolsResponse.errorMessage) {
+      reject(new Error(toolsResponse.errorMessage));
+    } else {
+      resolve(toolsResponse.tools);
+    }
+  });
+});
 
 const getCloneUrl = (links, which) => {
   const link = links.clone.find(l => l.name === which);
@@ -129,7 +105,7 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
 const createCloneButton = (tool, bitbucketMetadata) => {
   info(`Creating the clone button (${tool.tag})`);
 
-  const title = `Clone in ${tool.name}`;
+  const title = `Clone in ${tool.name} ${tool.version}`;
   const button = document.createElement('a');
   button.setAttribute('class', 'aui-nav-item');
   button.setAttribute('href', '#');
@@ -138,7 +114,7 @@ const createCloneButton = (tool, bitbucketMetadata) => {
 
   const buttonIcon = document.createElement('span');
   buttonIcon.setAttribute('class', 'aui-icon toolbox-aui-icon');
-  buttonIcon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain`);
+  buttonIcon.setAttribute('style', `background-image:url(${tool.defaultIcon});background-size:contain`);
 
   const buttonLabel = document.createElement('span');
   buttonLabel.setAttribute('class', 'aui-nav-item-label');
@@ -159,24 +135,30 @@ const renderCloneButtons = bitbucketMetadata => {
     return;
   }
 
-  fetchTools(bitbucketMetadata).forEach(tool => {
-    const classEnding = tool.tag.replace('-', '');
-    const buttonContainerClass = `${CLONE_CONTAINER_JS_CSS_CLASS} ${CLONE_CONTAINER_JS_CSS_CLASS}-${classEnding}`;
+  fetchTools().
+    then(tools => {
+      tools.forEach(tool => {
+        const classEnding = tool.tag.replace('-', '');
+        const buttonContainerClass = `${CLONE_CONTAINER_JS_CSS_CLASS} ${CLONE_CONTAINER_JS_CSS_CLASS}-${classEnding}`;
 
-    if (document.getElementsByClassName(buttonContainerClass).length === 0) {
-      const buttonContainer = document.createElement('li');
-      buttonContainer.setAttribute('class', buttonContainerClass);
+        if (document.getElementsByClassName(buttonContainerClass).length === 0) {
+          const buttonContainer = document.createElement('li');
+          buttonContainer.setAttribute('class', buttonContainerClass);
 
-      const button = createCloneButton(tool, bitbucketMetadata);
-      buttonContainer.appendChild(button);
+          const button = createCloneButton(tool, bitbucketMetadata);
+          buttonContainer.appendChild(button);
 
-      cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
+          cloneElement.insertAdjacentElement('beforebegin', buttonContainer);
 
-      info(`Embedded the clone button (${tool.tag})`);
-    } else {
-      info(`The clone button (${tool.tag}) is already rendered`);
-    }
-  });
+          info(`Embedded the clone button (${tool.tag})`);
+        } else {
+          info(`The clone button (${tool.tag}) is already rendered`);
+        }
+      });
+    }).
+    catch(e => {
+      warn('Failed to render the clone buttons', e);
+    });
 };
 
 const removeCloneButtons = () => {
@@ -216,11 +198,11 @@ const createOpenButton = (tool, bitbucketMetadata) => {
 
   const button = document.createElement('button');
   button.setAttribute('class', 'aui-button');
-  button.setAttribute('original-title', `Open this file in ${tool.name}`);
+  button.setAttribute('original-title', `Open this file in ${tool.name} ${tool.version}`);
 
   const buttonIcon = document.createElement('img');
-  buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
+  buttonIcon.setAttribute('src', tool.defaultIcon);
   buttonIcon.setAttribute('width', '16');
   buttonIcon.setAttribute('height', '16');
   buttonIcon.setAttribute('style', 'vertical-align:text-bottom');
@@ -250,12 +232,17 @@ const renderOpenButtons = bitbucketMetadata => {
 
   const anchorElement = document.querySelector('.file-toolbar > .secondary > .aui-buttons:first-child');
   if (anchorElement) {
-    const tools = fetchTools(bitbucketMetadata);
-    tools.forEach(tool => {
-      const action = createOpenButton(tool, bitbucketMetadata);
-      anchorElement.insertAdjacentElement('beforebegin', action);
-      info(`Embedded the open button (${tool.tag})`);
-    });
+    fetchTools().
+      then(tools => {
+        tools.forEach(tool => {
+          const action = createOpenButton(tool, bitbucketMetadata);
+          anchorElement.insertAdjacentElement('beforebegin', action);
+          info(`Embedded the open button (${tool.tag})`);
+        });
+      }).
+      catch(e => {
+        warn('Failed to render the open buttons', e);
+      });
     setOpenButtonTooltips();
   } else {
     info('Missing the anchor element, nowhere to render the open buttons');
@@ -329,7 +316,7 @@ const toolboxify = () => {
           info('Embedding the clone buttons is prohibited in the settings');
         }
 
-        chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+        chrome.runtime.onMessage.addListener(message => {
           switch (message.type) {
             case 'modify-pages-changed':
               if (message.newValue) {
@@ -339,13 +326,6 @@ const toolboxify = () => {
                 removeCloneButtons();
                 stopTrackingDOMChanges(DOMObserver);
               }
-              break;
-
-            case 'get-tools':
-              sendResponse(fetchTools(metadata));
-              // if the fetchTools becomes asynchronous, remove the break and uncomment the return below,
-              // like in other cases in the extension
-              // return true;
               break;
 
             case 'perform-action':

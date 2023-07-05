@@ -1,12 +1,7 @@
 import {observe} from 'selector-observer';
 import bb from 'bitbucket-url-to-object';
 
-import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
-  DEFAULT_LANGUAGE,
-  CLONE_PROTOCOLS
-} from './constants';
+import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
@@ -14,6 +9,7 @@ import {
   callToolbox,
   parseLineNumber
 } from './web-api/toolbox';
+import {warn} from './web-api/web-logger';
 
 /* eslint-disable max-len */
 const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > div > button:last-child';
@@ -53,46 +49,24 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   }
 });
 
-const fetchLanguages = bitbucketMetadata => new Promise((resolve, reject) => {
-  fetch(`${bitbucketMetadata.api_url}?fields=language`).
-    then(response => response.json()).
-    then(parsedResponse => {
-      resolve(parsedResponse.language);
-    }).
-    catch(() => {
-      reject();
-    });
+const fetchTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
+    if (toolsResponse.errorMessage) {
+      reject(new Error(toolsResponse.errorMessage));
+    } else {
+      resolve(toolsResponse.tools);
+    }
+  });
 });
-
-const selectTools = language => new Promise(resolve => {
-  // All languages in Bitbucket match the common list with an exception of HTML
-  const normalizedLanguage = language === 'html/css' ? 'html' : language;
-
-  const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
-  const normalizedToolIds = toolIds && toolIds.length > 0
-    ? toolIds
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
-
-  resolve(tools);
-});
-
-const fetchTools = bitbucketMetadata => fetchLanguages(bitbucketMetadata).then(selectTools);
 
 let onMessageHandler = null;
 
-const renderPageAction = bitbucketMetadata => new Promise(resolve => {
+const renderPageAction = () => new Promise(resolve => {
   if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
     chrome.runtime.onMessage.removeListener(onMessageHandler);
   }
-  onMessageHandler = (message, sender, sendResponse) => {
+  onMessageHandler = message => {
     switch (message.type) {
-      case 'get-tools':
-        fetchTools(bitbucketMetadata).then(sendResponse);
-        return true;
       case 'perform-action':
         const toolboxCloneUrl = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
         callToolbox(toolboxCloneUrl);
@@ -193,8 +167,8 @@ const createCloneButton = (tool, cloneButton, bitbucketMetadata) => {
   button.dataset.toolTag = tool.tag;
 
   const buttonIcon = document.createElement('img');
-  buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
+  buttonIcon.setAttribute('src', tool.defaultIcon);
   button.appendChild(buttonIcon);
 
   addCloneButtonEventHandler(button, bitbucketMetadata);
@@ -232,7 +206,7 @@ const renderCloneButtons = (tools, bitbucketMetadata, cloneButton = null) => {
       const btn = createCloneButton(tool, cloneButton, bitbucketMetadata);
       buttonGroup.appendChild(btn);
 
-      const tooltip = createButtonTooltip(btn, `Clone in ${tool.name}`);
+      const tooltip = createButtonTooltip(btn, `Clone in ${tool.name} ${tool.version}`);
       buttonGroup.appendChild(tooltip);
     });
 
@@ -270,8 +244,8 @@ const createOpenButton = (tool, sampleButton, bitbucketMetadata) => {
   }
 
   const buttonIcon = document.createElement('img');
-  buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
+  buttonIcon.setAttribute('alt', `${tool.name} ${tool.version}`);
+  buttonIcon.setAttribute('src', tool.defaultIcon);
   buttonIcon.setAttribute('width', '16');
   buttonIcon.setAttribute('height', '16');
   buttonIcon.setAttribute('style', 'vertical-align:text-bottom');
@@ -279,7 +253,7 @@ const createOpenButton = (tool, sampleButton, bitbucketMetadata) => {
 
   addOpenButtonEventHandler(actionButton, tool, bitbucketMetadata);
 
-  const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name}`);
+  const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name} ${tool.version}`);
   button.appendChild(tooltip);
 
   return button;
@@ -308,9 +282,13 @@ const startTrackingDOMChanges = () => {
     add(el) {
       if (el.textContent.includes('Clone')) {
         fetchMetadata().then(metadata => {
-          fetchTools(metadata).then(tools => {
-            renderCloneButtons(tools, metadata, el);
-          });
+          fetchTools().
+            then(tools => {
+              renderCloneButtons(tools, metadata, el);
+            }).
+            catch(e => {
+              warn('Failed to render the clone buttons', e);
+            });
         });
       }
     },
@@ -322,9 +300,13 @@ const startTrackingDOMChanges = () => {
   const openButtonsObserver = observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
     add(/*el*/) {
       fetchMetadata().then(metadata => {
-        fetchTools(metadata).then(tools => {
-          renderOpenButtons(tools, metadata);
-        });
+        fetchTools().
+          then(tools => {
+            renderOpenButtons(tools, metadata);
+          }).
+          catch(e => {
+            warn('Failed to render the open buttons', e);
+          });
       });
     },
     remove(/*el*/) {
@@ -359,7 +341,7 @@ const disablePageAction = () => {
 const refreshPageAction = () => {
   fetchMetadata().
     then(metadata => {
-      renderPageAction(metadata).then(() => {
+      renderPageAction().then(() => {
         enablePageAction(metadata);
       });
     }).

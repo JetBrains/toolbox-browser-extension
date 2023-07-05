@@ -123,7 +123,7 @@ const handleMessage = (message, sender, sendResponse) => {
       getInstalledTools().
         then(tools => {
           info(`Installed tools are: ${tools}`);
-          sendResponse(new ToolsResponse(tools));
+          sendResponse(new ToolsResponse(tools, tools.length === 0 ? 'No tools installed' : null));
         }).
         catch(e => {
           error(`Failed to get installed tools: ${e.message}`);
