@@ -5,10 +5,11 @@ import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
-  getToolboxNavigateUrl,
+  getToolboxOpenUrl,
+  getInstalledTools,
   callToolbox,
   parseLineNumber
-} from './web-api/toolbox';
+} from './web-api/toolbox-client';
 import {warn} from './web-api/web-logger';
 
 /* eslint-disable max-len */
@@ -47,16 +48,6 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   } else {
     reject();
   }
-});
-
-const fetchTools = () => new Promise((resolve, reject) => {
-  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
-    if (toolsResponse.errorMessage) {
-      reject(new Error(toolsResponse.errorMessage));
-    } else {
-      resolve(toolsResponse.tools);
-    }
-  });
 });
 
 let onMessageHandler = null;
@@ -227,7 +218,7 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
     const lineNumber = parseLineNumber(location.hash.replace('#lines-', ''));
 
-    callToolbox(getToolboxNavigateUrl(tool.id, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxOpenUrl(tool.id, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 
@@ -281,7 +272,7 @@ const startTrackingDOMChanges = () => {
   const cloneButtonsObserver = observe(cloneButtonSelectors.join(', '), {
     add(el) {
       if (el.textContent.includes('Clone')) {
-        Promise.all([fetchMetadata(), fetchTools()]).
+        Promise.all([fetchMetadata(), getInstalledTools()]).
           then(([metadata, tools]) => {
             renderCloneButtons(tools, metadata, el);
           }).
@@ -297,7 +288,7 @@ const startTrackingDOMChanges = () => {
 
   const openButtonsObserver = observe('[data-qa="bk-file__header"] > div > [data-qa="bk-file__actions"]', {
     add(/*el*/) {
-      Promise.all([fetchMetadata(), fetchTools()]).
+      Promise.all([fetchMetadata(), getInstalledTools()]).
         then(([metadata, tools]) => {
           renderOpenButtons(tools, metadata);
         }).

@@ -5,10 +5,11 @@ import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
-  getToolboxNavigateUrl,
+  getToolboxOpenUrl,
+  getInstalledTools,
   callToolbox,
   parseLineNumber
-} from './web-api/toolbox';
+} from './web-api/toolbox-client';
 import {info, warn} from './web-api/web-logger';
 import {f} from './api/format';
 
@@ -53,16 +54,6 @@ const fetchMetadata = async () => {
 
   return metadata;
 };
-
-const fetchTools = () => new Promise((resolve, reject) => {
-  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
-    if (toolsResponse.errorMessage) {
-      reject(new Error(toolsResponse.errorMessage));
-    } else {
-      resolve(toolsResponse.tools);
-    }
-  });
-});
 
 const getCloneUrl = (links, which) => {
   const link = links.clone.find(l => l.name === which);
@@ -136,7 +127,7 @@ const renderCloneButtons = bitbucketMetadata => {
     return;
   }
 
-  fetchTools().
+  getInstalledTools().
     then(tools => {
       tools.forEach(tool => {
         const classEnding = tool.tag.replace('-', '');
@@ -185,7 +176,7 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
     const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
     const lineNumber = parseLineNumber(location.hash.replace('#', ''));
 
-    callToolbox(getToolboxNavigateUrl(tool.id, bitbucketMetadata.repo, filePath, lineNumber));
+    callToolbox(getToolboxOpenUrl(tool.id, bitbucketMetadata.repo, filePath, lineNumber));
   });
 
   info(`Added click handler for the open button (${tool.tag}:${tool.id})`);
@@ -233,7 +224,7 @@ const renderOpenButtons = bitbucketMetadata => {
 
   const anchorElement = document.querySelector('.file-toolbar > .secondary > .aui-buttons:first-child');
   if (anchorElement) {
-    fetchTools().
+    getInstalledTools().
       then(tools => {
         tools.forEach(tool => {
           const action = createOpenButton(tool, bitbucketMetadata);

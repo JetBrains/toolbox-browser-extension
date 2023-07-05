@@ -10,7 +10,7 @@ export const parseLineNumber = lineNumber => {
 export const getToolboxCloneUrl = (toolId, cloneUrl) =>
   `jetbrains://${toolId}.tool/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 
-export const getToolboxNavigateUrl = (toolId, project, filePath, lineNumber = null) => {
+export const getToolboxOpenUrl = (toolId, project, filePath, lineNumber = null) => {
   const line = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
   const column = convertNumberToIndex(1);
 
@@ -25,7 +25,17 @@ export const callToolbox = url => {
   document.body.appendChild(fakeAction);
   fakeAction.click();
 
-  info(`Called Toolbox with ${url}`);
+  info(`Called Toolbox App with ${url}`);
 
   document.body.removeChild(fakeAction);
 };
+
+export const getInstalledTools = () => new Promise((resolve, reject) => {
+  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
+    if (toolsResponse.errorMessage) {
+      reject(new Error(toolsResponse.errorMessage));
+    } else {
+      resolve(toolsResponse.tools);
+    }
+  });
+});

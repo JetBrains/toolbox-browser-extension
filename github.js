@@ -5,10 +5,11 @@ import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
-  getToolboxNavigateUrl,
+  getToolboxOpenUrl,
+  getInstalledTools,
   callToolbox,
   parseLineNumber
-} from './web-api/toolbox';
+} from './web-api/toolbox-client';
 import {info, warn, error} from './web-api/web-logger';
 import {f} from './api/format';
 
@@ -33,16 +34,6 @@ function fetchMetadata() {
     return null;
   }
 }
-
-const fetchTools = () => new Promise((resolve, reject) => {
-  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
-    if (toolsResponse.errorMessage) {
-      reject(new Error(toolsResponse.errorMessage));
-    } else {
-      resolve(toolsResponse.tools);
-    }
-  });
-});
 
 const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
 const getSshCloneUrl =
@@ -171,7 +162,7 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
     const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
     const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
 
-    callToolbox(getToolboxNavigateUrl(tool.id, repo, filePath, lineNumber));
+    callToolbox(getToolboxOpenUrl(tool.id, repo, filePath, lineNumber));
   });
 
   info(`Added click handler for the open button/menu item (${tool.tag}:${tool.id})`);
@@ -294,7 +285,7 @@ const renderPageButtons = async githubMetadata => {
   try {
     info('Rendering the page buttons');
 
-    const tools = await fetchTools();
+    const tools = await getInstalledTools();
 
     removePageButtons();
     renderCloneButtons(tools, githubMetadata);

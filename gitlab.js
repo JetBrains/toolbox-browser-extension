@@ -5,10 +5,11 @@ import {CLONE_PROTOCOLS} from './constants';
 
 import {
   getToolboxCloneUrl,
-  getToolboxNavigateUrl,
+  getToolboxOpenUrl,
+  getInstalledTools,
   callToolbox,
   parseLineNumber
-} from './web-api/toolbox';
+} from './web-api/toolbox-client';
 import {info, warn} from './web-api/web-logger';
 import {f} from './api/format';
 
@@ -75,16 +76,6 @@ const fetchMetadata = async () => {
     repo: metadata.path
   };
 };
-
-const fetchTools = () => new Promise((resolve, reject) => {
-  chrome.runtime.sendMessage({type: 'get-installed-tools'}, toolsResponse => {
-    if (toolsResponse.errorMessage) {
-      reject(new Error(toolsResponse.errorMessage));
-    } else {
-      resolve(toolsResponse.tools);
-    }
-  });
-});
 
 const removeCloneButtons = () => {
   const cloneButtons = document.querySelectorAll(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
@@ -190,7 +181,7 @@ const addOpenButtonEventHandler = (buttonElement, tool, gitlabMetadata) => {
 
     const parsedLineNumber = parseLineNumber(lineNumber);
 
-    callToolbox(getToolboxNavigateUrl(tool.id, gitlabMetadata.repo, filePath, parsedLineNumber));
+    callToolbox(getToolboxOpenUrl(tool.id, gitlabMetadata.repo, filePath, parsedLineNumber));
   });
 
   info(`Added click handler for the open button (${tool.tag}:${tool.id})`);
@@ -268,7 +259,7 @@ const startTrackingDOMChanges = gitlabMetadata => {
     {
       add(el) {
         info('Found the file holder element to embed the open buttons to');
-        fetchTools().
+        getInstalledTools().
           then(tools => {
             renderOpenButtons(tools, gitlabMetadata, el);
           }).
@@ -315,7 +306,7 @@ const toolboxify = () => {
 
       chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
         if (data.allow) {
-          fetchTools().
+          getInstalledTools().
             then(tools => {
               renderCloneButtons(tools, metadata);
             }).
@@ -329,7 +320,7 @@ const toolboxify = () => {
           switch (message.type) {
             case 'modify-pages-changed':
               if (message.newValue) {
-                fetchTools().
+                getInstalledTools().
                   then(tools => {
                     renderCloneButtons(tools, metadata);
                   }).

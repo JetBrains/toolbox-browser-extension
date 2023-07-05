@@ -111,8 +111,10 @@ const sendNativeMessage = request => new Promise((resolve, reject) => {
       reject(chrome.runtime.lastError);
     } else if (response.status === RESPONSE_STATUS.OK) {
       resolve(response.result);
+    } else if (response.error?.message) {
+      reject(new Error(response.error.message));
     } else {
-      reject(response.error);
+      reject(new Error(`The '${request.method}' request failed`));
     }
   });
 });
