@@ -5,6 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "prebuild": "eslint .",
+    "prebuild2": "eslint . --fix",
     "build": "webpack --bail --mode production",
     "postbuild": "node .scripts/generate-readme.js | node .scripts/generate-license-list.js",
     "build:dev": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug",
