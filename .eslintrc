@@ -1,5 +1,13 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false,
+    "babelOptions": {
+      "babelrc": false,
+      "configFile": false,
+      "presets": ["@babel/preset-env"]
+    }
+  },
   "extends": [
     "@jetbrains",
     "@jetbrains/eslint-config/browser",
@@ -7,7 +15,10 @@
   ],
   "rules": {
     "max-len": ["error", { "code": 120, "tabWidth": 2 }],
-    "no-magic-numbers": ["error", { "ignore": [0, 1] }]
+    "no-magic-numbers": ["error", { "ignore": [0, 1] }],
+    "indent": ["error", 2, {
+      "ignoredNodes": ["TemplateLiteral", "SwitchCase"]
+    }]
   },
   "globals": {
     "chrome": "readonly"

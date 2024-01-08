@@ -30,13 +30,16 @@
       "js": ["jetbrains-toolbox-bitbucket-public.js"]
     }
   ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "web_accessible_resources": [
     "*.svg"
   ],
   "permissions": [
     "activeTab",
     "contextMenus",
-    "nativeMessaging",
     "storage",
     "https://github.com/*",
     "https://api.github.com/*",

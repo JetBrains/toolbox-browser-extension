@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>JetBrains Toolbox App Extension Options</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+<div class="options">
+  <h1>General Options</h1>
+  <div class="option">
+    <div class="option__label">
+      <label id="lbl-clone">Clone with:</label>
+    </div>
+    <div class="option__input js-protocol-input-group">
+      <input id="rad-https" class="js-protocol-input" type="radio" name="protocol" value="HTTPS"> <label for="rad-https">HTTPS</label>
+      /
+      <input id="rad-ssh" class="js-protocol-input" type="radio" name="protocol" value="SSH"> <label for="rad-ssh">SSH</label>
+    </div>
+  </div>
+  <div class="option">
+    <div class="option__label">
+      <label for="chk-modify-page">Add additional buttons to web pages:</label>
+    </div>
+    <div class="option__input">
+      <input id="chk-modify-page" class="js-modify-pages-input" type="checkbox">
+    </div>
+  </div>
+  <div class="option__description">
+    In addition to the standard button (the one in the main toolbar of your browser),
+    the extension can add additional buttons to clone projects directly to the page, when the above option is on.
+    This feature is experimental and may lead to incorrect display of the user interface under certain conditions
+    (works for most of the users though):
+    <div class="extra-buttons">
+      <img class="extra-buttons__image extra-buttons__image-light" src="options-extra-buttons-light.png" alt="Extra buttons added to page">
+      <img class="extra-buttons__image extra-buttons__image-dark" src="options-extra-buttons-dark.png" alt="Extra buttons added to page">
+    </div>
+  </div>
+</div>
+<script src="jetbrains-toolbox-options.js"></script>
+</body>
+</html>

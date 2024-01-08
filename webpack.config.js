@@ -5,7 +5,7 @@ const path = require('path');
 
 const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const LicenseChecker = require('@jetbrains/ring-ui-license-checker');
+const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -13,8 +13,9 @@ module.exports = {
     'gitlab-public': './gitlab-public',
     'bitbucket-public': './bitbucket-public',
     background: './background',
-    'clone-popup': './popup/clone',
-    'detect-enterprise': './detect-enterprise'
+    'clone-popup': './popups/clone',
+    'detect-enterprise': './detect-enterprise',
+    options: './pages/options'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
@@ -23,24 +24,12 @@ module.exports = {
   module: {
     rules: [
       {
-        test: require.resolve('whatwg-fetch'),
-        loader: 'imports-loader?Promise=core-js/es6/promise'
-      },
-      {
         test: /\.js$/,
-        loader: 'babel-loader',
-        options: {
-          babelrc: false,
-          presets: [
-            [
-              require('@babel/preset-env')
-            ]
-          ]
-        }
+        loader: 'babel-loader'
       },
       {
-        test: /\.(svg|png)$/,
-        loader: 'file-loader?name=[name].[ext]'
+        test: /\.svg$/,
+        type: 'asset/inline'
       }
     ]
   },
@@ -49,7 +38,6 @@ module.exports = {
       new TerserPlugin({
         extractComments: false,
         terserOptions: {
-          extractComments: false,
           mangle: false,
           compress: {
             defaults: false,
@@ -59,13 +47,12 @@ module.exports = {
             expression: false,
             sequences: false,
             /* eslint-disable camelcase */
-            dead_code: true,
             join_vars: false,
             keep_classnames: true,
             keep_fnames: true
             /* eslint-enable camelcase */
           },
-          output: {
+          format: {
             beautify: true,
             comments: false,
             /* eslint-disable camelcase */
@@ -77,21 +64,25 @@ module.exports = {
     ]
   },
   plugins: [
+    new NodePolyfillPlugin({
+      includeAliases: ['url', 'process']
+    }),
     new CopyWebpackPlugin({
       patterns: [
         {from: 'manifest.json'},
         {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
         {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
-        {from: 'popup/common.css', to: 'jetbrains-toolbox-common.css'},
-        {from: 'popup/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
-        {from: 'popup/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'}
+        {from: 'popups/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
+        {from: 'popups/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
+        {from: 'pages/options-extra-buttons-dark.png', to: 'options-extra-buttons-dark.png'},
+        {from: 'pages/options-extra-buttons-light.png', to: 'options-extra-buttons-light.png'},
+        {from: 'pages/options.html', to: 'options.html'},
+        {from: 'pages/options.css', to: 'options.css'},
+        {from: 'styles/common.css', to: 'common.css'},
+        {from: 'styles/page.css', to: 'page.css'},
+        {from: 'styles/popup.css', to: 'popup.css'},
+        {from: 'styles/variables.css', to: 'variables.css'}
       ]
-    }),
-    new LicenseChecker({
-      format: params => params.modules.map(mod => `${mod.name}@${mod.version} (${mod.url})
-${mod.license.name} (${mod.license.url})`).join('\n\n'),
-      filename: 'third-party-licences.txt',
-      exclude: /@jetbrains[\/|\\]logos/
     })
   ]
 };

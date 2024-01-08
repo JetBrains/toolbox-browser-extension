@@ -74,6 +74,9 @@ function manifestPermissionGranted(url) {
         } else {
           reject();
         }
+      }).
+      catch(() => {
+        reject();
       });
   });
 }
@@ -217,14 +220,18 @@ function registerContentScripts() {
   getAdditionalPermissions().
     then(permissions => {
       permissions.origins.forEach(domainMatch => {
-        registerEnterpriseContentScripts(domainMatch);
+        registerEnterpriseContentScripts(domainMatch).catch(() => {
+          // do nothing
+        });
       });
     });
 }
 
 export function createExtensionMenu() {
   registerContentScripts();
-  createMenu();
+  createMenu().catch(() => {
+    // do nothing
+  });
 
   chrome.contextMenus.onClicked.addListener(handleMenuItemClick);
   chrome.tabs.onActivated.addListener(handleTabActivated);

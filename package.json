@@ -5,54 +5,45 @@
   "license": "Apache-2.0",
   "scripts": {
     "prebuild": "eslint .",
-    "build": "webpack --bail -p",
-    "postbuild": "node distribution/generate-readme.js",
-    "build:dev": "webpack --bail -p --mode=development --devtool=inline-source-map",
-    "watch": "webpack -w"
+    "build": "webpack --bail --mode production",
+    "postbuild": "node distribution/generate-readme.js | node distribution/generate-license-list.js",
+    "build:dev": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug",
+    "watch": "webpack -w",
+    "prepare": "husky install"
   },
   "dependencies": {
-    "@jetbrains/logos": "^1.2.10",
+    "@jetbrains/logos": "^2.2.14",
     "bitbucket-url-to-object": "^0.3.0",
-    "content-scripts-register-polyfill": "1.0.0",
+    "content-scripts-register-polyfill": "^4.0.2",
     "github-url-to-object": "^4.0.4",
     "parse-bitbucket-url": "^0.3.0",
     "selector-observer": "^2.1.6",
-    "webext-additional-permissions": "^1.0.0",
-    "whatwg-fetch": "^3.0.0"
+    "webext-additional-permissions": "^2.4.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.2",
-    "@babel/preset-env": "^7.10.2",
+    "@babel/core": "^7.21.4",
+    "@babel/eslint-parser": "^7.21.3",
+    "@babel/preset-env": "^7.21.4",
     "@jetbrains/eslint-config": "^5.3.1",
-    "@jetbrains/ring-ui-license-checker": "^1.5.5",
-    "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.1.0",
-    "copy-webpack-plugin": "^6.0.1",
-    "core-js": "^3.6.5",
-    "eslint": "^7.1.0",
-    "eslint-import-resolver-webpack": "^0.12.1",
-    "eslint-plugin-angular": "^4.0.1",
-    "eslint-plugin-bdd": "^2.1.1",
-    "eslint-plugin-import": "^2.20.1",
-    "eslint-plugin-react": "^7.20.0",
-    "file-loader": "^6.0.0",
-    "husky": "^4.2.5",
-    "imports-loader": "^0.8.0",
-    "lint-staged": "^10.2.7",
-    "regenerator-runtime": "^0.13.5",
-    "terser-webpack-plugin": "^3.0.2",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
+    "babel-loader": "^9.1.2",
+    "copy-webpack-plugin": "^11.0.0",
+    "core-js": "^3.29.1",
+    "eslint": "^8.37.0",
+    "eslint-import-resolver-webpack": "^0.13.2",
+    "eslint-plugin-import": "^2.27.5",
+    "husky": "^8.0.3",
+    "imports-loader": "^4.0.1",
+    "license-checker-rseidelsohn": "^4.1.1",
+    "lint-staged": "^13.2.0",
+    "node-polyfill-webpack-plugin": "^2.0.1",
+    "regenerator-runtime": "^0.13.11",
+    "terser-webpack-plugin": "^5.3.7",
+    "webpack": "^5.77.0",
+    "webpack-cli": "^5.0.1"
   },
   "lint-staged": {
     "*.js": [
-      "yarn prebuild --fix",
-      "git add"
+      "yarn prebuild --fix"
     ]
   }
 }
