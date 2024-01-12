@@ -16,7 +16,7 @@ import {
 } from './api/toolbox';
 
 /* eslint-disable max-len */
-const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > div > button:last-child';
+const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > button:last-of-type';
 const CLONE_BUTTON_CONTENT_SELECTOR = '#root [data-testid="Content"] > div > div > div > div > div > div > div > div + div > div:last-child > button:last-child';
 const CLONE_BUTTON_NARROW_PAGE_SELECTOR = '#root > div > div > div > header + div + div + div > div > div > div > div + div > div + div > button:last-child';
 const CLONE_BUTTON_NARROW_PAGE_SIDE_PANEL_OPEN = '#root > div > div > div > div:last-child > div > div > div > div + div > div:last-child > button:last-child';
