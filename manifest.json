@@ -22,6 +22,10 @@
       "js": ["jetbrains-toolbox-github-public.js"]
     },
     {
+      "matches": ["https://gitee.com/*"],
+      "js": ["jetbrains-toolbox-gitee.js"]
+    },
+    {
       "matches": ["https://gitlab.com/*"],
       "js": ["jetbrains-toolbox-gitlab-public.js"]
     },
@@ -45,7 +49,8 @@
     "https://api.github.com/*",
     "https://gitlab.com/*",
     "https://bitbucket.org/*",
-    "https://api.bitbucket.org/*"
+    "https://api.bitbucket.org/*",
+    "https://gitee.com/*"
   ],
   "optional_permissions": [
     "http://*/*",

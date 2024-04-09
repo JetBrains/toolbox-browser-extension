@@ -12,6 +12,7 @@ module.exports = {
     'github-public': './github-public',
     'gitlab-public': './gitlab-public',
     'bitbucket-public': './bitbucket-public',
+    gitee: './gitee',
     background: './background',
     'clone-popup': './popups/clone',
     'detect-enterprise': './detect-enterprise',
