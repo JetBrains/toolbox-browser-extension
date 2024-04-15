@@ -62,6 +62,14 @@ const handleMessage = (message, sender, sendResponse) => {
             type: 'protocol-changed',
             newValue: message.protocol
           });
+          chrome.tabs.query({}, tabs => {
+            tabs.forEach(t => {
+              chrome.tabs.sendMessage(t.id, {
+                type: 'protocol-changed',
+                newValue: message.protocol
+              });
+            });
+          });
         }).
         catch(() => {
         // do nothing
