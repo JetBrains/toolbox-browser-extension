@@ -1,4 +1,6 @@
-/** @author normalcoder <normal@normalcoder.com> */
+/** @author 诺墨 <normal@normalcoder.com> */
+
+import {observe} from 'selector-observer';
 
 import {
   CLONE_PROTOCOLS,
@@ -9,7 +11,9 @@ import {
 
 import {
   callToolbox,
-  getToolboxURN
+  getToolboxNavURN,
+  getToolboxURN,
+  parseLineNumber
 } from './api/toolbox';
 
 const extractExtensionEntry = (extensionElement, selector) =>
@@ -33,25 +37,75 @@ const fetchMetadata = () => {
   };
 };
 
-const selectTools = language => {
+const selectTools = (language, metadata) => {
   // All languages on Gitee match the common list except HTML
   const lang = language === 'html/css' ? 'html' : language;
 
   const selectedTools = lang && SUPPORTED_LANGUAGES[lang.toLowerCase()];
-  return selectedTools && selectedTools.length > 0
+  const normalizedSelectedTools = selectedTools && selectedTools.length > 0
     ? selectedTools
     : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
-};
 
-// TODO: refactor this: extract code to separate functions, assign CSS classes, etc.
-const renderActions = (tools, metadata) => {
-  const selectedTools = tools.sort().map(toolId => {
+  return normalizedSelectedTools.sort().map(toolId => {
     const tool = SUPPORTED_TOOLS[toolId];
     tool.httpsUrl = getToolboxURN(tool.tag, metadata.https);
     tool.sshUrl = getToolboxURN(tool.tag, metadata.ssh);
     return tool;
   });
+};
 
+const menuContainerClickHandler = e => {
+  const tab = e.target;
+  const menuContainer = e.currentTarget;
+  const content = menuContainer.parentElement;
+
+  if (tab.dataset.type === 'jb') {
+    e.stopImmediatePropagation();
+
+    menuContainer.querySelectorAll('.item').forEach(item => {
+      item.classList.remove('active');
+    });
+    tab.classList.add('active');
+
+    content.querySelectorAll(':scope > :not(.menu-container, .tip-box)').forEach(item => {
+      item.style.display = 'none';
+    });
+
+    content.querySelector('.http-ssh-item').style.display = '';
+
+    content.querySelector('.js-jb-tab-content').style.display = '';
+
+    chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
+      switch (data.protocol) {
+        case CLONE_PROTOCOLS.HTTPS: {
+          const item = content.querySelector('.http-item');
+          if (item) {
+            item.style.display = '';
+          }
+          break;
+        }
+        case CLONE_PROTOCOLS.SSH: {
+          const item = content.querySelector('.ssh-item');
+          if (item) {
+            item.style.display = '';
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    });
+  } else {
+    content.querySelectorAll('.forbid-warning-text').forEach(item => {
+      if (item.style.display === 'none') {
+        item.style.display = '';
+      }
+    });
+  }
+};
+
+// TODO: refactor this: extract code to separate functions, assign CSS classes, etc.
+const renderCloneButtons = (tools, metadata) => {
   const modalDownload = document.getElementById('git-project-download-panel');
   if (modalDownload) {
     const content = modalDownload.querySelector('.content');
@@ -60,6 +114,7 @@ const renderActions = (tools, metadata) => {
     // render the JetBrains tab
     const jetbrainsTab = document.createElement('a');
     jetbrainsTab.classList.add('item');
+    jetbrainsTab.classList.add('js-jb-tab');
     jetbrainsTab.dataset.type = 'jb';
     jetbrainsTab.textContent = 'JETBRAINS';
 
@@ -108,12 +163,12 @@ const renderActions = (tools, metadata) => {
           httpsInput.checked = true;
           break;
         }
-      case CLONE_PROTOCOLS.SSH: {
-        sshInput.checked = true;
-        break;
-      }
-      default:
-        break;
+        case CLONE_PROTOCOLS.SSH: {
+          sshInput.checked = true;
+          break;
+        }
+        default:
+          break;
       }
     });
 
@@ -122,6 +177,7 @@ const renderActions = (tools, metadata) => {
     jbItem.classList.add('jb-item');
     jbItem.classList.add('item-panel-box');
     jbItem.classList.add('mb-2');
+    jbItem.classList.add('js-jb-tab-content');
     jbItem.style.display = 'none';
 
     // create the tools list
@@ -130,7 +186,7 @@ const renderActions = (tools, metadata) => {
     toolsList.style.flexDirection = 'column';
     toolsList.style.gap = '12px';
 
-    selectedTools.forEach(tool => {
+    tools.forEach(tool => {
       const toolItem = document.createElement('div');
       toolItem.style.display = 'flex';
       toolItem.style.gap = '8px';
@@ -183,52 +239,7 @@ const renderActions = (tools, metadata) => {
     // intercept the click event to show the JetBrains tab content
     menuContainer.addEventListener(
       'click',
-      e => {
-        const targetItem = e.target;
-        if (targetItem.dataset.type === 'jb') {
-          e.stopImmediatePropagation();
-
-          menuContainer.querySelectorAll('.item').forEach(item => {
-            item.classList.remove('active');
-          });
-          targetItem.classList.add('active');
-
-          content.querySelectorAll(':scope > :not(.menu-container, .tip-box)').forEach(item => {
-            item.style.display = 'none';
-          });
-
-          content.querySelector('.http-ssh-item').style.display = '';
-
-          jbItem.style.display = '';
-
-          chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
-            switch (data.protocol) {
-              case CLONE_PROTOCOLS.HTTPS: {
-                const item = content.querySelector('.http-item');
-                if (item) {
-                  item.style.display = '';
-                }
-              }
-                break;
-              case CLONE_PROTOCOLS.SSH: {
-                const item = content.querySelector('.ssh-item');
-                if (item) {
-                  item.style.display = '';
-                }
-              }
-                break;
-              default:
-                break;
-            }
-          });
-        } else {
-          content.querySelectorAll('.forbid-warning-text').forEach(item => {
-            if (item.style.display === 'none') {
-              item.style.display = '';
-            }
-          });
-        }
-      },
+      menuContainerClickHandler,
       true
     );
 
@@ -236,7 +247,7 @@ const renderActions = (tools, metadata) => {
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
       case 'get-tools':
-        sendResponse(selectedTools);
+        sendResponse(tools);
         break;
       case 'perform-action':
         const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
@@ -280,10 +291,118 @@ const renderActions = (tools, metadata) => {
   }
 };
 
+const removeCloneButtons = () => {
+  document.querySelectorAll('.js-jb-tab, .js-jb-tab-content').forEach(element => {
+    element.remove();
+  });
+  document.
+    querySelector('#git-project-download-panel .menu-container')?.
+    removeEventListener('click', menuContainerClickHandler, true);
+  document.querySelector('.item[data-type="http"]')?.click();
+};
+
+const renderOpenButtons = (optionsElement, tools, metadata) => {
+  const openButtons = tools.map(tool => {
+    const openButton = document.createElement('a');
+    openButton.classList.add('ui');
+    openButton.classList.add('button');
+    openButton.classList.add('has_tooltip');
+    openButton.href = '#';
+    openButton.title = `Open in ${tool.name}`;
+    openButton.textContent = tool.name;
+    openButton.addEventListener('click', e => {
+      e.preventDefault();
+
+      const filePathIndex = 5;
+      const filePath = location.pathname.split('/').splice(filePathIndex).join('/');
+      const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
+
+      callToolbox(getToolboxNavURN(tool.tag, metadata.repo, filePath, lineNumber));
+    });
+
+    let tooltip = null;
+    openButton.addEventListener('mouseenter', e => {
+      const rect = e.target.getBoundingClientRect();
+      // eslint-disable-next-line no-magic-numbers
+      const x = rect.left - rect.width / 2 + window.scrollX;
+      const y = rect.bottom + window.scrollY;
+
+      tooltip = document.createElement('div');
+      tooltip.classList.add('ui');
+      tooltip.classList.add('popup');
+      tooltip.classList.add('bottom');
+      tooltip.classList.add('center');
+      tooltip.classList.add('transition');
+      tooltip.classList.add('visible');
+      tooltip.style.inset = `${y}px auto auto ${x}px`;
+      tooltip.style.display = 'block !important';
+      tooltip.innerHTML = `<div class='content'>${e.target.title}</div>`;
+      document.body.appendChild(tooltip);
+    });
+
+    openButton.addEventListener('mouseleave', () => {
+      if (tooltip) {
+        document.body.removeChild(tooltip);
+        tooltip = null;
+      }
+    });
+
+    return openButton;
+  });
+  const openButtonContainer = document.createElement('div');
+  openButtonContainer.classList.add('ui');
+  openButtonContainer.classList.add('mini');
+  openButtonContainer.classList.add('buttons');
+  openButtonContainer.classList.add('basic');
+  openButtonContainer.classList.add('js-open-buttons');
+  openButtonContainer.append(...openButtons);
+  optionsElement.insertAdjacentElement('beforeend', openButtonContainer);
+};
+
+const removeOpenButtons = () => {
+  const openButtonContainer = document.querySelector('.js-open-buttons');
+  if (openButtonContainer) {
+    openButtonContainer.remove();
+  }
+};
+
+const startTrackingDOMChanges = (tools, metadata) => {
+  const selector = '#tree-content-holder .blob-header-title .options';
+
+  return observe(selector, {
+    add(options) {
+      renderOpenButtons(options, tools, metadata);
+    }
+  });
+};
+
 try {
   const metadata = fetchMetadata();
-  const tools = selectTools(metadata.language.toLowerCase());
-  renderActions(tools, metadata);
+  const tools = selectTools(metadata.language.toLowerCase(), metadata);
+
+  chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
+    let DOMObserver = null;
+    if (data.allow) {
+      renderCloneButtons(tools, metadata);
+      DOMObserver = startTrackingDOMChanges(tools, metadata);
+    }
+    chrome.runtime.onMessage.addListener(message => {
+      switch (message.type) {
+        case 'modify-pages-changed':
+          if (message.newValue) {
+            renderCloneButtons(tools, metadata);
+            DOMObserver = startTrackingDOMChanges(tools, metadata);
+          } else {
+            removeCloneButtons();
+            DOMObserver.abort();
+            removeOpenButtons();
+          }
+          break;
+          // no default
+      }
+    });
+  });
+
   chrome.runtime.sendMessage({
     type: 'enable-page-action',
     project: metadata.name,
