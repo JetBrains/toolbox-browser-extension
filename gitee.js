@@ -54,6 +54,69 @@ const selectTools = (language, metadata) => {
   });
 };
 
+const addStylesheet = () => {
+  const styleSheet = document.createElement('style');
+  styleSheet.id = 'jb-gitee-styles';
+  styleSheet.textContent = `
+    .tab-content-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .protocol-switcher {
+      display: flex;
+      gap: 20px;
+    }
+    .protocol-switcher label {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+    }
+    .tools-list {
+      border-radius: 4px;
+      border: 1px solid #E3E9ED;
+      display: flex;
+      flex-direction: column;
+    }
+    .tool-item {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      gap: 8px;
+      padding: 5px 12px;
+    }
+    .tool-item:not(:last-child) {
+      box-shadow: inset 0px -1px 0px 0px rgba(227, 233, 237, 0.5);
+    }
+    .tool-item:hover {
+      background: #F5F7FA;
+    }
+    .tool-item-icon {
+      background-size: contain;
+      height: 32px;
+      width: 32px;
+    }
+    .tool-data-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .tool-item-description {
+      color: #8c92a4;
+      font-size: 0.93em;
+    }
+  `;
+
+  document.head.append(styleSheet);
+};
+
+const removeStylesheet = () => {
+  const styleSheet = document.getElementById('jb-gitee-styles');
+  if (styleSheet) {
+    styleSheet.remove();
+  }
+};
+
 const menuContainerClickHandler = e => {
   const tab = e.target;
   const menuContainer = e.currentTarget;
@@ -104,7 +167,6 @@ const menuContainerClickHandler = e => {
   }
 };
 
-// TODO: refactor this: extract code to separate functions, assign CSS classes, etc.
 const renderCloneButtons = (tools, metadata) => {
   const modalDownload = document.getElementById('git-project-download-panel');
   if (modalDownload) {
@@ -112,26 +174,22 @@ const renderCloneButtons = (tools, metadata) => {
     const menuContainer = modalDownload.querySelector('.menu-container');
 
     // render the JetBrains tab
-    const jetbrainsTab = document.createElement('a');
-    jetbrainsTab.classList.add('item');
-    jetbrainsTab.classList.add('js-jb-tab');
-    jetbrainsTab.dataset.type = 'jb';
-    jetbrainsTab.textContent = 'JETBRAINS';
+    const jbTab = document.createElement('a');
+    jbTab.classList.add('item');
+    jbTab.classList.add('js-jb-tab');
+    jbTab.dataset.type = 'jb';
+    jbTab.textContent = 'JETBRAINS';
 
     const items = menuContainer.querySelectorAll('.item');
     if (items.length > 0) {
-      items.item(items.length - 1).insertAdjacentElement('afterend', jetbrainsTab);
+      items.item(items.length - 1).insertAdjacentElement('afterend', jbTab);
     }
 
     // create the protocol switcher
     const protocolSwitcher = document.createElement('div');
-    protocolSwitcher.style.display = 'flex';
-    protocolSwitcher.style.gap = '20px';
+    protocolSwitcher.classList.add('protocol-switcher');
 
     const httpsItem = document.createElement('label');
-    httpsItem.style.display = 'flex';
-    httpsItem.style.gap = '8px';
-    httpsItem.style.alignItems = 'center';
     const httpsInput = document.createElement('input');
     httpsInput.type = 'radio';
     httpsInput.name = 'protocol';
@@ -140,9 +198,6 @@ const renderCloneButtons = (tools, metadata) => {
     httpsItem.append(httpsInput, 'Clone with HTTPS');
 
     const sshItem = document.createElement('label');
-    sshItem.style.display = 'flex';
-    sshItem.style.gap = '8px';
-    sshItem.style.alignItems = 'center';
     const sshInput = document.createElement('input');
     sshInput.type = 'radio';
     sshInput.name = 'protocol';
@@ -182,26 +237,22 @@ const renderCloneButtons = (tools, metadata) => {
 
     // create the tools list
     const toolsList = document.createElement('div');
-    toolsList.style.display = 'flex';
-    toolsList.style.flexDirection = 'column';
-    toolsList.style.gap = '12px';
+    toolsList.classList.add('tools-list');
 
     tools.forEach(tool => {
       const toolItem = document.createElement('div');
-      toolItem.style.display = 'flex';
-      toolItem.style.gap = '8px';
-      toolItem.style.alignItems = 'center';
-      toolItem.style.cursor = 'pointer';
+      toolItem.classList.add('tool-item');
 
       const icon = document.createElement('span');
-      icon.setAttribute('style', `background-image:url(${tool.icon});background-size:contain;width:32px;height:32px;`);
+      icon.classList.add('tool-item-icon');
+      icon.style.backgroundImage = `url(${tool.icon})`;
 
       const toolDataContainer = document.createElement('div');
-      toolDataContainer.style.display = 'flex';
-      toolDataContainer.style.flexDirection = 'column';
+      toolDataContainer.classList.add('tool-data-container');
       const toolName = document.createElement('strong');
       toolName.textContent = tool.name;
       const projectName = document.createElement('span');
+      projectName.classList.add('tool-item-description');
       projectName.textContent = `${metadata.name} • ${metadata.branch}`;
       toolDataContainer.append(toolName, projectName);
 
@@ -226,13 +277,10 @@ const renderCloneButtons = (tools, metadata) => {
       toolsList.append(toolItem);
     });
 
-    const outerContainer = document.createElement('div');
-    outerContainer.style.display = 'flex';
-    outerContainer.style.flexDirection = 'column';
-    outerContainer.style.gap = '20px';
-
-    outerContainer.append(protocolSwitcher, toolsList);
-    jbItem.append(outerContainer);
+    const contentWrapper = document.createElement('div');
+    contentWrapper.classList.add('tab-content-wrapper');
+    contentWrapper.append(protocolSwitcher, toolsList);
+    jbItem.append(contentWrapper);
 
     content.querySelector('.tip-box')?.insertAdjacentElement('beforebegin', jbItem);
 
@@ -242,6 +290,9 @@ const renderCloneButtons = (tools, metadata) => {
       menuContainerClickHandler,
       true
     );
+
+    // preselect the JetBrains tab
+    jbTab.click();
 
     // eslint-disable-next-line complexity
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -383,6 +434,7 @@ try {
   chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
     let DOMObserver = null;
     if (data.allow) {
+      addStylesheet();
       renderCloneButtons(tools, metadata);
       DOMObserver = startTrackingDOMChanges(tools, metadata);
     }
@@ -390,12 +442,14 @@ try {
       switch (message.type) {
         case 'modify-pages-changed':
           if (message.newValue) {
+            addStylesheet();
             renderCloneButtons(tools, metadata);
             DOMObserver = startTrackingDOMChanges(tools, metadata);
           } else {
             removeCloneButtons();
             DOMObserver.abort();
             removeOpenButtons();
+            removeStylesheet();
           }
           break;
           // no default
