@@ -111,10 +111,21 @@ const addStylesheet = () => {
 };
 
 const removeStylesheet = () => {
-  const styleSheet = document.getElementById('jb-gitee-styles');
-  if (styleSheet) {
-    styleSheet.remove();
-  }
+  document.getElementById('jb-gitee-styles')?.remove();
+};
+
+const addScript = () => {
+  const script = document.createElement('script');
+  script.id = 'jb-gitee-script';
+  script.textContent = `
+    window.jQuery('.js-open-button').popup({position:'bottom center'});
+  `;
+
+  document.body.append(script);
+};
+
+const removeScript = () => {
+  document.getElementById('jb-gitee-script')?.remove();
 };
 
 const menuContainerClickHandler = e => {
@@ -170,6 +181,8 @@ const menuContainerClickHandler = e => {
 const renderCloneButtons = (tools, metadata) => {
   const modalDownload = document.getElementById('git-project-download-panel');
   if (modalDownload) {
+    addStylesheet();
+
     const content = modalDownload.querySelector('.content');
     const menuContainer = modalDownload.querySelector('.menu-container');
 
@@ -350,6 +363,8 @@ const removeCloneButtons = () => {
     querySelector('#git-project-download-panel .menu-container')?.
     removeEventListener('click', menuContainerClickHandler, true);
   document.querySelector('.item[data-type="http"]')?.click();
+
+  removeStylesheet();
 };
 
 const renderOpenButtons = (optionsElement, tools, metadata) => {
@@ -358,6 +373,7 @@ const renderOpenButtons = (optionsElement, tools, metadata) => {
     openButton.classList.add('ui');
     openButton.classList.add('button');
     openButton.classList.add('has_tooltip');
+    openButton.classList.add('js-open-button');
     openButton.href = '#';
     openButton.title = `Open in ${tool.name}`;
     openButton.textContent = tool.name;
@@ -369,33 +385,6 @@ const renderOpenButtons = (optionsElement, tools, metadata) => {
       const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
 
       callToolbox(getToolboxNavURN(tool.tag, metadata.repo, filePath, lineNumber));
-    });
-
-    let tooltip = null;
-    openButton.addEventListener('mouseenter', e => {
-      const rect = e.target.getBoundingClientRect();
-      // eslint-disable-next-line no-magic-numbers
-      const x = rect.left - rect.width / 2 + window.scrollX;
-      const y = rect.bottom + window.scrollY;
-
-      tooltip = document.createElement('div');
-      tooltip.classList.add('ui');
-      tooltip.classList.add('popup');
-      tooltip.classList.add('bottom');
-      tooltip.classList.add('center');
-      tooltip.classList.add('transition');
-      tooltip.classList.add('visible');
-      tooltip.style.inset = `${y}px auto auto ${x}px`;
-      tooltip.style.display = 'block !important';
-      tooltip.innerHTML = `<div class='content'>${e.target.title}</div>`;
-      document.body.appendChild(tooltip);
-    });
-
-    openButton.addEventListener('mouseleave', () => {
-      if (tooltip) {
-        document.body.removeChild(tooltip);
-        tooltip = null;
-      }
     });
 
     return openButton;
@@ -411,20 +400,25 @@ const renderOpenButtons = (optionsElement, tools, metadata) => {
 };
 
 const removeOpenButtons = () => {
-  const openButtonContainer = document.querySelector('.js-open-buttons');
-  if (openButtonContainer) {
-    openButtonContainer.remove();
-  }
+  document.querySelector('.js-open-buttons')?.remove();
 };
 
-const startTrackingDOMChanges = (tools, metadata) => {
-  const selector = '#tree-content-holder .blob-header-title .options';
-
-  return observe(selector, {
+const startTrackingDOMChanges = (tools, metadata) =>
+  observe('#tree-content-holder .blob-header-title .options', {
     add(options) {
       renderOpenButtons(options, tools, metadata);
+      addScript();
+    },
+    remove() {
+      removeOpenButtons();
+      removeScript();
     }
   });
+
+const stopTrackingDOMChanges = observer => {
+  observer?.abort();
+  removeOpenButtons();
+  removeScript();
 };
 
 try {
@@ -434,7 +428,6 @@ try {
   chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
     let DOMObserver = null;
     if (data.allow) {
-      addStylesheet();
       renderCloneButtons(tools, metadata);
       DOMObserver = startTrackingDOMChanges(tools, metadata);
     }
@@ -442,14 +435,11 @@ try {
       switch (message.type) {
         case 'modify-pages-changed':
           if (message.newValue) {
-            addStylesheet();
             renderCloneButtons(tools, metadata);
             DOMObserver = startTrackingDOMChanges(tools, metadata);
           } else {
             removeCloneButtons();
-            DOMObserver.abort();
-            removeOpenButtons();
-            removeStylesheet();
+            stopTrackingDOMChanges(DOMObserver);
           }
           break;
           // no default
