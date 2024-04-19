@@ -243,22 +243,28 @@ const renderCloneButtons = (tools, githubMetadata) => {
   } else {
     // new UI as of 24.06.20
     getRepoController = document.querySelector('get-repo');
+
     if (getRepoController) {
+      // https://github.com/orgs/community/discussions/61982
+      const isNewRepositoryOverview = getRepoController.
+        parentElement?.parentElement?.classList?.contains('pagehead-actions') ?? false;
+
       const summary = getRepoController.querySelector('summary');
       // the Code tab contains the green Code button (primary),
       // the Pull requests tab contains the ordinary Code button (outlined)
       const isOnCodeTab = summary && summary.classList.contains('Button--primary');
 
-      const toolboxCloneButtonGroup = document.createElement('div');
+      const toolboxCloneButtonGroup = document.createElement(isNewRepositoryOverview ? 'li' : 'div');
+      const classes = isOnCodeTab
+        ? (!isNewRepositoryOverview && 'd-block ml-2')
+        : 'flex-md-order-2';
       toolboxCloneButtonGroup.setAttribute(
         'class',
-        `BtnGroup ${isOnCodeTab
-          ? 'd-block ml-2'
-          : 'flex-md-order-2'} ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
+        `BtnGroup ${classes} ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
       );
 
       tools.forEach(tool => {
-        const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
+        const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab || isNewRepositoryOverview);
         toolboxCloneButtonGroup.appendChild(btn);
       });
 
