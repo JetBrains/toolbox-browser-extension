@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "JetBrains Toolbox Extension",
   "short_name": "Toolbox",
-  "description": "Clone and open projects from GitHub, GitLab, and Bitbucket in JetBrains IDEs right from your browser",
+  "description": "Clone and open projects from GitHub, GitLab, Gitee, and Bitbucket in JetBrains IDEs right from your browser",
   "version": "1.0",
   "icons": {
     "128": "icon-128.png"
