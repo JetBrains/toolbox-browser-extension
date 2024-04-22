@@ -14,6 +14,7 @@
   ],
   "rules": {
     "max-len": ["error", { "code": 120, "tabWidth": 2 }],
+    "complexity": ["off"],
     "no-magic-numbers": ["error", { "ignore": [0, 1] }],
     "indent": ["error", 2, {
       "ignoredNodes": ["TemplateLiteral", "SwitchCase"]
