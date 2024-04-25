@@ -22,7 +22,7 @@ Promise
     const requiredCoreJsVersion = babelConfigJson.presets[0][1].corejs;
 
     if (!installedCoreJsVersion.startsWith(requiredCoreJsVersion)) {
-      throw new Error(`The current version of core-js is ${installedCoreJsVersion}, but the babel config requires version ${requiredCoreJsVersion}.x`);
+      throw new Error(`The current version of core-js is ${installedCoreJsVersion}, but the babel config requires version ${requiredCoreJsVersion}. Update the babel.config.json file accordingly.`);
     }
   })
   .catch(e => {
