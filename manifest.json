@@ -37,10 +37,6 @@
     "page": "options.html",
     "open_in_tab": true
   },
-  "web_accessible_resources": [{
-    "resources": ["*.svg"],
-    "matches": ["http://*/*", "https://*/*"]
-  }],
   "permissions": [
     "activeTab",
     "contextMenus",
