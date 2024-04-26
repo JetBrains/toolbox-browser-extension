@@ -2,12 +2,14 @@ import {CLONE_PROTOCOLS} from '../constants';
 
 const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',
-  MODIFY_PAGES: 'modify-pages'
+  MODIFY_PAGES: 'modify-pages',
+  ACTIVE_TAB_ID: 'active-tab-id'
 };
 
 const DEFAULTS = {
   PROTOCOL: CLONE_PROTOCOLS.HTTPS,
-  MODIFY_PAGES: true
+  MODIFY_PAGES: true,
+  ACTIVE_TAB_ID: null
 };
 
 const saveToStorage = (key, value) => new Promise((resolve, reject) => {
@@ -34,7 +36,7 @@ export function getProtocol() {
   return new Promise(resolve => {
     getFromStorage(STORAGE_ITEMS.PROTOCOL).
       then(protocol => {
-        resolve(protocol || DEFAULTS.PROTOCOL);
+        resolve(protocol ?? DEFAULTS.PROTOCOL);
       }).
       catch(() => {
         resolve(DEFAULTS.PROTOCOL);
@@ -56,7 +58,7 @@ export function getModifyPages() {
   return new Promise(resolve => {
     getFromStorage(STORAGE_ITEMS.MODIFY_PAGES).
       then(allow => {
-        resolve(allow == null ? DEFAULTS.MODIFY_PAGES : allow);
+        resolve(allow ?? DEFAULTS.MODIFY_PAGES);
       }).
       catch(() => {
         resolve(DEFAULTS.MODIFY_PAGES);
@@ -67,6 +69,28 @@ export function getModifyPages() {
 export function saveModifyPages(allow) {
   return new Promise(resolve => {
     saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow).
+      then(resolve).
+      catch(() => {
+        resolve();
+      });
+  });
+}
+
+export function getActiveTabId() {
+  return new Promise(resolve => {
+    getFromStorage(STORAGE_ITEMS.ACTIVE_TAB_ID).
+      then(activeTabId => {
+        resolve(activeTabId ?? DEFAULTS.ACTIVE_TAB_ID);
+      }).
+      catch(() => {
+        resolve(DEFAULTS.ACTIVE_TAB_ID);
+      });
+  });
+}
+
+export function setActiveTabId(tabId) {
+  return new Promise(resolve => {
+    saveToStorage(STORAGE_ITEMS.ACTIVE_TAB_ID, tabId ?? DEFAULTS.ACTIVE_TAB_ID).
       then(resolve).
       catch(() => {
         resolve();

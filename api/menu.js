@@ -1,10 +1,10 @@
 import 'regenerator-runtime/runtime';
 import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
 
+import {getActiveTabId, setActiveTabId} from './storage';
+
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
 const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';
-
-let activeTabId = null;
 
 function getTabUrl(tabId) {
   return new Promise((resolve, reject) => {
@@ -182,14 +182,21 @@ function handleMenuItemClick(info, tab) {
 }
 
 function handleTabActivated(activeInfo) {
-  activeTabId = activeInfo.tabId;
-  updateMenu(activeInfo.tabId);
+  setActiveTabId(activeInfo.tabId).then(() => {
+    updateMenu(activeInfo.tabId);
+  }).catch(() => {
+    // do nothing
+  });
 }
 
 function handleTabUpdated(tabId, changeInfo) {
-  if (activeTabId === tabId && changeInfo.status === 'complete') {
-    updateMenu(tabId);
-  }
+  getActiveTabId().then(activeTabId => {
+    if (activeTabId === tabId && changeInfo.status === 'complete') {
+      updateMenu(tabId);
+    }
+  }).catch(() => {
+    // do nothing
+  });
 }
 
 function registerEnterpriseContentScripts(domainMatch) {
@@ -224,7 +231,11 @@ function registerContentScripts() {
 
 export function createExtensionMenu() {
   registerContentScripts();
-  createMenu().catch(() => {
+  createMenu().then(() => {
+    setActiveTabId(/*null*/).then(() => {
+      // do nothing
+    });
+  }).catch(() => {
     // do nothing
   });
 

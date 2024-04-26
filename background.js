@@ -29,11 +29,11 @@ const handleMessage = (message, sender, sendResponse) => {
         https,
         ssh
       } = message;
-      const uri = encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
+      const url = encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
       chrome.action.setPopup(
         {
           tabId: sender.tab.id,
-          popup: chrome.runtime.getURL(uri)
+          popup: chrome.runtime.getURL(url)
         }
       );
       break;
