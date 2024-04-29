@@ -7,14 +7,14 @@ import {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS
-} from './constants';
+} from '../../constants';
 
 import {
   callToolbox,
   getToolboxNavURN,
   getToolboxURN,
   parseLineNumber
-} from './api/toolbox';
+} from '../../api/toolbox';
 
 const extractExtensionEntry = (extensionElement, selector) =>
   extensionElement.querySelector(selector)?.textContent?.trim() ?? '';
@@ -22,7 +22,7 @@ const extractExtensionEntry = (extensionElement, selector) =>
 const fetchMetadata = () => {
   const extension = document.querySelector('.gitee-project-extension');
   if (extension == null) {
-    throw new Error('Extension element not found');
+    throw new Error('Gitee project extension is not found');
   }
 
   return {
@@ -52,80 +52,6 @@ const selectTools = (language, metadata) => {
     tool.sshUrl = getToolboxURN(tool.tag, metadata.ssh);
     return tool;
   });
-};
-
-const addStylesheet = () => {
-  const styleSheet = document.createElement('style');
-  styleSheet.id = 'jb-gitee-styles';
-  styleSheet.textContent = `
-    .tab-content-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-    .protocol-switcher {
-      display: flex;
-      gap: 20px;
-    }
-    .protocol-switcher label {
-      align-items: center;
-      cursor: pointer;
-      display: flex;
-      gap: 8px;
-    }
-    .tools-list {
-      border-radius: 4px;
-      border: 1px solid #E3E9ED;
-      display: flex;
-      flex-direction: column;
-    }
-    .tool-item {
-      align-items: center;
-      cursor: pointer;
-      display: flex;
-      gap: 8px;
-      padding: 5px 12px;
-    }
-    .tool-item:not(:last-child) {
-      box-shadow: inset 0px -1px 0px 0px rgba(227, 233, 237, 0.5);
-    }
-    .tool-item:hover {
-      background: #F5F7FA;
-    }
-    .tool-item-icon {
-      background-size: contain;
-      height: 32px;
-      width: 32px;
-    }
-    .tool-data-container {
-      display: flex;
-      flex-direction: column;
-    }
-    .tool-item-description {
-      color: #8c92a4;
-      font-size: 0.93em;
-    }
-  `;
-
-  document.head.append(styleSheet);
-};
-
-const removeStylesheet = () => {
-  document.getElementById('jb-gitee-styles')?.remove();
-};
-
-const addScript = () => {
-  const script = document.createElement('script');
-  script.id = 'jb-gitee-script';
-  script.textContent = `
-    window.jQuery('.js-open-button').popup({position:'bottom center'});
-  `;
-
-  document.body.append(script);
-};
-
-const removeScript = () => {
-  document.getElementById('jb-gitee-script')?.remove();
 };
 
 const menuContainerClickHandler = e => {
@@ -181,8 +107,6 @@ const menuContainerClickHandler = e => {
 const renderCloneButtons = (tools, metadata) => {
   const modalDownload = document.getElementById('git-project-download-panel');
   if (modalDownload) {
-    addStylesheet();
-
     const content = modalDownload.querySelector('.content');
     const menuContainer = modalDownload.querySelector('.menu-container');
 
@@ -363,8 +287,6 @@ const removeCloneButtons = () => {
     querySelector('#git-project-download-panel .menu-container')?.
     removeEventListener('click', menuContainerClickHandler, true);
   document.querySelector('.item[data-type="http"]')?.click();
-
-  removeStylesheet();
 };
 
 const renderOpenButtons = (optionsElement, tools, metadata) => {
@@ -397,9 +319,12 @@ const renderOpenButtons = (optionsElement, tools, metadata) => {
   openButtonContainer.classList.add('js-open-buttons');
   openButtonContainer.append(...openButtons);
   optionsElement.insertAdjacentElement('beforeend', openButtonContainer);
+
+  document.dispatchEvent(new CustomEvent('init-open-buttons-tooltips', {}));
 };
 
 const removeOpenButtons = () => {
+  document.dispatchEvent(new CustomEvent('destroy-open-buttons-tooltips', {}));
   document.querySelector('.js-open-buttons')?.remove();
 };
 
@@ -407,18 +332,15 @@ const startTrackingDOMChanges = (tools, metadata) =>
   observe('#tree-content-holder .blob-header-title .options', {
     add(options) {
       renderOpenButtons(options, tools, metadata);
-      addScript();
     },
     remove() {
       removeOpenButtons();
-      removeScript();
     }
   });
 
 const stopTrackingDOMChanges = observer => {
   observer?.abort();
   removeOpenButtons();
-  removeScript();
 };
 
 try {

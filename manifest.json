@@ -25,6 +25,12 @@
       "js": ["jetbrains-toolbox-gitee.js"]
     },
     {
+      "world": "MAIN",
+      "matches": ["https://gitee.com/*"],
+      "js": ["providers/gitee/assets/scripts.js"],
+      "css": ["providers/gitee/assets/styles.css"]
+    },
+    {
       "matches": ["https://gitlab.com/*"],
       "js": ["jetbrains-toolbox-gitlab-public.js"]
     },

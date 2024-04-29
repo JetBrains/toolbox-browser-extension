@@ -12,7 +12,7 @@ module.exports = {
     'github-public': './github-public',
     'gitlab-public': './gitlab-public',
     'bitbucket-public': './bitbucket-public',
-    gitee: './gitee',
+    gitee: './providers/gitee',
     background: './background',
     'clone-popup': './popups/clone',
     'detect-enterprise': './detect-enterprise',
@@ -71,7 +71,7 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {from: 'manifest.json'},
-        {from: 'icons/icon-128.png', to: 'icon-128.png'}, // Replace with logo from package after it's generation
+        {from: 'icons/icon-128.png', to: 'icon-128.png'},
         {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
         {from: 'popups/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
         {from: 'popups/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
@@ -82,7 +82,8 @@ module.exports = {
         {from: 'styles/common.css', to: 'common.css'},
         {from: 'styles/page.css', to: 'page.css'},
         {from: 'styles/popup.css', to: 'popup.css'},
-        {from: 'styles/variables.css', to: 'variables.css'}
+        {from: 'styles/variables.css', to: 'variables.css'},
+        {from: 'providers/**/assets/*'}
       ]
     })
   ]
