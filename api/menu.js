@@ -42,28 +42,23 @@ function reloadTab(tabId) {
   );
 }
 
-function createMenu(createProperties = {}) {
+function createMenu() {
   return new Promise(resolve => {
-    const contexts = [
-      chrome.contextMenus.ContextType.ACTION
-    ];
-    const documentUrlPatterns = [
-      'http://*/*',
-      'https://*/*'
-    ];
     chrome.contextMenus.removeAll(() => {
-      // eslint-disable-next-line no-void
-      void chrome.runtime.lastError;
-      chrome.contextMenus.create({
-        id: MENU_ITEM_ID,
-        type: chrome.contextMenus.ItemType.CHECKBOX,
-        title: 'Enable on this domain',
-        ...createProperties,
-        contexts,
-        documentUrlPatterns
-      }, () => {
-        resolve();
-      });
+      chrome.contextMenus.create(
+        {
+          id: MENU_ITEM_ID,
+          type: chrome.contextMenus.ItemType.CHECKBOX,
+          title: 'Enable on this domain',
+          contexts: [chrome.contextMenus.ContextType.ACTION],
+          documentUrlPatterns: ['http://*/*', 'https://*/*']
+        },
+        () => {
+          // eslint-disable-next-line no-void
+          void chrome.runtime.lastError;
+          resolve();
+        }
+      );
     });
   });
 }
@@ -232,9 +227,7 @@ function registerContentScripts() {
 export function createExtensionMenu() {
   registerContentScripts();
   createMenu().then(() => {
-    setActiveTabId(/*null*/).then(() => {
-      // do nothing
-    });
+    // do nothing
   }).catch(() => {
     // do nothing
   });

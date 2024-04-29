@@ -13,6 +13,8 @@ const handleInstalled = () => {
     // eslint-disable-next-line no-void
     void chrome.runtime.lastError;
   });
+
+  createExtensionMenu();
 };
 
 // eslint-disable-next-line complexity
@@ -104,5 +106,3 @@ const handleMessage = (message, sender, sendResponse) => {
 
 chrome.runtime.onInstalled.addListener(handleInstalled);
 chrome.runtime.onMessage.addListener(handleMessage);
-
-createExtensionMenu();
