@@ -115,7 +115,12 @@ function updateMenuItem(updateProperties) {
   });
 }
 
-function updateMenu(tabId) {
+function updateMenu(tabId, internalBrowserPage = false) {
+  if (internalBrowserPage) {
+    updateMenuItem({enabled: false, checked: false});
+    return;
+  }
+
   getTabUrl(tabId).
     then(tabUrl => {
       manifestPermissionGranted(tabUrl).
@@ -152,11 +157,11 @@ function toggleDomainPermissions(request, url) {
 }
 
 function handleMenuItemClick(info, tab) {
-  if (info.menuItemId !== MENU_ITEM_ID) {
-    return;
-  }
-  if (tab.url.startsWith('chrome://')) {
-    updateMenu(tab.id);
+  if (
+    info.menuItemId !== MENU_ITEM_ID ||
+    tab.url.startsWith('chrome://') ||
+    tab.url.startsWith('chrome-extension://')
+  ) {
     return;
   }
 

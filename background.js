@@ -63,12 +63,16 @@ const handleMessage = (message, sender, sendResponse) => {
           chrome.runtime.sendMessage({
             type: 'protocol-changed',
             newValue: message.protocol
+          }).catch(() => {
+            // do nothing
           });
           chrome.tabs.query({}, tabs => {
             tabs.forEach(t => {
               chrome.tabs.sendMessage(t.id, {
                 type: 'protocol-changed',
                 newValue: message.protocol
+              }).catch(() => {
+                // TODO: re-register the content scripts, probably the extension was updated
               });
             });
           });
@@ -90,6 +94,8 @@ const handleMessage = (message, sender, sendResponse) => {
               chrome.tabs.sendMessage(t.id, {
                 type: 'modify-pages-changed',
                 newValue: message.allow
+              }).catch(() => {
+                // TODO: re-register the content scripts, probably the extension was updated
               });
             });
           });
