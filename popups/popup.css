@@ -1,5 +1,5 @@
-@import "variables.css";
-@import "common.css";
+@import "../styles/variables.css";
+@import "../styles/common.css";
 
 body {
   font-size: 0.75rem;

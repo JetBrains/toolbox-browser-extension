@@ -14,9 +14,7 @@ module.exports = {
     'bitbucket-public': './bitbucket-public',
     gitee: './providers/gitee',
     background: './background',
-    'clone-popup': './popups/clone',
-    'detect-enterprise': './detect-enterprise',
-    options: './pages/options'
+    'detect-enterprise': './detect-enterprise'
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
@@ -71,19 +69,11 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {from: 'manifest.json'},
-        {from: 'icons/icon-128.png', to: 'icon-128.png'},
-        {from: 'icons/icon-disabled-128.png', to: 'icon-disabled-128.png'},
-        {from: 'popups/clone.html', to: 'jetbrains-toolbox-clone-popup.html'},
-        {from: 'popups/disabled.html', to: 'jetbrains-toolbox-disabled-popup.html'},
-        {from: 'pages/options-extra-buttons-dark.png', to: 'options-extra-buttons-dark.png'},
-        {from: 'pages/options-extra-buttons-light.png', to: 'options-extra-buttons-light.png'},
-        {from: 'pages/options.html', to: 'options.html'},
-        {from: 'pages/options.css', to: 'options.css'},
-        {from: 'styles/common.css', to: 'common.css'},
-        {from: 'styles/page.css', to: 'page.css'},
-        {from: 'styles/popup.css', to: 'popup.css'},
-        {from: 'styles/variables.css', to: 'variables.css'},
-        {from: 'providers/**/assets/*'}
+        {from: 'icons/*'},
+        {from: 'pages/*'},
+        {from: 'popups/*'},
+        {from: 'providers/**/assets/*'},
+        {from: 'styles/*'}
       ]
     })
   ]

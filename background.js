@@ -23,7 +23,7 @@ const handleMessage = (message, sender, sendResponse) => {
     case 'enable-page-action':
       chrome.action.setIcon({
         tabId: sender.tab.id,
-        path: {128: 'icon-128.png'}
+        path: {128: 'icons/icon-128.png'}
       });
 
       const {
@@ -31,7 +31,7 @@ const handleMessage = (message, sender, sendResponse) => {
         https,
         ssh
       } = message;
-      const url = encodeURI(`jetbrains-toolbox-clone-popup.html?project=${project}&https=${https}&ssh=${ssh}`);
+      const url = encodeURI(`popups/clone.html?project=${project}&https=${https}&ssh=${ssh}`);
       chrome.action.setPopup(
         {
           tabId: sender.tab.id,
@@ -42,12 +42,12 @@ const handleMessage = (message, sender, sendResponse) => {
     case 'disable-page-action':
       chrome.action.setIcon({
         tabId: sender.tab.id,
-        path: {128: 'icon-disabled-128.png'}
+        path: {128: 'icons/icon-disabled-128.png'}
       });
       chrome.action.setPopup(
         {
           tabId: sender.tab.id,
-          popup: chrome.runtime.getURL('jetbrains-toolbox-disabled-popup.html')
+          popup: chrome.runtime.getURL('popups/disabled.html')
         }
       );
       break;
