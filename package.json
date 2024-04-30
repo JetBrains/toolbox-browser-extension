@@ -5,10 +5,13 @@
   "license": "Apache-2.0",
   "scripts": {
     "prebuild": "eslint .",
-    "build": "webpack --bail --mode production",
+    "build:chrome": "webpack --bail --mode production --env browser=chrome",
+    "build:firefox": "webpack --bail --mode production --env browser=firefox",
     "postbuild": "node .scripts/generate-readme.js | node .scripts/generate-license-list.js",
-    "build:dev": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug",
-    "watch": "webpack -w",
+    "build:dev:chrome": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug --env browser=chrome",
+    "build:dev:firefox": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug --env browser=firefox",
+    "watch:chrome": "webpack -w --env browser=chrome",
+    "watch:firefox": "webpack -w --env browser=firefox",
     "prepare": "husky",
     "postinstall": "node .scripts/ensure-core.js"
   },

@@ -7,7 +7,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
-module.exports = {
+module.exports = env => ({
   entry: {
     'github-public': './github-public',
     'gitlab-public': './gitlab-public',
@@ -68,7 +68,7 @@ module.exports = {
     }),
     new CopyWebpackPlugin({
       patterns: [
-        {from: 'manifest.json'},
+        {from: 'manifest.json', context: `manifests/${env.browser}/`},
         {from: 'icons/*'},
         {from: 'pages/*'},
         {from: 'popups/*'},
@@ -77,4 +77,4 @@ module.exports = {
       ]
     })
   ]
-};
+});
