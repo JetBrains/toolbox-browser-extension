@@ -95,3 +95,8 @@ export const CLONE_PROTOCOLS = {
   HTTPS: 'HTTPS',
   SSH: 'SSH'
 };
+
+export const BROWSERS = {
+  CHROME: 'chrome',
+  FIREFOX: 'firefox'
+};

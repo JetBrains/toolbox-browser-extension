@@ -3,6 +3,7 @@
 import {observe} from 'selector-observer';
 
 import {
+  BROWSERS,
   CLONE_PROTOCOLS,
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
@@ -15,6 +16,15 @@ import {
   getToolboxURN,
   parseLineNumber
 } from '../../api/toolbox';
+
+/*
+ https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Sharing_objects_with_page_scripts
+  - more on wrappedJSObject
+ https://stackoverflow.com/questions/40572065/calling-webpage-javascript-methods-from-browser-extension
+  - folks do the same thing
+ TODO: make the jquery popup work in Firefox to have one code for both browsers
+*/
+const getBrowser = () => (window.wrappedJSObject ? BROWSERS.FIREFOX : BROWSERS.CHROME);
 
 const extractExtensionEntry = (extensionElement, selector) =>
   extensionElement.querySelector(selector)?.textContent?.trim() ?? '';
@@ -289,6 +299,41 @@ const removeCloneButtons = () => {
   document.querySelector('.item[data-type="http"]')?.click();
 };
 
+const executeChromeScript = eventName => {
+  document.dispatchEvent(new CustomEvent(eventName, {}));
+};
+
+const executeFirefoxScript = scriptContent => {
+  const script = document.createElement('script');
+  script.textContent = scriptContent;
+  document.body.append(script);
+  script.remove();
+};
+
+const initOpenButtonsTooltips = () => {
+  switch (getBrowser()) {
+    case BROWSERS.CHROME:
+      executeChromeScript('init-open-buttons-tooltips');
+      break;
+    case BROWSERS.FIREFOX:
+      executeFirefoxScript('window.jQuery(".js-open-button").popup({position:"bottom center"});');
+      break;
+    // no default
+  }
+};
+
+const destroyOpenButtonsTooltips = () => {
+  switch (getBrowser()) {
+    case BROWSERS.CHROME:
+      executeChromeScript('destroy-open-buttons-tooltips');
+      break;
+    case BROWSERS.FIREFOX:
+      executeFirefoxScript('window.jQuery(".js-open-button").popup("destroy");');
+      break;
+    // no default
+  }
+};
+
 const renderOpenButtons = (optionsElement, tools, metadata) => {
   const openButtons = tools.map(tool => {
     const openButton = document.createElement('a');
@@ -319,12 +364,11 @@ const renderOpenButtons = (optionsElement, tools, metadata) => {
   openButtonContainer.classList.add('js-open-buttons');
   openButtonContainer.append(...openButtons);
   optionsElement.insertAdjacentElement('beforeend', openButtonContainer);
-
-  document.dispatchEvent(new CustomEvent('init-open-buttons-tooltips', {}));
+  initOpenButtonsTooltips();
 };
 
 const removeOpenButtons = () => {
-  document.dispatchEvent(new CustomEvent('destroy-open-buttons-tooltips', {}));
+  destroyOpenButtonsTooltips();
   document.querySelector('.js-open-buttons')?.remove();
 };
 
@@ -332,9 +376,6 @@ const startTrackingDOMChanges = (tools, metadata) =>
   observe('#tree-content-holder .blob-header-title .options', {
     add(options) {
       renderOpenButtons(options, tools, metadata);
-    },
-    remove() {
-      removeOpenButtons();
     }
   });
 

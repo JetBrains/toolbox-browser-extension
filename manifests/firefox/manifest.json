@@ -22,12 +22,7 @@
     },
     {
       "matches": ["https://gitee.com/*"],
-      "js": ["jetbrains-toolbox-gitee.js"]
-    },
-    {
-      "world": "MAIN",
-      "matches": ["https://gitee.com/*"],
-      "js": ["providers/gitee/assets/scripts.js"],
+      "js": ["jetbrains-toolbox-gitee.js"],
       "css": ["providers/gitee/assets/styles.css"]
     },
     {
