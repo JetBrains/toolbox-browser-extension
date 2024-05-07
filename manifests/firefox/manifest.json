@@ -48,9 +48,7 @@
     "https://github.com/*",
     "https://gitlab.com/*",
     "https://bitbucket.org/*",
-    "https://gitee.com/*"
-  ],
-  "optional_host_permissions": [
+    "https://gitee.com/*",
     "http://*/*",
     "https://*/*"
   ]
