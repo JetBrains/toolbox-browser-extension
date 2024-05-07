@@ -14,7 +14,7 @@ function getTabUrl(tabId) {
         func: () => window.location.href
       },
       results => {
-        if (!chrome.runtime.lastError && results && results.length > 0) {
+        if (!chrome.runtime.lastError && results?.length > 0 && results[0] != null) {
           const url = results[0].result;
           resolve(url);
         } else {
