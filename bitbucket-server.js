@@ -6,14 +6,14 @@ import {
   SUPPORTED_TOOLS,
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
-} from './constants';
+} from './constants.js';
 
 import {
   getToolboxURN,
   getToolboxNavURN,
   callToolbox,
   parseLineNumber
-} from './api/toolbox';
+} from './api/toolbox.js';
 
 const CLONE_CONTAINER_JS_CSS_CLASS = 'js-toolbox-clone-repo';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';

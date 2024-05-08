@@ -1,13 +1,14 @@
-/* eslint-env node */
-/* eslint-disable import/no-commonjs */
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-const path = require('path');
+import TerserPlugin from 'terser-webpack-plugin';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
+import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 
-const TerserPlugin = require('terser-webpack-plugin');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const NodePolyfillPlugin = require('node-polyfill-webpack-plugin');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-module.exports = env => ({
+export default env => ({
   entry: {
     'github-public': './github-public',
     'gitlab-public': './gitlab-public',

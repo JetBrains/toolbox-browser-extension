@@ -1,4 +1,4 @@
-import toolboxify from './gitlab';
+import toolboxify from './gitlab.js';
 
 if (!window.hasRun) {
   window.hasRun = true;

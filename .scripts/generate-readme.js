@@ -1,9 +1,10 @@
-const childProcess = require('child_process');
-const fs = require('fs');
-const os = require('os');
+import childProcess from 'child_process';
+import fs from 'fs';
+import os from 'os';
 
 const readme = fs.createWriteStream('dist/README.md');
 
+// eslint-disable-next-line max-len
 readme.write('This is an open source project which is hosted on GitHub: [https://github.com/JetBrains/toolbox-browser-extension/](https://github.com/JetBrains/toolbox-browser-extension/).\n');
 readme.write('\nUse the following data as your reference:\n');
 

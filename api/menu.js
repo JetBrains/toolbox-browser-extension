@@ -1,7 +1,6 @@
-import 'regenerator-runtime/runtime';
-import {getManifestPermissions, getAdditionalPermissions} from 'webext-additional-permissions';
+import {normalizeManifestPermissions, queryAdditionalPermissions} from 'webext-permissions';
 
-import {getActiveTabId, setActiveTabId} from './storage';
+import {getActiveTabId, setActiveTabId} from './storage.js';
 
 const MENU_ITEM_ID = 'jetbrains-toolbox-toggle-domain';
 const DETECT_ENTERPRISE_CONTENT_SCRIPT = 'jetbrains-toolbox-detect-enterprise.js';
@@ -64,21 +63,13 @@ function createMenu() {
 }
 
 function manifestPermissionGranted(url) {
-  return new Promise((resolve, reject) => {
-    getManifestPermissions().
-      then(manifestPermissions => {
-        const domainMatch = generateDomainMatch(url);
-        const granted = manifestPermissions.origins.includes(domainMatch);
-        if (granted) {
-          resolve();
-        } else {
-          reject();
-        }
-      }).
-      catch(() => {
-        reject();
-      });
-  });
+  try {
+    const manifestPermissions = normalizeManifestPermissions();
+    const domainMatch = generateDomainMatch(url);
+    return manifestPermissions.origins.includes(domainMatch);
+  } catch {
+    return false;
+  }
 }
 
 function additionalPermissionGranted(url) {
@@ -123,19 +114,17 @@ function updateMenu(tabId, internalBrowserPage = false) {
 
   getTabUrl(tabId).
     then(tabUrl => {
-      manifestPermissionGranted(tabUrl).
-        then(() => {
-          updateMenuItem({enabled: false, checked: true});
-        }).
-        catch(() => {
-          additionalPermissionGranted(tabUrl).
-            then(() => {
-              updateMenuItem({enabled: true, checked: true});
-            }).
-            catch(() => {
-              updateMenuItem({enabled: true, checked: false});
-            });
-        });
+      if (manifestPermissionGranted(tabUrl)) {
+        updateMenuItem({enabled: false, checked: true});
+      } else {
+        additionalPermissionGranted(tabUrl).
+          then(() => {
+            updateMenuItem({enabled: true, checked: true});
+          }).
+          catch(() => {
+            updateMenuItem({enabled: true, checked: false});
+          });
+      }
     }).
     catch(() => {
       updateMenuItem({enabled: true, checked: false});
@@ -219,7 +208,7 @@ function registerEnterpriseContentScripts(domainMatch) {
 }
 
 function registerContentScripts() {
-  getAdditionalPermissions().
+  queryAdditionalPermissions().
     then(permissions => {
       permissions.origins.forEach(domainMatch => {
         registerEnterpriseContentScripts(domainMatch).catch(() => {

@@ -3,8 +3,8 @@ import {
   saveProtocol,
   getModifyPages,
   saveModifyPages
-} from './api/storage';
-import {createExtensionMenu} from './api/menu';
+} from './api/storage.js';
+import {createExtensionMenu} from './api/menu.js';
 
 const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();

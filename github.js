@@ -12,14 +12,14 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET,
   CLONE_PROTOCOLS
-} from './constants';
+} from './constants.js';
 
 import {
   getToolboxURN,
   getToolboxNavURN,
   callToolbox,
   parseLineNumber
-} from './api/toolbox';
+} from './api/toolbox.js';
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
 const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';

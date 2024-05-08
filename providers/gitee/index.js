@@ -8,14 +8,14 @@ import {
   DEFAULT_LANGUAGE,
   SUPPORTED_LANGUAGES,
   SUPPORTED_TOOLS
-} from '../../constants';
+} from '../../constants.js';
 
 import {
   callToolbox,
   getToolboxNavURN,
   getToolboxURN,
   parseLineNumber
-} from '../../api/toolbox';
+} from '../../api/toolbox.js';
 
 /*
  https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Sharing_objects_with_page_scripts

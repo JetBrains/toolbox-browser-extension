@@ -1,4 +1,4 @@
-import {CLONE_PROTOCOLS} from '../constants';
+import {CLONE_PROTOCOLS} from '../constants.js';
 
 const STORAGE_ITEMS = {
   PROTOCOL: 'protocol',

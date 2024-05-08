@@ -1,30 +1,28 @@
-const fs = require('fs');
+import fs from 'fs';
 
-const readJsonFile = path => new Promise((resolve, reject) => {
-  fs.readFile(path, 'utf8', (ioError, fileContent) => {
-    if (ioError) {
-      reject(ioError);
-    } else {
-      try {
-        const parsedContent = JSON.parse(fileContent);
-        resolve(parsedContent);
-      } catch (e) {
-        reject(e);
-      }
-    }
-  });
-});
+const readJsonFileSync = (path) => {
+  const fileContent = fs.readFileSync(path, 'utf8');
+  return JSON.parse(fileContent);
+};
 
-Promise
-  .all([readJsonFile('./package.json'), readJsonFile('./babel.config.json')])
-  .then(([packageJson, babelConfigJson]) => {
-    const installedCoreJsVersion = packageJson.devDependencies['core-js'].replace('^', '');
-    const requiredCoreJsVersion = babelConfigJson.presets[0][1].corejs;
+const writeJsonFileSync = (path, data) => {
+  const dataString = JSON.stringify(data, null, 2);
+  fs.writeFileSync(path, dataString, 'utf8');
+};
 
-    if (!installedCoreJsVersion.startsWith(requiredCoreJsVersion)) {
-      throw new Error(`The current version of core-js is ${installedCoreJsVersion}, but the babel config requires version ${requiredCoreJsVersion}. Update the babel.config.json file accordingly.`);
-    }
-  })
-  .catch(e => {
-    console.error(e.message);
-  });
+try {
+  const packageJson = readJsonFileSync('./package.json');
+  const babelConfigJson = readJsonFileSync('./babel.config.json');
+
+  const installedCoreJsVersion = packageJson.devDependencies['core-js'].replace('^', '');
+  const requiredCoreJsVersion = babelConfigJson.presets[0][1].corejs;
+
+  if (installedCoreJsVersion !== requiredCoreJsVersion) {
+    console.error(`The current version of core-js ${installedCoreJsVersion} does not match the required version ${requiredCoreJsVersion} in babel.config.json, updating...`);
+    babelConfigJson.presets[0][1].corejs = installedCoreJsVersion;
+    writeJsonFileSync('./babel.config.json', babelConfigJson);
+    console.log('babel.config.json has been updated with the new core-js version.');
+  }
+} catch (error) {
+  console.error(error.message);
+}

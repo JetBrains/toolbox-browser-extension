@@ -6,14 +6,14 @@ import {
   SUPPORTED_TOOLS,
   DEFAULT_LANGUAGE,
   CLONE_PROTOCOLS
-} from './constants';
+} from './constants.js';
 
 import {
   getToolboxURN,
   getToolboxNavURN,
   callToolbox,
   parseLineNumber
-} from './api/toolbox';
+} from './api/toolbox.js';
 
 /* eslint-disable max-len */
 const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR = '[data-qa="page-header-wrapper"] > div > div > div > div > div > button:last-of-type';

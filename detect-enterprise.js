@@ -1,6 +1,6 @@
-import toolboxifyGithub from './github';
-import toolboxifyGitlab from './gitlab';
-import toolboxifyBitbucket from './bitbucket-server';
+import toolboxifyGithub from './github.js';
+import toolboxifyGitlab from './gitlab.js';
+import toolboxifyBitbucket from './bitbucket-server.js';
 
 (function detectEnterprise() {
   const nameMeta = document.querySelector('meta[property="og:site_name"]') ||

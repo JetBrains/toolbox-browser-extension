@@ -1,4 +1,4 @@
-import toolboxify from './github';
+import toolboxify from './github.js';
 
 if (!window.hasRun) {
   window.hasRun = true;
