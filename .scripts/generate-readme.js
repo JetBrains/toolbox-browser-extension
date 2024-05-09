@@ -2,7 +2,8 @@ import childProcess from 'child_process';
 import fs from 'fs';
 import os from 'os';
 
-const readme = fs.createWriteStream('dist/README.md');
+const browser = process.env.BROWSER;
+const readme = fs.createWriteStream(`dist/${browser}/README.md`);
 
 // eslint-disable-next-line max-len
 readme.write('This is an open source project which is hosted on GitHub: [https://github.com/JetBrains/toolbox-browser-extension/](https://github.com/JetBrains/toolbox-browser-extension/).\n');
@@ -41,8 +42,8 @@ readme.write('2. \`cd \'toolbox-browser-extension\'\`\n');
 readme.write(`3. \`git checkout \'${branch}\'\`\n`);
 readme.write(`4. \`git reset --hard \'${longSHA}\'\`\n`);
 readme.write('5. \`yarn install\`\n');
-readme.write('6. \`yarn build\`\n');
-readme.write('\n   The built code is saved in the \'dist\' subdirectory:  \n');
-readme.write('\n7. \`cd \'dist\'\`');
+readme.write(`6. \`yarn build:${browser}\`\n`);
+readme.write(`\n   The built code is saved in the \'dist/${browser}\' subdirectory:  \n`);
+readme.write(`\n7. \`cd \'dist/${browser}\'\``);
 
 readme.end();

@@ -8,7 +8,7 @@ import NodePolyfillPlugin from 'node-polyfill-webpack-plugin';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export default env => ({
+export default () => ({
   entry: {
     'github-public': './github-public',
     'gitlab-public': './gitlab-public',
@@ -19,7 +19,7 @@ export default env => ({
   },
   output: {
     filename: 'jetbrains-toolbox-[name].js',
-    path: path.resolve(__dirname, 'dist')
+    path: path.resolve(__dirname, `dist/${process.env.BROWSER}`),
   },
   module: {
     rules: [
@@ -69,7 +69,7 @@ export default env => ({
     }),
     new CopyWebpackPlugin({
       patterns: [
-        {from: 'manifest.json', context: `manifests/${env.browser}/`},
+        {from: 'manifest.json', context: `manifests/${process.env.BROWSER}/`},
         {from: 'icons/*'},
         {from: 'pages/*'},
         {from: 'popups/*'},
