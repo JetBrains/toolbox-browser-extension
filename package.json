@@ -11,7 +11,7 @@
     "prepare": "husky",
     "postinstall": "node .scripts/ensure-core.js",
     "build:dev": "webpack --bail --mode development --devtool inline-source-map --infrastructure-logging-debug",
-    "watch": "webpack -w --mode development",
+    "watch": "webpack -w --mode development --devtool inline-source-map",
     "build:chrome": "cross-env BROWSER=chrome yarn build",
     "build:firefox": "cross-env BROWSER=firefox yarn build",
     "build:dev:chrome": "cross-env BROWSER=chrome yarn build:dev",
