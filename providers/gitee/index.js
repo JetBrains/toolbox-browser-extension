@@ -32,7 +32,7 @@ const extractExtensionEntry = (extensionElement, selector) =>
 const fetchMetadata = () => {
   const extension = document.querySelector('.gitee-project-extension');
   if (extension == null) {
-    throw new Error('Gitee project extension is not found');
+    throw new Error('Gitee project extension is not found.');
   }
 
   return {

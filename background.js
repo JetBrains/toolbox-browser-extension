@@ -9,9 +9,8 @@ import {createExtensionMenu} from './api/menu.js';
 const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
   const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
-  chrome.runtime.setUninstallURL(uninstallUrl, () => {
-    // eslint-disable-next-line no-void
-    void chrome.runtime.lastError;
+  chrome.runtime.setUninstallURL(uninstallUrl).catch(e => {
+    console.error('Failed to set uninstall URL: %s', e.message);
   });
 
   createExtensionMenu();

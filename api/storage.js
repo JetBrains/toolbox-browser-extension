@@ -12,88 +12,32 @@ const DEFAULTS = {
   ACTIVE_TAB_ID: null
 };
 
-const saveToStorage = (key, value) => new Promise((resolve, reject) => {
-  chrome.storage.local.set({[key]: value}, () => {
-    if (chrome.runtime.lastError) {
-      reject(chrome.runtime.lastError.message);
-    } else {
-      resolve();
-    }
-  });
-});
+const saveToStorage = async (key, value) => {
+  try {
+    await chrome.storage.local.set({[key]: value});
+  } catch (e) {
+    console.error('Failed to save %s: %s to storage: %s', key, value, e.message);
+  }
+};
 
-const getFromStorage = key => new Promise((resolve, reject) => {
-  chrome.storage.local.get([key], result => {
-    if (chrome.runtime.lastError) {
-      reject(chrome.runtime.lastError.message);
-    } else {
-      resolve(result[key]);
-    }
-  });
-});
+const getFromStorage = async (key, defaultValue) => {
+  try {
+    const result = await chrome.storage.local.get([key]);
+    return result[key] ?? defaultValue;
+  } catch (e) {
+    console.error('Failed to get %s from storage: %s', key, e.message);
+    return defaultValue;
+  }
+};
 
-export function getProtocol() {
-  return new Promise(resolve => {
-    getFromStorage(STORAGE_ITEMS.PROTOCOL).
-      then(protocol => {
-        resolve(protocol ?? DEFAULTS.PROTOCOL);
-      }).
-      catch(() => {
-        resolve(DEFAULTS.PROTOCOL);
-      });
-  });
-}
+export const getProtocol = () => getFromStorage(STORAGE_ITEMS.PROTOCOL, DEFAULTS.PROTOCOL);
 
-export function saveProtocol(protocol) {
-  return new Promise(resolve => {
-    saveToStorage(STORAGE_ITEMS.PROTOCOL, protocol).
-      then(resolve).
-      catch(() => {
-        resolve();
-      });
-  });
-}
+export const saveProtocol = protocol => saveToStorage(STORAGE_ITEMS.PROTOCOL, protocol);
 
-export function getModifyPages() {
-  return new Promise(resolve => {
-    getFromStorage(STORAGE_ITEMS.MODIFY_PAGES).
-      then(allow => {
-        resolve(allow ?? DEFAULTS.MODIFY_PAGES);
-      }).
-      catch(() => {
-        resolve(DEFAULTS.MODIFY_PAGES);
-      });
-  });
-}
+export const getModifyPages = () => getFromStorage(STORAGE_ITEMS.MODIFY_PAGES, DEFAULTS.MODIFY_PAGES);
 
-export function saveModifyPages(allow) {
-  return new Promise(resolve => {
-    saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow).
-      then(resolve).
-      catch(() => {
-        resolve();
-      });
-  });
-}
+export const saveModifyPages = allow => saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow);
 
-export function getActiveTabId() {
-  return new Promise(resolve => {
-    getFromStorage(STORAGE_ITEMS.ACTIVE_TAB_ID).
-      then(activeTabId => {
-        resolve(activeTabId ?? DEFAULTS.ACTIVE_TAB_ID);
-      }).
-      catch(() => {
-        resolve(DEFAULTS.ACTIVE_TAB_ID);
-      });
-  });
-}
+export const getActiveTabId = () => getFromStorage(STORAGE_ITEMS.ACTIVE_TAB_ID, DEFAULTS.ACTIVE_TAB_ID);
 
-export function setActiveTabId(tabId) {
-  return new Promise(resolve => {
-    saveToStorage(STORAGE_ITEMS.ACTIVE_TAB_ID, tabId ?? DEFAULTS.ACTIVE_TAB_ID).
-      then(resolve).
-      catch(() => {
-        resolve();
-      });
-  });
-}
+export const setActiveTabId = tabId => saveToStorage(STORAGE_ITEMS.ACTIVE_TAB_ID, tabId ?? DEFAULTS.ACTIVE_TAB_ID);
