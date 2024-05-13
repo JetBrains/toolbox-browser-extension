@@ -241,49 +241,41 @@ const renderCloneButtons = (tools, metadata) => {
     // preselect the JetBrains tab
     jbTab.click();
 
-    // eslint-disable-next-line complexity
-    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    chrome.runtime.onMessage.addListener((message) => {
       switch (message.type) {
-      case 'get-tools':
-        sendResponse(tools);
-        break;
-      case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
-        break;
-      case 'protocol-changed': {
-        switch (message.newValue) {
-          case CLONE_PROTOCOLS.HTTPS: {
-            httpsInput.checked = true;
-            let item = content.querySelector('.http-item');
-            if (item) {
-              item.style.display = '';
+        case 'protocol-changed': {
+          switch (message.newValue) {
+            case CLONE_PROTOCOLS.HTTPS: {
+              httpsInput.checked = true;
+              let item = content.querySelector('.http-item');
+              if (item) {
+                item.style.display = '';
+              }
+              item = content.querySelector('.ssh-item');
+              if (item) {
+                item.style.display = 'none';
+              }
+              break;
             }
-            item = content.querySelector('.ssh-item');
-            if (item) {
-              item.style.display = 'none';
+            case CLONE_PROTOCOLS.SSH: {
+              sshInput.checked = true;
+              let item = content.querySelector('.ssh-item');
+              if (item) {
+                item.style.display = '';
+              }
+              item = content.querySelector('.http-item');
+              if (item) {
+                item.style.display = 'none';
+              }
+              break;
             }
-            break;
+            // no default
           }
-          case CLONE_PROTOCOLS.SSH: {
-            sshInput.checked = true;
-            let item = content.querySelector('.ssh-item');
-            if (item) {
-              item.style.display = '';
-            }
-            item = content.querySelector('.http-item');
-            if (item) {
-              item.style.display = 'none';
-            }
-            break;
-          }
-          // no default
+          break;
         }
-        break;
-      }
-      default:
-        // unknown message
-        break;
+        default:
+          // unknown message
+          break;
       }
     });
   }
@@ -394,9 +386,16 @@ try {
       renderCloneButtons(tools, metadata);
       DOMObserver = startTrackingDOMChanges(tools, metadata);
     }
-    chrome.runtime.onMessage.addListener(message => {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       switch (message.type) {
-        case 'modify-pages-changed':
+      case 'get-tools':
+        sendResponse(tools);
+        break;
+      case 'perform-action':
+        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
+        callToolbox(toolboxAction);
+        break;
+      case 'modify-pages-changed':
           if (message.newValue) {
             renderCloneButtons(tools, metadata);
             DOMObserver = startTrackingDOMChanges(tools, metadata);

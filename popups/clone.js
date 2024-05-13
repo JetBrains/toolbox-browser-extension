@@ -1,4 +1,4 @@
-function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
+const createOpenToolAction = (tool, project, httpsUrl, sshUrl) => {
   const toolAction = document.createElement('button');
   toolAction.setAttribute('type', 'button');
   toolAction.setAttribute('class', 'tool-action');
@@ -32,7 +32,7 @@ function createOpenToolAction(tool, project, httpsUrl, sshUrl) {
   return toolAction;
 }
 
-function setToolActionClickHandler(action) {
+const setToolActionClickHandler = (action) => {
   action.addEventListener('click', e => {
     e.preventDefault();
 
@@ -64,21 +64,29 @@ inputs.forEach(input => {
 });
 
 chrome.tabs.query({active: true, currentWindow: true}, tabs => {
-  chrome.runtime.sendMessage({type: 'get-protocol'}, data => {
-    const protocolInput = document.querySelector(`.js-protocol-input[value="${data.protocol}"]`);
-    protocolInput.checked = true;
-  });
-
-  chrome.tabs.sendMessage(tabs[0].id, {type: 'get-tools'}, tools => {
-    if (tools == null) {
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    tools.forEach(tool => {
-      fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
+  chrome.runtime.sendMessage({type: 'get-protocol'})
+    .then(data => {
+      const protocolInput = document.querySelector(`.js-protocol-input[value="${data.protocol}"]`);
+      protocolInput.checked = true;
+    })
+    .catch(e => {
+      console.error(`Failed to get protocol. ${e.message}`);
     });
-    document.querySelector('.js-tool-action-placeholder').remove();
-    document.querySelector('.js-tool-actions').append(fragment);
-  });
+
+  chrome.tabs.sendMessage(tabs[0].id, {type: 'get-tools'})
+    .then(tools => {
+      if (tools == null) {
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+      tools.forEach(tool => {
+        fragment.append(createOpenToolAction(tool, query.project, query.https, query.ssh));
+      });
+      document.querySelector('.js-tool-action-placeholder').remove();
+      document.querySelector('.js-tool-actions').append(fragment);
+    })
+    .catch(e => {
+      console.error(`Failed to get tools. ${e.message}`);
+    });
 });
