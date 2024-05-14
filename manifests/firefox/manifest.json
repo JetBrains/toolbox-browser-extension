@@ -51,5 +51,10 @@
     "https://gitee.com/*",
     "http://*/*",
     "https://*/*"
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{bf9e77ee-c405-4dd7-9bed-2f55e448d19a}"
+    }
+  }
 }
