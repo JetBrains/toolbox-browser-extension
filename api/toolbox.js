@@ -12,7 +12,10 @@ export function getToolboxURN(toolTag, cloneUrl) {
 export function getToolboxNavURN(toolTag, project, filePath, lineNumber = null) {
   const lineIndex = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
   const columnIndex = convertNumberToIndex(1);
-  return `jetbrains://${toolTag}/navigate/reference?project=${project}&path=${filePath}:${lineIndex}:${columnIndex}`;
+  const encodedToolTag = encodeURIComponent(toolTag);
+  const encodedProject = encodeURIComponent(project);
+  // eslint-disable-next-line max-len
+  return `jetbrains://${encodedToolTag}/navigate/reference?project=${encodedProject}&path=${filePath}:${lineIndex}:${columnIndex}`;
 }
 
 export function callToolbox(action) {
