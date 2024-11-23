@@ -46,18 +46,14 @@ export default () => ({
             booleans: false,
             expression: false,
             sequences: false,
-            /* eslint-disable camelcase */
             join_vars: false,
             keep_classnames: true,
             keep_fnames: true
-            /* eslint-enable camelcase */
           },
           format: {
             beautify: true,
             comments: false,
-            /* eslint-disable camelcase */
             indent_level: 2
-            /* eslint-enable camelcase */
           }
         }
       })
@@ -65,7 +61,7 @@ export default () => ({
   },
   plugins: [
     new NodePolyfillPlugin({
-      includeAliases: ['url', 'process']
+      additionalAliases: ['url', 'process']
     }),
     new CopyWebpackPlugin({
       patterns: [

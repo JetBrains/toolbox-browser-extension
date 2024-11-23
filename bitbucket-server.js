@@ -27,7 +27,6 @@ const fetchMetadata = () => new Promise((resolve, reject) => {
   }
   // normalize metadata
   const metadata = {
-    // eslint-disable-next-line camelcase
     api_url: `${location.origin}/rest/api/latest/projects/${parsedStashUrl.owner}/repos/${parsedStashUrl.name}`,
     branch: parsedStashUrl.branch,
     repo: parsedStashUrl.name,

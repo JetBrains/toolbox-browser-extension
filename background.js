@@ -16,7 +16,6 @@ const handleInstalled = () => {
   createExtensionMenu();
 };
 
-// eslint-disable-next-line complexity
 const handleMessage = (message, sender, sendResponse) => {
   switch (message.type) {
     case 'enable-page-action':

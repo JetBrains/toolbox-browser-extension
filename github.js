@@ -413,7 +413,6 @@ class GitHubObserver {
     }
   }
 
-  // eslint-disable-next-line no-unused-vars
   observe(onChange) {
     this._throwNotImplemented(this.observe);
   }
