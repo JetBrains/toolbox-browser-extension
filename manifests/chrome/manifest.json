@@ -43,20 +43,12 @@
     "page": "pages/options.html",
     "open_in_tab": true
   },
-  "permissions": [
-    "activeTab",
-    "contextMenus",
-    "storage",
-    "scripting"
-  ],
+  "permissions": ["activeTab", "contextMenus", "storage", "scripting"],
   "host_permissions": [
     "https://github.com/*",
     "https://gitlab.com/*",
     "https://bitbucket.org/*",
     "https://gitee.com/*"
   ],
-  "optional_host_permissions": [
-    "http://*/*",
-    "https://*/*"
-  ]
+  "optional_host_permissions": ["http://*/*", "https://*/*"]
 }

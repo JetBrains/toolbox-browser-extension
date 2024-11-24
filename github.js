@@ -1,5 +1,5 @@
-import {observe} from 'selector-observer';
-import gh from 'github-url-to-object';
+import { observe } from "selector-observer";
+import gh from "github-url-to-object";
 
 import {
   SUPPORTED_LANGUAGES,
@@ -11,189 +11,225 @@ import {
   MAX_VALID_HTTP_STATUS,
   DEFAULT_LANGUAGE,
   DEFAULT_LANGUAGE_SET,
-  CLONE_PROTOCOLS
-} from './constants.js';
+  CLONE_PROTOCOLS,
+} from "./constants.js";
 
 import {
   getToolboxURN,
   getToolboxNavURN,
   callToolbox,
-  parseLineNumber
-} from './api/toolbox.js';
+  parseLineNumber,
+} from "./api/toolbox.js";
 
-const CLONE_BUTTON_GROUP_JS_CSS_CLASS = 'js-toolbox-clone-button-group';
-const OPEN_BUTTON_JS_CSS_CLASS = 'js-toolbox-open-button';
-const OPEN_MENU_ITEM_JS_CSS_CLASS = 'js-toolbox-open-menu-item';
+const CLONE_BUTTON_GROUP_JS_CSS_CLASS = "js-toolbox-clone-button-group";
+const OPEN_BUTTON_JS_CSS_CLASS = "js-toolbox-open-button";
+const OPEN_MENU_ITEM_JS_CSS_CLASS = "js-toolbox-open-menu-item";
 
-const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR = '.js-blob-header .BtnGroup + div:not(.BtnGroup)';
+const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR =
+  ".js-blob-header .BtnGroup + div:not(.BtnGroup)";
 
 function fetchMetadata() {
-  return document.getElementById('repository-container-header') && gh(window.location.toString(), {enterprise: true});
+  return (
+    document.getElementById("repository-container-header") &&
+    gh(window.location.toString(), { enterprise: true })
+  );
 }
 
-const checkResponseStatus = response => new Promise((resolve, reject) => {
-  if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
-    resolve(response);
-  } else {
-    reject();
-  }
-});
-
-const parseResponse = response => new Promise((resolve, reject) => {
-  response.json().then(result => {
-    if (Object.keys(result).length > 0) {
-      resolve(result);
+const checkResponseStatus = (response) =>
+  new Promise((resolve, reject) => {
+    if (
+      response.status >= MIN_VALID_HTTP_STATUS &&
+      response.status <= MAX_VALID_HTTP_STATUS
+    ) {
+      resolve(response);
     } else {
       reject();
     }
-  }).catch(() => {
-    reject();
   });
-});
 
-const convertBytesToPercents = languages => new Promise(resolve => {
-  const totalBytes = Object.
-    values(languages).
-    reduce((total, bytes) => total + bytes, 0);
+const parseResponse = (response) =>
+  new Promise((resolve, reject) => {
+    response
+      .json()
+      .then((result) => {
+        if (Object.keys(result).length > 0) {
+          resolve(result);
+        } else {
+          reject();
+        }
+      })
+      .catch(() => {
+        reject();
+      });
+  });
 
-  Object.
-    keys(languages).
-    forEach(key => {
-      const percentFloat = languages[key] / totalBytes * HUNDRED_PERCENT;
+const convertBytesToPercents = (languages) =>
+  new Promise((resolve) => {
+    const totalBytes = Object.values(languages).reduce(
+      (total, bytes) => total + bytes,
+      0,
+    );
+
+    Object.keys(languages).forEach((key) => {
+      const percentFloat = (languages[key] / totalBytes) * HUNDRED_PERCENT;
       const percentString = percentFloat.toFixed(MAX_DECIMALS);
       languages[key] = parseFloat(percentString);
     });
 
-  resolve(languages);
-});
+    resolve(languages);
+  });
 
-const extractLanguagesFromPage = githubMetadata => new Promise(resolve => {
-  // TBX-4762: private repos don't let use API, load root page and scrape languages off it
-  fetch(githubMetadata.clone_url).
-    then(response => response.text()).
-    then(htmlString => {
-      const parser = new DOMParser();
-      const htmlDocument = parser.parseFromString(htmlString, 'text/html');
-      const languageElements = htmlDocument.querySelectorAll('.repository-lang-stats-numbers .lang');
-      if (languageElements.length === 0) {
-        // see if it's new UI as of 24.06.20
-        const newLanguageElements = htmlDocument.querySelectorAll(
-          '[data-ga-click="Repository, language stats search click, location:repo overview"]'
+const extractLanguagesFromPage = (githubMetadata) =>
+  new Promise((resolve) => {
+    // TBX-4762: private repos don't let use API, load root page and scrape languages off it
+    fetch(githubMetadata.clone_url)
+      .then((response) => response.text())
+      .then((htmlString) => {
+        const parser = new DOMParser();
+        const htmlDocument = parser.parseFromString(htmlString, "text/html");
+        const languageElements = htmlDocument.querySelectorAll(
+          ".repository-lang-stats-numbers .lang",
         );
-        if (newLanguageElements.length > 0) {
-          const allLanguages = Array.from(newLanguageElements).reduce((acc, el) => {
-            const langEl = el.querySelector('span');
-            const percentEl = langEl.nextElementSibling;
-            acc[langEl.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-            return acc;
-          }, {});
-          if (Object.keys(allLanguages).length > 0) {
-            resolve(allLanguages);
+        if (languageElements.length === 0) {
+          // see if it's new UI as of 24.06.20
+          const newLanguageElements = htmlDocument.querySelectorAll(
+            '[data-ga-click="Repository, language stats search click, location:repo overview"]',
+          );
+          if (newLanguageElements.length > 0) {
+            const allLanguages = Array.from(newLanguageElements).reduce(
+              (acc, el) => {
+                const langEl = el.querySelector("span");
+                const percentEl = langEl.nextElementSibling;
+                acc[langEl.textContent] = percentEl
+                  ? parseFloat(percentEl.textContent)
+                  : USAGE_THRESHOLD + 1;
+                return acc;
+              },
+              {},
+            );
+            if (Object.keys(allLanguages).length > 0) {
+              resolve(allLanguages);
+            } else {
+              resolve(DEFAULT_LANGUAGE_SET);
+            }
           } else {
             resolve(DEFAULT_LANGUAGE_SET);
           }
         } else {
-          resolve(DEFAULT_LANGUAGE_SET);
+          const allLanguages = Array.from(languageElements).reduce(
+            (acc, el) => {
+              const percentEl = el.nextElementSibling;
+              acc[el.textContent] = percentEl
+                ? parseFloat(percentEl.textContent)
+                : USAGE_THRESHOLD + 1;
+              return acc;
+            },
+            {},
+          );
+          resolve(allLanguages);
         }
-      } else {
-        const allLanguages = Array.from(languageElements).reduce((acc, el) => {
-          const percentEl = el.nextElementSibling;
-          acc[el.textContent] = percentEl ? parseFloat(percentEl.textContent) : USAGE_THRESHOLD + 1;
-          return acc;
-        }, {});
-        resolve(allLanguages);
-      }
-    }).
-    catch(() => {
-      resolve(DEFAULT_LANGUAGE_SET);
-    });
-});
+      })
+      .catch(() => {
+        resolve(DEFAULT_LANGUAGE_SET);
+      });
+  });
 
-const fetchLanguages = githubMetadata => new Promise(resolve => {
-  fetch(`${githubMetadata.api_url}/languages`).
-    then(checkResponseStatus).
-    then(parseResponse).
-    then(convertBytesToPercents).
-    then(resolve).
-    catch(() => {
-      extractLanguagesFromPage(githubMetadata).
-        then(resolve);
-    });
-});
+const fetchLanguages = (githubMetadata) =>
+  new Promise((resolve) => {
+    fetch(`${githubMetadata.api_url}/languages`)
+      .then(checkResponseStatus)
+      .then(parseResponse)
+      .then(convertBytesToPercents)
+      .then(resolve)
+      .catch(() => {
+        extractLanguagesFromPage(githubMetadata).then(resolve);
+      });
+  });
 
-const selectTools = languages => new Promise(resolve => {
-  const overallPoints = Object.
-    values(languages).
-    reduce((overall, current) => overall + current, 0);
+const selectTools = (languages) =>
+  new Promise((resolve) => {
+    const overallPoints = Object.values(languages).reduce(
+      (overall, current) => overall + current,
+      0,
+    );
 
-  const filterLang = language =>
-    SUPPORTED_LANGUAGES[language.toLowerCase()] && languages[language] / overallPoints > USAGE_THRESHOLD;
+    const filterLang = (language) =>
+      SUPPORTED_LANGUAGES[language.toLowerCase()] &&
+      languages[language] / overallPoints > USAGE_THRESHOLD;
 
-  const selectedToolIds = Object.
-    keys(languages).
-    filter(filterLang).
-    reduce((acc, key) => {
-      acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
-      return acc;
-    }, []);
+    const selectedToolIds = Object.keys(languages)
+      .filter(filterLang)
+      .reduce((acc, key) => {
+        acc.push(...SUPPORTED_LANGUAGES[key.toLowerCase()]);
+        return acc;
+      }, []);
 
-  const normalizedToolIds = selectedToolIds.length > 0
-    ? Array.from(new Set(selectedToolIds))
-    : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+    const normalizedToolIds =
+      selectedToolIds.length > 0
+        ? Array.from(new Set(selectedToolIds))
+        : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-  const tools = normalizedToolIds.
-    sort().
-    map(toolId => SUPPORTED_TOOLS[toolId]);
+    const tools = normalizedToolIds
+      .sort()
+      .map((toolId) => SUPPORTED_TOOLS[toolId]);
 
-  resolve(tools);
-});
+    resolve(tools);
+  });
 
-const fetchTools = githubMetadata => fetchLanguages(githubMetadata).then(selectTools);
+const fetchTools = (githubMetadata) =>
+  fetchLanguages(githubMetadata).then(selectTools);
 
-const getHttpsCloneUrl = githubMetadata => `${githubMetadata.clone_url}.git`;
-const getSshCloneUrl =
-  githubMetadata => `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
+const getHttpsCloneUrl = (githubMetadata) => `${githubMetadata.clone_url}.git`;
+const getSshCloneUrl = (githubMetadata) =>
+  `git@${githubMetadata.host}:${githubMetadata.user}/${githubMetadata.repo}.git`;
 
 let handleMessage = null;
 
-const renderPageAction = githubMetadata => new Promise(resolve => {
-  if (handleMessage && chrome.runtime.onMessage.hasListener(handleMessage)) {
-    chrome.runtime.onMessage.removeListener(handleMessage);
-  }
-  handleMessage = (message, sender, sendResponse) => {
-    switch (message.type) {
-      case 'get-tools':
-        fetchTools(githubMetadata).then(sendResponse);
-        return true;
-      case 'perform-action':
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
-        callToolbox(toolboxAction);
-        break;
-      // no default
+const renderPageAction = (githubMetadata) =>
+  new Promise((resolve) => {
+    if (handleMessage && chrome.runtime.onMessage.hasListener(handleMessage)) {
+      chrome.runtime.onMessage.removeListener(handleMessage);
     }
-    return undefined;
-  };
-  chrome.runtime.onMessage.addListener(handleMessage);
+    handleMessage = (message, sender, sendResponse) => {
+      switch (message.type) {
+        case "get-tools":
+          fetchTools(githubMetadata).then(sendResponse);
+          return true;
+        case "perform-action":
+          const toolboxAction = getToolboxURN(
+            message.toolTag,
+            message.cloneUrl,
+          );
+          callToolbox(toolboxAction);
+          break;
+        // no default
+      }
+      return undefined;
+    };
+    chrome.runtime.onMessage.addListener(handleMessage);
 
-  resolve();
-});
+    resolve();
+  });
 
 const removeCloneButtons = () => {
-  const cloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+  const cloneButtonGroup = document.querySelector(
+    `.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
+  );
   if (cloneButtonGroup) {
     cloneButtonGroup.parentElement.removeChild(cloneButtonGroup);
   }
 };
 
 const addCloneButtonEventHandler = (btn, githubMetadata) => {
-  btn.addEventListener('click', e => {
+  btn.addEventListener("click", (e) => {
     e.preventDefault();
 
-    const {toolTag} = e.currentTarget.dataset;
-    chrome.runtime.sendMessage({type: 'get-protocol'}, ({protocol}) => {
-      const cloneUrl = protocol === CLONE_PROTOCOLS.HTTPS
-        ? getHttpsCloneUrl(githubMetadata)
-        : getSshCloneUrl(githubMetadata);
+    const { toolTag } = e.currentTarget.dataset;
+    chrome.runtime.sendMessage({ type: "get-protocol" }, ({ protocol }) => {
+      const cloneUrl =
+        protocol === CLONE_PROTOCOLS.HTTPS
+          ? getHttpsCloneUrl(githubMetadata)
+          : getSshCloneUrl(githubMetadata);
       const action = getToolboxURN(toolTag, cloneUrl);
       callToolbox(action);
     });
@@ -201,22 +237,22 @@ const addCloneButtonEventHandler = (btn, githubMetadata) => {
 };
 
 const createCloneButton = (tool, githubMetadata, small = true) => {
-  const button = document.createElement('a');
+  const button = document.createElement("a");
   button.setAttribute(
-    'class',
-    `btn ${small ? 'btn-sm' : ''} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item m-0`
+    "class",
+    `btn ${small ? "btn-sm" : ""} tooltipped tooltipped-s tooltipped-multiline BtnGroup-item m-0`,
   );
-  button.setAttribute('href', '#');
-  button.setAttribute('aria-label', `Clone in ${tool.name}`);
-  button.setAttribute('style', 'align-items:center');
+  button.setAttribute("href", "#");
+  button.setAttribute("aria-label", `Clone in ${tool.name}`);
+  button.setAttribute("style", "align-items:center");
   button.dataset.toolTag = tool.tag;
 
-  const buttonIcon = document.createElement('img');
-  buttonIcon.setAttribute('alt', tool.name);
-  buttonIcon.setAttribute('src', tool.icon);
-  buttonIcon.setAttribute('width', '16');
-  buttonIcon.setAttribute('height', '16');
-  buttonIcon.setAttribute('style', 'vertical-align:text-top');
+  const buttonIcon = document.createElement("img");
+  buttonIcon.setAttribute("alt", tool.name);
+  buttonIcon.setAttribute("src", tool.icon);
+  buttonIcon.setAttribute("width", "16");
+  buttonIcon.setAttribute("height", "16");
+  buttonIcon.setAttribute("style", "vertical-align:text-top");
   button.appendChild(buttonIcon);
 
   addCloneButtonEventHandler(button, githubMetadata);
@@ -225,56 +261,71 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
 };
 
 const renderCloneButtons = (tools, githubMetadata) => {
-  let getRepoController = document.querySelector('.BtnGroup + .d-flex > get-repo-controller');
+  let getRepoController = document.querySelector(
+    ".BtnGroup + .d-flex > get-repo-controller",
+  );
   getRepoController = getRepoController
     ? getRepoController.parentElement
-    : document.querySelector('.js-get-repo-select-menu');
+    : document.querySelector(".js-get-repo-select-menu");
 
   if (getRepoController) {
-    const toolboxCloneButtonGroup = document.createElement('div');
-    toolboxCloneButtonGroup.setAttribute('class', `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
+    const toolboxCloneButtonGroup = document.createElement("div");
+    toolboxCloneButtonGroup.setAttribute(
+      "class",
+      `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
+    );
 
-    tools.forEach(tool => {
+    tools.forEach((tool) => {
       const btn = createCloneButton(tool, githubMetadata);
       toolboxCloneButtonGroup.appendChild(btn);
     });
 
-    getRepoController.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+    getRepoController.insertAdjacentElement(
+      "beforebegin",
+      toolboxCloneButtonGroup,
+    );
   } else {
     // new UI as of 24.06.20
-    getRepoController = document.querySelector('get-repo');
+    getRepoController = document.querySelector("get-repo");
     if (getRepoController) {
-      const summary = getRepoController.querySelector('summary');
+      const summary = getRepoController.querySelector("summary");
       // the Code tab contains the green Code button (primary),
       // the Pull requests tab contains the ordinary Code button (outlined)
-      const isOnCodeTab = summary && summary.classList.contains('Button--primary');
+      const isOnCodeTab =
+        summary && summary.classList.contains("Button--primary");
 
-      const toolboxCloneButtonGroup = document.createElement('div');
+      const toolboxCloneButtonGroup = document.createElement("div");
       toolboxCloneButtonGroup.setAttribute(
-        'class',
-        `BtnGroup ${isOnCodeTab
-          ? 'd-block ml-2'
-          : 'flex-md-order-2'} ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`
+        "class",
+        `BtnGroup ${
+          isOnCodeTab ? "d-block ml-2" : "flex-md-order-2"
+        } ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
       );
 
-      tools.forEach(tool => {
+      tools.forEach((tool) => {
         const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
         toolboxCloneButtonGroup.appendChild(btn);
       });
 
-      getRepoController.parentElement.insertAdjacentElement('beforebegin', toolboxCloneButtonGroup);
+      getRepoController.parentElement.insertAdjacentElement(
+        "beforebegin",
+        toolboxCloneButtonGroup,
+      );
     }
   }
 };
 
 const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
-  domElement.addEventListener('click', e => {
+  domElement.addEventListener("click", (e) => {
     e.preventDefault();
 
-    const {user, repo, branch} = githubMetadata;
-    const normalizedBranch = branch.split('/').shift();
-    const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, '');
-    const lineNumber = parseLineNumber(location.hash.replace('#L', ''));
+    const { user, repo, branch } = githubMetadata;
+    const normalizedBranch = branch.split("/").shift();
+    const filePath = location.pathname.replace(
+      `/${user}/${repo}/blob/${normalizedBranch}/`,
+      "",
+    );
+    const lineNumber = parseLineNumber(location.hash.replace("#L", ""));
 
     callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
   });
@@ -284,12 +335,14 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
 // we have to re-create open actions b/c their click handlers got lost somehow
 const removeOpenButtons = () => {
   const actions = document.querySelectorAll(`.${OPEN_BUTTON_JS_CSS_CLASS}`);
-  actions.forEach(action => {
+  actions.forEach((action) => {
     action.parentElement.removeChild(action);
   });
 
-  const menuItems = document.querySelectorAll(`.${OPEN_MENU_ITEM_JS_CSS_CLASS}`);
-  menuItems.forEach(item => {
+  const menuItems = document.querySelectorAll(
+    `.${OPEN_MENU_ITEM_JS_CSS_CLASS}`,
+  );
+  menuItems.forEach((item) => {
     item.parentElement.removeChild(item);
   });
 };
@@ -300,16 +353,19 @@ const removePageButtons = () => {
 };
 
 const createOpenButton = (tool, githubMetadata) => {
-  const action = document.createElement('a');
-  action.setAttribute('class', `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`);
-  action.setAttribute('aria-label', `Open this file in ${tool.name}`);
-  action.setAttribute('href', '#');
+  const action = document.createElement("a");
+  action.setAttribute(
+    "class",
+    `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`,
+  );
+  action.setAttribute("aria-label", `Open this file in ${tool.name}`);
+  action.setAttribute("href", "#");
 
-  const actionIcon = document.createElement('img');
-  actionIcon.setAttribute('alt', tool.name);
-  actionIcon.setAttribute('src', tool.icon);
-  actionIcon.setAttribute('width', '16');
-  actionIcon.setAttribute('height', '16');
+  const actionIcon = document.createElement("img");
+  actionIcon.setAttribute("alt", tool.name);
+  actionIcon.setAttribute("src", tool.icon);
+  actionIcon.setAttribute("width", "16");
+  actionIcon.setAttribute("height", "16");
   action.appendChild(actionIcon);
 
   addOpenButtonEventHandler(action, tool, githubMetadata);
@@ -318,34 +374,36 @@ const createOpenButton = (tool, githubMetadata) => {
 };
 
 const createOpenMenuItem = (tool, first, githubMetadata) => {
-  const menuItem = document.createElement('a');
-  menuItem.setAttribute('class', 'dropdown-item');
-  menuItem.setAttribute('role', 'menu-item');
-  menuItem.setAttribute('href', '#');
+  const menuItem = document.createElement("a");
+  menuItem.setAttribute("class", "dropdown-item");
+  menuItem.setAttribute("role", "menu-item");
+  menuItem.setAttribute("href", "#");
   if (first) {
-    menuItem.style.borderTop = '1px solid #eaecef';
+    menuItem.style.borderTop = "1px solid #eaecef";
   }
   menuItem.textContent = `Open in ${tool.name}`;
 
   addOpenButtonEventHandler(menuItem, tool, githubMetadata);
-  menuItem.addEventListener('click', () => {
-    const blobToolbar = document.querySelector('.BlobToolbar');
+  menuItem.addEventListener("click", () => {
+    const blobToolbar = document.querySelector(".BlobToolbar");
     if (blobToolbar) {
-      blobToolbar.removeAttribute('open');
+      blobToolbar.removeAttribute("open");
     }
   });
 
-  const menuItemContainer = document.createElement('li');
-  menuItemContainer.setAttribute('class', OPEN_MENU_ITEM_JS_CSS_CLASS);
+  const menuItemContainer = document.createElement("li");
+  menuItemContainer.setAttribute("class", OPEN_MENU_ITEM_JS_CSS_CLASS);
   menuItemContainer.appendChild(menuItem);
 
   return menuItemContainer;
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
-  const actionAnchorElement = document.querySelector(BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR);
+  const actionAnchorElement = document.querySelector(
+    BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR,
+  );
   const actionAnchorFragment = document.createDocumentFragment();
-  const blobToolbarDropdown = document.querySelector('.BlobToolbar-dropdown');
+  const blobToolbarDropdown = document.querySelector(".BlobToolbar-dropdown");
 
   tools.forEach((tool, toolIndex) => {
     if (actionAnchorElement) {
@@ -353,7 +411,11 @@ const renderOpenButtons = (tools, githubMetadata) => {
       actionAnchorFragment.appendChild(action);
     }
     if (blobToolbarDropdown) {
-      const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
+      const menuItem = createOpenMenuItem(
+        tool,
+        toolIndex === 0,
+        githubMetadata,
+      );
       blobToolbarDropdown.appendChild(menuItem);
     }
   });
@@ -362,54 +424,51 @@ const renderOpenButtons = (tools, githubMetadata) => {
   }
 };
 
-const renderPageButtons = githubMetadata => {
-  fetchTools(githubMetadata).
-    then(tools => {
+const renderPageButtons = (githubMetadata) => {
+  fetchTools(githubMetadata)
+    .then((tools) => {
       removePageButtons();
       renderCloneButtons(tools, githubMetadata);
       renderOpenButtons(tools, githubMetadata);
-    }).
-    catch(() => {
+    })
+    .catch(() => {
       // do nothing
     });
 };
 
-const startTrackingDOMChanges = githubMetadata =>
-  observe(
-    `get-repo, ${BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR}`,
-    {
-      add() {
-        renderPageButtons(githubMetadata);
-      },
-      remove() {
-        removePageButtons();
-      }
-    }
-  );
+const startTrackingDOMChanges = (githubMetadata) =>
+  observe(`get-repo, ${BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR}`, {
+    add() {
+      renderPageButtons(githubMetadata);
+    },
+    remove() {
+      removePageButtons();
+    },
+  });
 
-const stopTrackingDOMChanges = observer => {
+const stopTrackingDOMChanges = (observer) => {
   if (observer) {
     observer.abort();
   }
 };
 
-const enablePageAction = githubMetadata => {
+const enablePageAction = (githubMetadata) => {
   chrome.runtime.sendMessage({
-    type: 'enable-page-action',
+    type: "enable-page-action",
     project: githubMetadata.repo,
     https: getHttpsCloneUrl(githubMetadata),
-    ssh: getSshCloneUrl(githubMetadata)
+    ssh: getSshCloneUrl(githubMetadata),
   });
 };
 
 const disablePageAction = () => {
-  chrome.runtime.sendMessage({type: 'disable-page-action'});
+  chrome.runtime.sendMessage({ type: "disable-page-action" });
 };
 
 class GitHubObserver {
   constructor() {
     if (this.constructor === GitHubObserver) {
-      throw new Error('Abstract classes can\'t be instantiated.');
+      throw new Error("Abstract classes can't be instantiated.");
     }
   }
 
@@ -441,12 +500,9 @@ class DomObserver extends GitHubObserver {
 
     return (...args) => {
       clearTimeout(timer);
-      timer = setTimeout(
-        () => {
-          callback.apply(this, args);
-        },
-        timeout
-      );
+      timer = setTimeout(() => {
+        callback.apply(this, args);
+      }, timeout);
     };
   }
 
@@ -457,30 +513,30 @@ class DomObserver extends GitHubObserver {
 
     const onChangeDebounced = this._debounce(onChange);
 
-    this._observer = new MutationObserver(mutationList => {
+    this._observer = new MutationObserver((mutationList) => {
       for (const mutation of mutationList) {
         if (
-          mutation.type === 'attributes' &&
-          (mutation.attributeName === 'aria-busy' || mutation.attributeName === 'data-turbo-loaded')
+          mutation.type === "attributes" &&
+          (mutation.attributeName === "aria-busy" ||
+            mutation.attributeName === "data-turbo-loaded")
         ) {
           onChangeDebounced();
         }
       }
     });
 
-    this._observer.observe(document.querySelector('html'), {attributes: true});
+    this._observer.observe(document.querySelector("html"), {
+      attributes: true,
+    });
 
-    this._observer = observe(
-      '#repository-container-header',
-      {
-        add() {
-          onChangeDebounced();
-        },
-        remove() {
-          onChangeDebounced();
-        }
-      }
-    );
+    this._observer = observe("#repository-container-header", {
+      add() {
+        onChangeDebounced();
+      },
+      remove() {
+        onChangeDebounced();
+      },
+    });
   }
 
   abort() {
@@ -506,7 +562,7 @@ class HistoryObserver extends GitHubObserver {
       setTimeout(onChange);
     };
 
-    window.addEventListener('popstate', this._handlePopState);
+    window.addEventListener("popstate", this._handlePopState);
   }
 
   abort() {
@@ -514,7 +570,7 @@ class HistoryObserver extends GitHubObserver {
       return;
     }
 
-    window.removeEventListener('popstate', this._handlePopState);
+    window.removeEventListener("popstate", this._handlePopState);
 
     this._handlePopState = null;
   }
@@ -546,8 +602,12 @@ class ProjectObserver extends GitHubObserver {
 
     const handleChange = () => {
       const metadata = fetchMetadata();
-      const enteredProject = Boolean(metadata) && (!this._metadata || metadata.clone_url !== this._metadata.clone_url);
-      const leftProject = Boolean(this._metadata) && (!metadata || this._metadata.clone_url !== metadata.clone_url);
+      const enteredProject =
+        Boolean(metadata) &&
+        (!this._metadata || metadata.clone_url !== this._metadata.clone_url);
+      const leftProject =
+        Boolean(this._metadata) &&
+        (!metadata || this._metadata.clone_url !== metadata.clone_url);
 
       if (enteredProject) {
         onProjectEnter(metadata);
@@ -580,9 +640,9 @@ const toolboxify = () => {
   let githubMetadata = null;
   let DOMObserver = null;
 
-  const handleInnerMessage = message => {
+  const handleInnerMessage = (message) => {
     switch (message.type) {
-      case 'modify-pages-changed':
+      case "modify-pages-changed":
         if (message.newValue) {
           DOMObserver = startTrackingDOMChanges(githubMetadata);
         } else {
@@ -595,14 +655,14 @@ const toolboxify = () => {
 
   const projectObserver = new ProjectObserver();
   projectObserver.observe(
-    metadata => {
+    (metadata) => {
       githubMetadata = metadata;
 
       renderPageAction(metadata).then(() => {
         enablePageAction(metadata);
       });
 
-      chrome.runtime.sendMessage({type: 'get-modify-pages'}, response => {
+      chrome.runtime.sendMessage({ type: "get-modify-pages" }, (response) => {
         if (response.allow) {
           DOMObserver = startTrackingDOMChanges(githubMetadata);
         }
@@ -613,7 +673,7 @@ const toolboxify = () => {
       disablePageAction();
       stopTrackingDOMChanges(DOMObserver);
       chrome.runtime.onMessage.removeListener(handleInnerMessage);
-    }
+    },
   );
 };
 

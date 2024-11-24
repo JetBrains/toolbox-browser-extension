@@ -1,18 +1,19 @@
-import toolboxifyGithub from './github.js';
-import toolboxifyGitlab from './gitlab.js';
-import toolboxifyBitbucket from './bitbucket-server.js';
+import toolboxifyGithub from "./github.js";
+import toolboxifyGitlab from "./gitlab.js";
+import toolboxifyBitbucket from "./bitbucket-server.js";
 
 (function detectEnterprise() {
-  const nameMeta = document.querySelector('meta[property="og:site_name"]') ||
+  const nameMeta =
+    document.querySelector('meta[property="og:site_name"]') ||
     document.querySelector('meta[name="application-name"]');
   if (nameMeta) {
     const siteName = nameMeta.content;
-    if (siteName.startsWith('GitHub')) {
+    if (siteName.startsWith("GitHub")) {
       toolboxifyGithub();
-    } else if (siteName.startsWith('GitLab')) {
+    } else if (siteName.startsWith("GitLab")) {
       toolboxifyGitlab();
-    } else if (siteName.startsWith('Bitbucket')) {
+    } else if (siteName.startsWith("Bitbucket")) {
       toolboxifyBitbucket();
     }
   }
-}());
+})();

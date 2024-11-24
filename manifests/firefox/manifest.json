@@ -38,12 +38,7 @@
     "page": "pages/options.html",
     "open_in_tab": true
   },
-  "permissions": [
-    "activeTab",
-    "contextMenus",
-    "storage",
-    "scripting"
-  ],
+  "permissions": ["activeTab", "contextMenus", "storage", "scripting"],
   "host_permissions": [
     "https://github.com/*",
     "https://gitlab.com/*",

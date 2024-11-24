@@ -1,183 +1,189 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Open project in JetBrains IDEs</title>
-  <link rel="stylesheet" href="popup.css">
-  <style>
-    @keyframes placeholder-animation {
-      0%,
-      100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <title>Open project in JetBrains IDEs</title>
+    <link rel="stylesheet" href="popup.css" />
+    <style>
+      @keyframes placeholder-animation {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
 
-    body {
-      padding-left: 0;
-      padding-right: 0;
-    }
+      body {
+        padding-left: 0;
+        padding-right: 0;
+      }
 
-    .protocol {
-      display: flex;
-      flex-direction: row;
-      padding-left: var(--body-h-padding);
-      padding-right: var(--body-h-padding);
-    }
+      .protocol {
+        display: flex;
+        flex-direction: row;
+        padding-left: var(--body-h-padding);
+        padding-right: var(--body-h-padding);
+      }
 
-    .protocol__input {
-      display: none;
-    }
+      .protocol__input {
+        display: none;
+      }
 
-    .protocol__text {
-      border: solid 1px var(--item-border-color);
-      cursor: pointer;
-      line-height: 2;
-      padding: 0;
-      text-align: center;
-      width: 50%;
-    }
+      .protocol__text {
+        border: solid 1px var(--item-border-color);
+        cursor: pointer;
+        line-height: 2;
+        padding: 0;
+        text-align: center;
+        width: 50%;
+      }
 
-    .protocol__text:first-of-type {
-      border-right-style: none;
-      border-bottom-left-radius: 3px;
-      border-top-left-radius: 3px;
-      padding-right: 1px;
-    }
+      .protocol__text:first-of-type {
+        border-right-style: none;
+        border-bottom-left-radius: 3px;
+        border-top-left-radius: 3px;
+        padding-right: 1px;
+      }
 
-    .protocol__text:last-of-type {
-      border-left-style: none;
-      border-bottom-right-radius: 3px;
-      border-top-right-radius: 3px;
-      padding-left: 1px;
-    }
+      .protocol__text:last-of-type {
+        border-left-style: none;
+        border-bottom-right-radius: 3px;
+        border-top-right-radius: 3px;
+        padding-left: 1px;
+      }
 
-    .protocol__input:hover + .protocol__text,
-    .protocol__input:checked + .protocol__text {
-      background-color: var(--selected-item-background-color);
-      border-color: var(--selected-item-border-color);
-    }
+      .protocol__input:hover + .protocol__text,
+      .protocol__input:checked + .protocol__text {
+        background-color: var(--selected-item-background-color);
+        border-color: var(--selected-item-border-color);
+      }
 
-    .protocol__input:checked + .protocol__text {
-      color: var(--title);
-    }
+      .protocol__input:checked + .protocol__text {
+        color: var(--title);
+      }
 
-    .protocol__input:checked + .protocol__text:first-of-type {
-      border-right-style: solid;
-      padding-right: 0;
-    }
+      .protocol__input:checked + .protocol__text:first-of-type {
+        border-right-style: solid;
+        padding-right: 0;
+      }
 
-    .protocol__input:checked + .protocol__text:last-of-type {
-      border-left-style: solid;
-      padding-left: 0;
-    }
+      .protocol__input:checked + .protocol__text:last-of-type {
+        border-left-style: solid;
+        padding-left: 0;
+      }
 
-    .tool-actions {
-      align-items: stretch;
-      display: flex;
-      flex-direction: column;
-    }
+      .tool-actions {
+        align-items: stretch;
+        display: flex;
+        flex-direction: column;
+      }
 
-    .tool-action {
-      align-items: center;
-      background-color: var(--main-background-color);
-      border-style: none;
-      color: var(--main-color);
-      cursor: pointer;
-      display: flex;
-      font-size: 0.75rem;
-      line-height: 1.334;
-      outline-style: none;
-      padding: var(--tool-action-v-padding) var(--body-h-padding);
-      white-space: nowrap;
-    }
+      .tool-action {
+        align-items: center;
+        background-color: var(--main-background-color);
+        border-style: none;
+        color: var(--main-color);
+        cursor: pointer;
+        display: flex;
+        font-size: 0.75rem;
+        line-height: 1.334;
+        outline-style: none;
+        padding: var(--tool-action-v-padding) var(--body-h-padding);
+        white-space: nowrap;
+      }
 
-    .tool-action:hover {
-      background-color: var(--list-hover-background-color);
-    }
+      .tool-action:hover {
+        background-color: var(--list-hover-background-color);
+      }
 
-    .tool-action__icon {
-      box-sizing: border-box;
-      margin-right: 0.5rem;
-      width: var(--icon-size);
-      height: var(--icon-size);
-    }
+      .tool-action__icon {
+        box-sizing: border-box;
+        margin-right: 0.5rem;
+        width: var(--icon-size);
+        height: var(--icon-size);
+      }
 
-    .tool-action__text {
-      align-items: flex-start;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+      .tool-action__text {
+        align-items: flex-start;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
 
-    .tool-action__tool {
-      color: var(--title);
-      font-size: 0.875rem;
-      line-height: 1.429;
-      font-weight: bold;
-    }
+      .tool-action__tool {
+        color: var(--title);
+        font-size: 0.875rem;
+        line-height: 1.429;
+        font-weight: bold;
+      }
 
-    .tool-action__project {
-      overflow: hidden;
-      text-align: left;
-      text-overflow: ellipsis;
-      width: 100%;
-    }
+      .tool-action__project {
+        overflow: hidden;
+        text-align: left;
+        text-overflow: ellipsis;
+        width: 100%;
+      }
 
-    .protocol + .tool-actions {
-      margin-top: 0.5rem;
-    }
+      .protocol + .tool-actions {
+        margin-top: 0.5rem;
+      }
 
-    .tool-action_placeholder .tool-action__icon,
-    .tool-action_placeholder .tool-action__tool,
-    .tool-action_placeholder .tool-action__project {
-      border-radius: 100rem;
-      color: transparent;
-      animation: 1.5s ease-in-out 0s infinite normal running placeholder-animation;
-      background: linear-gradient(to right, #eee 2%, #ddd 18%, #eee 33%);
-      background-size: 500px;
-      -moz-user-select: none;
-      user-select: none;
-    }
+      .tool-action_placeholder .tool-action__icon,
+      .tool-action_placeholder .tool-action__tool,
+      .tool-action_placeholder .tool-action__project {
+        border-radius: 100rem;
+        color: transparent;
+        animation: 1.5s ease-in-out 0s infinite normal running
+          placeholder-animation;
+        background: linear-gradient(to right, #eee 2%, #ddd 18%, #eee 33%);
+        background-size: 500px;
+        -moz-user-select: none;
+        user-select: none;
+      }
 
-    .tool-action_placeholder .tool-action__tool {
-      width: 5.4rem;
-      height: 0.82rem;
-    }
+      .tool-action_placeholder .tool-action__tool {
+        width: 5.4rem;
+        height: 0.82rem;
+      }
 
-    .tool-action_placeholder .tool-action__project {
-      width: 8.8rem;
-      height: 0.5rem;
-      margin-top: 0.5rem;
-    }
-  </style>
-</head>
+      .tool-action_placeholder .tool-action__project {
+        width: 8.8rem;
+        height: 0.5rem;
+        margin-top: 0.5rem;
+      }
+    </style>
+  </head>
 
-<body>
-  <div class="protocol">
-    <input
-      type="radio"
-      name="protocol"
-      class="protocol__input js-protocol-input"
-      id="radHttps"
-      value="HTTPS"
-    ><label for="radHttps" class="protocol__text">Clone with HTTPS</label>
-    <input
-      type="radio"
-      name="protocol"
-      class="protocol__input js-protocol-input"
-      id="radSsh"
-      value="SSH"
-    ><label for="radSsh" class="protocol__text">Clone with SSH</label>
-  </div>
-  <div class="tool-actions js-tool-actions">
-    <div class="tool-action tool-action_placeholder js-tool-action-placeholder">
-      <div class="tool-action__icon"></div>
-      <div class="tool-action__text">
-        <div class="tool-action__tool"></div>
-        <div class="tool-action__project"></div>
+  <body>
+    <div class="protocol">
+      <input
+        type="radio"
+        name="protocol"
+        class="protocol__input js-protocol-input"
+        id="radHttps"
+        value="HTTPS"
+      /><label for="radHttps" class="protocol__text">Clone with HTTPS</label>
+      <input
+        type="radio"
+        name="protocol"
+        class="protocol__input js-protocol-input"
+        id="radSsh"
+        value="SSH"
+      /><label for="radSsh" class="protocol__text">Clone with SSH</label>
+    </div>
+    <div class="tool-actions js-tool-actions">
+      <div
+        class="tool-action tool-action_placeholder js-tool-action-placeholder"
+      >
+        <div class="tool-action__icon"></div>
+        <div class="tool-action__text">
+          <div class="tool-action__tool"></div>
+          <div class="tool-action__project"></div>
+        </div>
       </div>
     </div>
-  </div>
-  <script src="clone.js"></script>
-</body>
-
+    <script src="clone.js"></script>
+  </body>
 </html>
