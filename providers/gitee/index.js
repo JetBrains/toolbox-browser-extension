@@ -6,8 +6,10 @@ import {
   BROWSERS,
   CLONE_PROTOCOLS,
   DEFAULT_LANGUAGE,
+  HUNDRED_PERCENT,
   SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS
+  SUPPORTED_TOOLS,
+  USAGE_THRESHOLD
 } from '../../constants.js';
 
 import {
@@ -26,8 +28,35 @@ import {
 */
 const getBrowser = () => (window.wrappedJSObject ? BROWSERS.FIREFOX : BROWSERS.CHROME);
 
-const extractExtensionEntry = (extensionElement, selector) =>
-  extensionElement.querySelector(selector)?.textContent?.trim() ?? '';
+const defaultFallbackExtractionStrategy = () => '';
+
+const extractAllLanguages = (fallbackExtractionStrategy) => {
+  const languages = [];
+
+  document
+    .querySelectorAll('.summary-languages-popup > .row')
+    .forEach(rowElement => {
+      const langElement = rowElement.querySelector('.lang');
+      const percentageElement = rowElement.querySelector('.percentage');
+      if (langElement && percentageElement) {
+        const percentage = parseFloat(percentageElement.textContent.trim());
+        if (!isNaN(percentage)) {
+          languages.push({
+            language: langElement.textContent.trim(),
+            percentage
+          });
+        }
+      }
+    });
+
+  return languages.length > 0 ? languages : fallbackExtractionStrategy();
+};
+
+const extractExtensionEntry = (
+  extensionElement,
+  selector,
+  fallbackExtractionStrategy = defaultFallbackExtractionStrategy
+) => extensionElement.querySelector(selector)?.textContent?.trim() || fallbackExtractionStrategy();
 
 const fetchMetadata = () => {
   const extension = document.querySelector('.gitee-project-extension');
@@ -36,7 +65,7 @@ const fetchMetadata = () => {
   }
 
   return {
-    language: extractExtensionEntry(extension, '.extension.lang'),
+    language: extractAllLanguages(() => extractExtensionEntry(extension, '.extension.lang')),
     state: extractExtensionEntry(extension, '.extension.public'),
     https: extractExtensionEntry(extension, '.extension.https'),
     ssh: extractExtensionEntry(extension, '.extension.ssh'),
@@ -48,20 +77,36 @@ const fetchMetadata = () => {
 };
 
 const selectTools = (language, metadata) => {
-  // All languages on Gitee match the common list except HTML
-  const lang = language === 'html/css' ? 'html' : language;
+  const languages = Array.isArray(language)
+    ? language
+    : [{ language, percentage: HUNDRED_PERCENT }];
 
-  const selectedTools = lang && SUPPORTED_LANGUAGES[lang.toLowerCase()];
-  const normalizedSelectedTools = selectedTools && selectedTools.length > 0
-    ? selectedTools
+  const normalizedLanguages = languages.map(({ language, percentage }) => {
+    const lowerCasedLanguage = language.toLowerCase();
+    const normalizedLanguage = lowerCasedLanguage === 'html/css' ? 'html' : lowerCasedLanguage;
+    return { language: normalizedLanguage, percentage };
+  });
+
+  const THRESHOLD_PERCENT = USAGE_THRESHOLD * HUNDRED_PERCENT;
+
+  const selectedTools = new Set(
+    normalizedLanguages
+      .filter(({ percentage }) => percentage > THRESHOLD_PERCENT)
+      .flatMap(({ language }) => SUPPORTED_LANGUAGES[language] || [])
+  );
+
+  const toolsToReturn = selectedTools.size > 0
+    ? Array.from(selectedTools)
     : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-  return normalizedSelectedTools.sort().map(toolId => {
-    const tool = SUPPORTED_TOOLS[toolId];
-    tool.httpsUrl = getToolboxURN(tool.tag, metadata.https);
-    tool.sshUrl = getToolboxURN(tool.tag, metadata.ssh);
-    return tool;
-  });
+  return toolsToReturn
+    .sort()
+    .map(toolId => {
+      const tool = { ...SUPPORTED_TOOLS[toolId] };
+      tool.httpsUrl = getToolboxURN(tool.tag, metadata.https);
+      tool.sshUrl = getToolboxURN(tool.tag, metadata.ssh);
+      return tool;
+    });
 };
 
 const menuContainerClickHandler = e => {
@@ -378,7 +423,7 @@ const stopTrackingDOMChanges = observer => {
 
 try {
   const metadata = fetchMetadata();
-  const tools = selectTools(metadata.language.toLowerCase(), metadata);
+  const tools = selectTools(metadata.language, metadata);
 
   chrome.runtime.sendMessage({type: 'get-modify-pages'}, data => {
     let DOMObserver = null;
