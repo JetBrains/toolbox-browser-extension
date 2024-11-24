@@ -1,4 +1,4 @@
-@import "variables.css";
+@import url("variables.css");
 
 html {
   color-scheme: light dark;

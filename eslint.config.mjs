@@ -31,7 +31,7 @@ export default [
     },
   },
   {
-    ignores: ["dist/*", ".scripts/*", "eslint.config.mjs"],
+    ignores: ["dist/*", ".scripts/*", "**/*.mjs"],
   },
   eslintConfigPrettier,
 ];
