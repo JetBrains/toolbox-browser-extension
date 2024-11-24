@@ -2,6 +2,8 @@ import babelParser from "@babel/eslint-parser";
 import globals from "globals";
 import eslintConfigPrettier from "eslint-config-prettier";
 
+const TAB_WIDTH = 2;
+
 export default [
   {
     languageOptions: {
@@ -23,7 +25,7 @@ export default [
       "no-magic-numbers": ["error", { ignore: [0, 1] }],
       indent: [
         "error",
-        2,
+        TAB_WIDTH,
         {
           ignoredNodes: ["TemplateLiteral", "SwitchCase"],
         },
@@ -31,7 +33,7 @@ export default [
     },
   },
   {
-    ignores: ["dist/*", ".scripts/*", "eslint.config.mjs"],
+    ignores: ["dist/*", ".scripts/*"],
   },
   eslintConfigPrettier,
 ];

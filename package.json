@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
-    "prebuild": "eslint .",
+    "prebuild": "eslint . && stylelint '**/*.css'",
     "build": "webpack --bail --mode production",
     "postbuild": "node .scripts/generate-readme.js | node .scripts/generate-license-list.js",
     "prepare": "husky",
@@ -43,14 +43,15 @@
     "lint-staged": "^15.2.2",
     "node-polyfill-webpack-plugin": "^4.0.0",
     "prettier": "^3.3.3",
+    "stylelint": "^16.10.0",
+    "stylelint-config-standard": "^36.0.1",
     "terser-webpack-plugin": "^5.3.10",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
   },
   "lint-staged": {
-    "*.js": [
-      "yarn prebuild --fix"
-    ],
-    "**/*": "prettier --write --ignore-unknown"
+    "*.{js,mjs}": "eslint --fix",
+    "*.css": "stylelint --fix",
+    "**/*.{js,mjs,json,css}": "prettier --write --ignore-unknown"
   }
 }

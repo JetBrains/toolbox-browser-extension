@@ -1,4 +1,4 @@
-@import "page.css";
+@import url("page.css");
 
 .options {
   width: 36rem;
@@ -10,10 +10,12 @@
   display: flex;
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .option__label {
   flex-grow: 1;
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .option__description {
   font-size: 0.8rem;
   padding-right: 2rem;
@@ -24,17 +26,20 @@
   padding: 0.4rem 0;
 }
 
+/* stylelint-disable-next-line selector-class-pattern */
 .extra-buttons .extra-buttons__image {
   max-width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
+  /* stylelint-disable-next-line selector-class-pattern */
   .extra-buttons__image-light {
     display: none;
   }
 }
 
 @media (prefers-color-scheme: light) {
+  /* stylelint-disable-next-line selector-class-pattern */
   .extra-buttons__image-dark {
     display: none;
   }
