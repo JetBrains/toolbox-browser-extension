@@ -7,6 +7,7 @@ import rubymineIcon from "@jetbrains/logos/rubymine/rubymine.svg";
 import webstormIcon from "@jetbrains/logos/webstorm/webstorm.svg";
 import riderIcon from "@jetbrains/logos/rider/rider.svg";
 import golandIcon from "@jetbrains/logos/goland/goland.svg";
+import rustroverIcon from "@jetbrains/logos/rustrover/rustrover.svg";
 
 export const DEFAULT_LANGUAGE = "java";
 
@@ -30,7 +31,7 @@ export const SUPPORTED_LANGUAGES = {
   "c++": ["clion"],
   c: ["clion"],
   ruby: ["rubymine", "idea"],
-  rust: ["clion", "idea"],
+  rust: ["rustrover", "clion", "idea"],
   puppet: ["rubymine", "idea"],
   "objective-c": ["appcode"],
   swift: ["appcode"],
@@ -81,6 +82,11 @@ export const SUPPORTED_TOOLS = {
     name: "GoLand",
     tag: "goland",
     icon: golandIcon,
+  },
+  rustrover: {
+    name: "RustRover",
+    tag: "rustrover",
+    icon: rustroverIcon,
   },
 };
 
