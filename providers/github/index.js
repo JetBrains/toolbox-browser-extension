@@ -49,12 +49,12 @@ const listenToDomChanges = (metadata, tools) => {
 
     const grandparent = input.parentElement.parentElement;
 
-    if (grandparent.nextElementSibling.classList.contains("js-toolbox-tools")) {
+    if (grandparent.nextElementSibling.classList.contains("js-tools-list")) {
       grandparent.parentElement.removeChild(grandparent.nextElementSibling);
     }
 
     const toolsList = document.createElement("ul");
-    toolsList.classList.add("js-toolbox-tools");
+    toolsList.classList.add("js-tools-list");
 
     tools.forEach((tool) => {
       const installedTool = document.createElement("li");
@@ -77,6 +77,12 @@ const listenToDomChanges = (metadata, tools) => {
       toolText.textContent = `Clone with ${tool.name} via ${isSsh ? "SSH" : "HTTPS"}`;
 
       installedTool.appendChild(toolText);
+
+      installedTool.addEventListener("click", (e) => {
+        const cloneUrl = isSsh ? getSshCloneUrl(metadata) : getHttpsCloneUrl(metadata);
+        const action = getToolboxURN(tool.tag, cloneUrl);
+        callToolbox(action);
+      });
 
       toolsList.appendChild(installedTool);
     });

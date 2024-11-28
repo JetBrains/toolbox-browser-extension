@@ -10,6 +10,15 @@
   display: flex;
 }
 
+.installed-tool:hover {
+  /* stylelint-disable custom-property-pattern */
+  background-color: var(
+    --control-transparent-bgColor-hover,
+    var(--color-action-list-item-default-hover-bg, rgb(177 186 196 / 12%))
+  );
+  /* stylelint-enable */
+}
+
 .tool-icon-container {
   display: flex;
   align-items: center;
