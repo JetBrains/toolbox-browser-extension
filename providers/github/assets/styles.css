@@ -1,0 +1,20 @@
+.installed-tool {
+  padding: 16px;
+
+  /* stylelint-disable custom-property-pattern */
+  border-top: 1px solid var(--borderColor-muted, var(--color-border-muted));
+  color: var(--fgColor-default, var(--color-fg-default, #e6edf3));
+  /* stylelint-enable */
+
+  cursor: pointer;
+  display: flex;
+}
+
+.tool-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  margin-right: 8px;
+  width: 16px;
+}

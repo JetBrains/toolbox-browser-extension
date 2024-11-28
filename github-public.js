@@ -1,7 +1,9 @@
-import toolboxify from "./github.js";
+import { toolboxify } from "./providers/github/index.js";
 
-if (!window.hasRun) {
-  window.hasRun = true;
-
-  toolboxify();
-}
+toolboxify(false)
+  .then(() => {
+    console.log("GitHub initialized");
+  })
+  .catch((error) => {
+    console.error("GitHub initialization failed", error);
+  });

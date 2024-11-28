@@ -14,19 +14,13 @@ import {
   CLONE_PROTOCOLS,
 } from "./constants.js";
 
-import {
-  getToolboxURN,
-  getToolboxNavURN,
-  callToolbox,
-  parseLineNumber,
-} from "./api/toolbox.js";
+import { getToolboxURN, getToolboxNavURN, callToolbox, parseLineNumber } from "./api/toolbox.js";
 
 const CLONE_BUTTON_GROUP_JS_CSS_CLASS = "js-toolbox-clone-button-group";
 const OPEN_BUTTON_JS_CSS_CLASS = "js-toolbox-open-button";
 const OPEN_MENU_ITEM_JS_CSS_CLASS = "js-toolbox-open-menu-item";
 
-const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR =
-  ".js-blob-header .BtnGroup + div:not(.BtnGroup)";
+const BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR = ".js-blob-header .BtnGroup + div:not(.BtnGroup)";
 
 function fetchMetadata() {
   return (
@@ -37,10 +31,7 @@ function fetchMetadata() {
 
 const checkResponseStatus = (response) =>
   new Promise((resolve, reject) => {
-    if (
-      response.status >= MIN_VALID_HTTP_STATUS &&
-      response.status <= MAX_VALID_HTTP_STATUS
-    ) {
+    if (response.status >= MIN_VALID_HTTP_STATUS && response.status <= MAX_VALID_HTTP_STATUS) {
       resolve(response);
     } else {
       reject();
@@ -65,10 +56,7 @@ const parseResponse = (response) =>
 
 const convertBytesToPercents = (languages) =>
   new Promise((resolve) => {
-    const totalBytes = Object.values(languages).reduce(
-      (total, bytes) => total + bytes,
-      0,
-    );
+    const totalBytes = Object.values(languages).reduce((total, bytes) => total + bytes, 0);
 
     Object.keys(languages).forEach((key) => {
       const percentFloat = (languages[key] / totalBytes) * HUNDRED_PERCENT;
@@ -96,17 +84,14 @@ const extractLanguagesFromPage = (githubMetadata) =>
             '[data-ga-click="Repository, language stats search click, location:repo overview"]',
           );
           if (newLanguageElements.length > 0) {
-            const allLanguages = Array.from(newLanguageElements).reduce(
-              (acc, el) => {
-                const langEl = el.querySelector("span");
-                const percentEl = langEl.nextElementSibling;
-                acc[langEl.textContent] = percentEl
-                  ? parseFloat(percentEl.textContent)
-                  : USAGE_THRESHOLD + 1;
-                return acc;
-              },
-              {},
-            );
+            const allLanguages = Array.from(newLanguageElements).reduce((acc, el) => {
+              const langEl = el.querySelector("span");
+              const percentEl = langEl.nextElementSibling;
+              acc[langEl.textContent] = percentEl
+                ? parseFloat(percentEl.textContent)
+                : USAGE_THRESHOLD + 1;
+              return acc;
+            }, {});
             if (Object.keys(allLanguages).length > 0) {
               resolve(allLanguages);
             } else {
@@ -116,16 +101,13 @@ const extractLanguagesFromPage = (githubMetadata) =>
             resolve(DEFAULT_LANGUAGE_SET);
           }
         } else {
-          const allLanguages = Array.from(languageElements).reduce(
-            (acc, el) => {
-              const percentEl = el.nextElementSibling;
-              acc[el.textContent] = percentEl
-                ? parseFloat(percentEl.textContent)
-                : USAGE_THRESHOLD + 1;
-              return acc;
-            },
-            {},
-          );
+          const allLanguages = Array.from(languageElements).reduce((acc, el) => {
+            const percentEl = el.nextElementSibling;
+            acc[el.textContent] = percentEl
+              ? parseFloat(percentEl.textContent)
+              : USAGE_THRESHOLD + 1;
+            return acc;
+          }, {});
           resolve(allLanguages);
         }
       })
@@ -169,15 +151,12 @@ const selectTools = (languages) =>
         ? Array.from(new Set(selectedToolIds))
         : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-    const tools = normalizedToolIds
-      .sort()
-      .map((toolId) => SUPPORTED_TOOLS[toolId]);
+    const tools = normalizedToolIds.sort().map((toolId) => SUPPORTED_TOOLS[toolId]);
 
     resolve(tools);
   });
 
-const fetchTools = (githubMetadata) =>
-  fetchLanguages(githubMetadata).then(selectTools);
+const fetchTools = (githubMetadata) => fetchLanguages(githubMetadata).then(selectTools);
 
 const getHttpsCloneUrl = (githubMetadata) => `${githubMetadata.clone_url}.git`;
 const getSshCloneUrl = (githubMetadata) =>
@@ -196,10 +175,7 @@ const renderPageAction = (githubMetadata) =>
           fetchTools(githubMetadata).then(sendResponse);
           return true;
         case "perform-action":
-          const toolboxAction = getToolboxURN(
-            message.toolTag,
-            message.cloneUrl,
-          );
+          const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
           callToolbox(toolboxAction);
           break;
         // no default
@@ -212,9 +188,7 @@ const renderPageAction = (githubMetadata) =>
   });
 
 const removeCloneButtons = () => {
-  const cloneButtonGroup = document.querySelector(
-    `.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
-  );
+  const cloneButtonGroup = document.querySelector(`.${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`);
   if (cloneButtonGroup) {
     cloneButtonGroup.parentElement.removeChild(cloneButtonGroup);
   }
@@ -260,59 +234,92 @@ const createCloneButton = (tool, githubMetadata, small = true) => {
   return button;
 };
 
-const renderCloneButtons = (tools, githubMetadata) => {
-  let getRepoController = document.querySelector(
-    ".BtnGroup + .d-flex > get-repo-controller",
-  );
-  getRepoController = getRepoController
-    ? getRepoController.parentElement
-    : document.querySelector(".js-get-repo-select-menu");
+const renderCloneButtons = (tools, githubMetadata, actionListElement) => {
+  const ghActionsListElement = actionListElement?.children[1]?.children[1];
 
-  if (getRepoController) {
-    const toolboxCloneButtonGroup = document.createElement("div");
-    toolboxCloneButtonGroup.setAttribute(
-      "class",
-      `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
-    );
-
+  if (ghActionsListElement) {
+    const jbActionsListElement = document.createElement("ul");
     tools.forEach((tool) => {
-      const btn = createCloneButton(tool, githubMetadata);
-      toolboxCloneButtonGroup.appendChild(btn);
+      const jbActionElement = document.createElement("li");
+      jbActionElement.style.padding = "16px";
+
+      const iconContainerElement = document.createElement("span");
+      iconContainerElement.style.display = "flex";
+      iconContainerElement.style.alignItems = "center";
+      iconContainerElement.style.justifyContent = "center";
+      iconContainerElement.style.height = "20px";
+      iconContainerElement.style.marginRight = "8px";
+      iconContainerElement.style.minWidth = "16px";
+      iconContainerElement.style.width = "20px";
+
+      const iconElement = document.createElement("img");
+      iconElement.setAttribute("alt", tool.name);
+      iconElement.setAttribute("src", tool.icon);
+      iconElement.setAttribute("width", "16");
+      iconElement.setAttribute("height", "16");
+
+      iconContainerElement.appendChild(iconElement);
+
+      jbActionElement.appendChild(iconContainerElement);
+
+      jbActionsListElement.appendChild(jbActionElement);
     });
 
-    getRepoController.insertAdjacentElement(
-      "beforebegin",
-      toolboxCloneButtonGroup,
-    );
-  } else {
-    // new UI as of 24.06.20
-    getRepoController = document.querySelector("get-repo");
-    if (getRepoController) {
-      const summary = getRepoController.querySelector("summary");
-      // the Code tab contains the green Code button (primary),
-      // the Pull requests tab contains the ordinary Code button (outlined)
-      const isOnCodeTab =
-        summary && summary.classList.contains("Button--primary");
-
-      const toolboxCloneButtonGroup = document.createElement("div");
-      toolboxCloneButtonGroup.setAttribute(
-        "class",
-        `BtnGroup ${
-          isOnCodeTab ? "d-block ml-2" : "flex-md-order-2"
-        } ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
-      );
-
-      tools.forEach((tool) => {
-        const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
-        toolboxCloneButtonGroup.appendChild(btn);
-      });
-
-      getRepoController.parentElement.insertAdjacentElement(
-        "beforebegin",
-        toolboxCloneButtonGroup,
-      );
-    }
+    ghActionsListElement.parentNode.insertBefore(jbActionsListElement, ghActionsListElement);
   }
+
+  // let getRepoController = document.querySelector(
+  //   ".BtnGroup + .d-flex > get-repo-controller",
+  // );
+  // getRepoController = getRepoController
+  //   ? getRepoController.parentElement
+  //   : document.querySelector(".js-get-repo-select-menu");
+
+  // if (getRepoController) {
+  //   const toolboxCloneButtonGroup = document.createElement("div");
+  //   toolboxCloneButtonGroup.setAttribute(
+  //     "class",
+  //     `BtnGroup ml-2 d-flex ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
+  //   );
+  //
+  //   tools.forEach((tool) => {
+  //     const btn = createCloneButton(tool, githubMetadata);
+  //     toolboxCloneButtonGroup.appendChild(btn);
+  //   });
+  //
+  //   getRepoController.insertAdjacentElement(
+  //     "beforebegin",
+  //     toolboxCloneButtonGroup,
+  //   );
+  // } else {
+  //   // new UI as of 24.06.20
+  //   getRepoController = document.querySelector("get-repo");
+  //   if (getRepoController) {
+  //     const summary = getRepoController.querySelector("summary");
+  //     // the Code tab contains the green Code button (primary),
+  //     // the Pull requests tab contains the ordinary Code button (outlined)
+  //     const isOnCodeTab =
+  //       summary && summary.classList.contains("Button--primary");
+  //
+  //     const toolboxCloneButtonGroup = document.createElement("div");
+  //     toolboxCloneButtonGroup.setAttribute(
+  //       "class",
+  //       `BtnGroup ${
+  //         isOnCodeTab ? "d-block ml-2" : "flex-md-order-2"
+  //       } ${CLONE_BUTTON_GROUP_JS_CSS_CLASS}`,
+  //     );
+  //
+  //     tools.forEach((tool) => {
+  //       const btn = createCloneButton(tool, githubMetadata, !isOnCodeTab);
+  //       toolboxCloneButtonGroup.appendChild(btn);
+  //     });
+  //
+  //     getRepoController.parentElement.insertAdjacentElement(
+  //       "beforebegin",
+  //       toolboxCloneButtonGroup,
+  //     );
+  //   }
+  // }
 };
 
 const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
@@ -321,10 +328,7 @@ const addOpenButtonEventHandler = (domElement, tool, githubMetadata) => {
 
     const { user, repo, branch } = githubMetadata;
     const normalizedBranch = branch.split("/").shift();
-    const filePath = location.pathname.replace(
-      `/${user}/${repo}/blob/${normalizedBranch}/`,
-      "",
-    );
+    const filePath = location.pathname.replace(`/${user}/${repo}/blob/${normalizedBranch}/`, "");
     const lineNumber = parseLineNumber(location.hash.replace("#L", ""));
 
     callToolbox(getToolboxNavURN(tool.tag, repo, filePath, lineNumber));
@@ -339,9 +343,7 @@ const removeOpenButtons = () => {
     action.parentElement.removeChild(action);
   });
 
-  const menuItems = document.querySelectorAll(
-    `.${OPEN_MENU_ITEM_JS_CSS_CLASS}`,
-  );
+  const menuItems = document.querySelectorAll(`.${OPEN_MENU_ITEM_JS_CSS_CLASS}`);
   menuItems.forEach((item) => {
     item.parentElement.removeChild(item);
   });
@@ -354,10 +356,7 @@ const removePageButtons = () => {
 
 const createOpenButton = (tool, githubMetadata) => {
   const action = document.createElement("a");
-  action.setAttribute(
-    "class",
-    `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`,
-  );
+  action.setAttribute("class", `btn-octicon tooltipped tooltipped-nw ${OPEN_BUTTON_JS_CSS_CLASS}`);
   action.setAttribute("aria-label", `Open this file in ${tool.name}`);
   action.setAttribute("href", "#");
 
@@ -399,9 +398,7 @@ const createOpenMenuItem = (tool, first, githubMetadata) => {
 };
 
 const renderOpenButtons = (tools, githubMetadata) => {
-  const actionAnchorElement = document.querySelector(
-    BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR,
-  );
+  const actionAnchorElement = document.querySelector(BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR);
   const actionAnchorFragment = document.createDocumentFragment();
   const blobToolbarDropdown = document.querySelector(".BlobToolbar-dropdown");
 
@@ -411,11 +408,7 @@ const renderOpenButtons = (tools, githubMetadata) => {
       actionAnchorFragment.appendChild(action);
     }
     if (blobToolbarDropdown) {
-      const menuItem = createOpenMenuItem(
-        tool,
-        toolIndex === 0,
-        githubMetadata,
-      );
+      const menuItem = createOpenMenuItem(tool, toolIndex === 0, githubMetadata);
       blobToolbarDropdown.appendChild(menuItem);
     }
   });
@@ -424,12 +417,12 @@ const renderOpenButtons = (tools, githubMetadata) => {
   }
 };
 
-const renderPageButtons = (githubMetadata) => {
+const renderPageButtons = (githubMetadata, actionListElement) => {
   fetchTools(githubMetadata)
     .then((tools) => {
-      removePageButtons();
-      renderCloneButtons(tools, githubMetadata);
-      renderOpenButtons(tools, githubMetadata);
+      // removePageButtons();
+      renderCloneButtons(tools, githubMetadata, actionListElement);
+      // renderOpenButtons(tools, githubMetadata);
     })
     .catch(() => {
       // do nothing
@@ -437,9 +430,9 @@ const renderPageButtons = (githubMetadata) => {
 };
 
 const startTrackingDOMChanges = (githubMetadata) =>
-  observe(`get-repo, ${BLOB_HEADER_BUTTON_GROUP_SCC_SELECTOR}`, {
-    add() {
-      renderPageButtons(githubMetadata);
+  observe(`#__primerPortalRoot__ .react-overview-code-button-action-list`, {
+    add(actionListElement) {
+      renderPageButtons(githubMetadata, actionListElement);
     },
     remove() {
       removePageButtons();
@@ -517,8 +510,7 @@ class DomObserver extends GitHubObserver {
       for (const mutation of mutationList) {
         if (
           mutation.type === "attributes" &&
-          (mutation.attributeName === "aria-busy" ||
-            mutation.attributeName === "data-turbo-loaded")
+          (mutation.attributeName === "aria-busy" || mutation.attributeName === "data-turbo-loaded")
         ) {
           onChangeDebounced();
         }
@@ -546,36 +538,6 @@ class DomObserver extends GitHubObserver {
   }
 }
 
-class HistoryObserver extends GitHubObserver {
-  constructor() {
-    super();
-
-    this._handlePopState = null;
-  }
-
-  observe(onChange) {
-    if (this._handlePopState !== null) {
-      return;
-    }
-
-    this._handlePopState = () => {
-      setTimeout(onChange);
-    };
-
-    window.addEventListener("popstate", this._handlePopState);
-  }
-
-  abort() {
-    if (this._handlePopState === null) {
-      return;
-    }
-
-    window.removeEventListener("popstate", this._handlePopState);
-
-    this._handlePopState = null;
-  }
-}
-
 class ProjectObserver extends GitHubObserver {
   constructor() {
     super();
@@ -583,7 +545,6 @@ class ProjectObserver extends GitHubObserver {
     this._isObserving = false;
     this._metadata = null;
     this._domObserver = null;
-    this._historyObserver = null;
   }
 
   observe(onProjectEnter, onProjectLeave) {
@@ -603,11 +564,9 @@ class ProjectObserver extends GitHubObserver {
     const handleChange = () => {
       const metadata = fetchMetadata();
       const enteredProject =
-        Boolean(metadata) &&
-        (!this._metadata || metadata.clone_url !== this._metadata.clone_url);
+        Boolean(metadata) && (!this._metadata || metadata.clone_url !== this._metadata.clone_url);
       const leftProject =
-        Boolean(this._metadata) &&
-        (!metadata || this._metadata.clone_url !== metadata.clone_url);
+        Boolean(this._metadata) && (!metadata || this._metadata.clone_url !== metadata.clone_url);
 
       if (enteredProject) {
         onProjectEnter(metadata);
@@ -619,19 +578,13 @@ class ProjectObserver extends GitHubObserver {
     };
 
     this._domObserver = new DomObserver();
-    this._historyObserver = new HistoryObserver();
-
     this._domObserver.observe(handleChange);
-    // this._historyObserver.observe(handleChange);
   }
 
   abort() {
     if (this._isObserving) {
       this._domObserver.abort();
-      this._historyObserver.abort();
-
       this._domObserver = null;
-      this._historyObserver = null;
     }
   }
 }

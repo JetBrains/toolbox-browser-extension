@@ -21,6 +21,11 @@
       "js": ["jetbrains-toolbox-github-public.js"]
     },
     {
+      "world": "MAIN",
+      "matches": ["https://github.com/*"],
+      "css": ["providers/github/assets/styles.css"]
+    },
+    {
       "matches": ["https://gitee.com/*"],
       "js": ["jetbrains-toolbox-gitee.js"]
     },
