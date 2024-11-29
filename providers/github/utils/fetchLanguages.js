@@ -3,17 +3,17 @@ import {
   HUNDRED_PERCENT,
   MAX_VALID_HTTP_STATUS,
   MIN_VALID_HTTP_STATUS,
-  USAGE_THRESHOLD,
 } from "../../../constants.js";
+import Language from "../../../repositories/language.js";
 
-export const fetchLanguages = async (repoMetadata) => {
+export const fetchLanguages = async (metadata) => {
   try {
-    const response = await fetch(`${repoMetadata.api_url}/languages`);
+    const response = await fetch(metadata.languagesUrl);
     const checkedResponse = validateHttpResponse(response);
     const parsedResponse = await parseHttpResponse(checkedResponse);
     return normalizeLanguages(parsedResponse);
   } catch (error) {
-    return extractLanguagesFromPage(repoMetadata);
+    return extractLanguagesFromPage(metadata);
   }
 };
 
@@ -37,12 +37,12 @@ const normalizeLanguages = (parsedResponse) => {
   );
 };
 
-const extractLanguagesFromPage = async (repoMetadata) => {
+const extractLanguagesFromPage = async (metadata) => {
   const defaultLanguageSet = new Language(DEFAULT_LANGUAGE, HUNDRED_PERCENT);
 
   try {
     // TBX-4762: private repos don't let use API, load root page and scrape languages off it
-    const response = await fetch(repoMetadata.clone_url);
+    const response = await fetch(metadata.projectUrl);
     const htmlString = await response.text();
     const parser = new DOMParser();
     const htmlDocument = parser.parseFromString(htmlString, "text/html");
@@ -62,9 +62,7 @@ const extractLanguagesFromPage = async (repoMetadata) => {
 
           return new Language(
             langEl.textContent.trim(),
-            percentEl
-              ? parseFloat(percentEl.textContent.trim())
-              : USAGE_THRESHOLD + USAGE_THRESHOLD,
+            percentEl ? parseFloat(percentEl.textContent.trim()) : HUNDRED_PERCENT,
           );
         });
 
@@ -78,7 +76,7 @@ const extractLanguagesFromPage = async (repoMetadata) => {
 
         return new Language(
           el.textContent.trim(),
-          percentEl ? parseFloat(percentEl.textContent.trim()) : USAGE_THRESHOLD + USAGE_THRESHOLD,
+          percentEl ? parseFloat(percentEl.textContent.trim()) : HUNDRED_PERCENT,
         );
       });
 
@@ -88,10 +86,3 @@ const extractLanguagesFromPage = async (repoMetadata) => {
     return defaultLanguageSet;
   }
 };
-
-class Language {
-  constructor(name, percentage) {
-    this.name = name;
-    this.percentage = percentage;
-  }
-}

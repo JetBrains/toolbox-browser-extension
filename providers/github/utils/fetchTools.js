@@ -5,13 +5,13 @@ import {
   SUPPORTED_TOOLS,
   USAGE_THRESHOLD,
 } from "../../../constants.js";
-import { fetchLanguages } from "./languages.js";
+import { fetchLanguages } from "./fetchLanguages.js";
 
-export const fetchTools = async (repoMetadata) => {
+export const fetchTools = async (metadata) => {
   const usageThresholdPercents = USAGE_THRESHOLD * HUNDRED_PERCENT;
   const supportedLanguages = Object.keys(SUPPORTED_LANGUAGES);
 
-  const languages = await fetchLanguages(repoMetadata);
+  const languages = await fetchLanguages(metadata);
 
   const languageFilter = (language) =>
     supportedLanguages.includes(language.name.toLowerCase()) &&
