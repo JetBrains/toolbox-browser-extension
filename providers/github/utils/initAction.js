@@ -1,6 +1,6 @@
 import { callToolbox, getToolboxURN } from "../../../api/toolbox.js";
 
-export const initPageAction = async (metadata, tools) => {
+export const initAction = async (metadata, tools) => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "get-tools":

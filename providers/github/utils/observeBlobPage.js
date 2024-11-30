@@ -1,7 +1,7 @@
 import DomObserver from "../../../repositories/dom-observer.js";
 import { callToolbox, getToolboxNavURN } from "../../../api/toolbox.js";
 
-export const extendBlobPage = (metadata, tools) => {
+export const observeBlobPage = (metadata, tools) => {
   const domObserver = new DomObserver("#__primerPortalRoot__ ul[aria-label='Open with...']");
 
   domObserver.start((openWithMenu) => {
