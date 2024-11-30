@@ -10,59 +10,57 @@ export const extendMainPage = (metadata, tools) => {
 
     const grandparent = input.parentElement.parentElement;
 
-    if (grandparent.nextElementSibling?.classList.contains("js-tools-list")) {
+    if (grandparent.nextElementSibling?.classList.contains("js-clone-menu")) {
       grandparent.parentElement.removeChild(grandparent.nextElementSibling);
     }
 
-    const toolsList = createToolsList(metadata, tools, isSsh);
-    grandparent.insertAdjacentElement("afterend", toolsList);
+    const cloneMenu = createCloneMenu(metadata, tools, isSsh);
+    grandparent.insertAdjacentElement("afterend", cloneMenu);
 
     chrome.runtime.sendMessage({
       type: "save-protocol",
       protocol: isSsh ? CLONE_PROTOCOLS.SSH : CLONE_PROTOCOLS.HTTPS,
     });
   });
-
-  document.documentElement.setAttribute("data-js-toolboxified", "");
 };
 
-const createToolsList = (metadata, tools, isSsh) => {
-  const toolsList = document.createElement("ul");
-  toolsList.classList.add("js-tools-list");
+const createCloneMenu = (metadata, tools, isSsh) => {
+  const cloneMenu = document.createElement("ul");
+  cloneMenu.classList.add("js-clone-menu");
 
   tools.forEach((tool) => {
-    const toolItem = createToolItem(metadata, tool, isSsh);
-    toolsList.appendChild(toolItem);
+    const toolItem = createCloneMenuItem(metadata, tool, isSsh);
+    cloneMenu.appendChild(toolItem);
   });
 
-  return toolsList;
+  return cloneMenu;
 };
 
-const createToolItem = (metadata, tool, isSsh) => {
-  const installedTool = document.createElement("li");
-  installedTool.classList.add("installed-tool");
+const createCloneMenuItem = (metadata, tool, isSsh) => {
+  const menuItem = document.createElement("li");
+  menuItem.classList.add("clone-menu-item");
 
-  const toolIconContainer = document.createElement("span");
-  toolIconContainer.classList.add("tool-icon-container");
+  const iconContainer = document.createElement("span");
+  iconContainer.classList.add("clone-menu-item-icon-container");
 
-  const toolIcon = document.createElement("img");
-  toolIcon.setAttribute("alt", tool.name);
-  toolIcon.setAttribute("src", tool.icon);
-  toolIcon.setAttribute("width", "16");
-  toolIcon.setAttribute("height", "16");
+  const icon = document.createElement("img");
+  icon.setAttribute("alt", tool.name);
+  icon.setAttribute("src", tool.icon);
+  icon.setAttribute("width", "16");
+  icon.setAttribute("height", "16");
 
-  toolIconContainer.appendChild(toolIcon);
-  installedTool.appendChild(toolIconContainer);
+  iconContainer.appendChild(icon);
+  menuItem.appendChild(iconContainer);
 
-  const toolText = document.createElement("span");
-  toolText.textContent = `Clone with ${tool.name} via ${isSsh ? "SSH" : "HTTPS"}`;
-  installedTool.appendChild(toolText);
+  const textContainer = document.createElement("span");
+  textContainer.textContent = `Clone with ${tool.name} via ${isSsh ? "SSH" : "HTTPS"}`;
+  menuItem.appendChild(textContainer);
 
-  installedTool.addEventListener("click", () => {
+  menuItem.addEventListener("click", () => {
     const cloneUrl = isSsh ? metadata.sshCloneUrl : metadata.httpsCloneUrl;
     const action = getToolboxURN(tool.tag, cloneUrl);
     callToolbox(action);
   });
 
-  return installedTool;
+  return menuItem;
 };

@@ -26,7 +26,7 @@ export default class GitHubMetadata extends AbstractMetadata {
   }
 
   get httpsCloneUrl() {
-    return `${this.project}.git`;
+    return `${this.projectUrl}.git`;
   }
 
   get sshCloneUrl() {

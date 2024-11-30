@@ -1,16 +1,16 @@
-.installed-tool {
-  padding: 16px;
+/* Clone menu items */
 
+.clone-menu-item {
+  padding: 16px;
   /* stylelint-disable custom-property-pattern */
   border-top: 1px solid var(--borderColor-muted, var(--color-border-muted));
   color: var(--fgColor-default, var(--color-fg-default, #e6edf3));
   /* stylelint-enable */
-
   cursor: pointer;
   display: flex;
 }
 
-.installed-tool:hover {
+.clone-menu-item:hover {
   /* stylelint-disable custom-property-pattern */
   background-color: var(
     --control-transparent-bgColor-hover,
@@ -19,11 +19,61 @@
   /* stylelint-enable */
 }
 
-.tool-icon-container {
+.clone-menu-item-icon-container {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 20px;
   margin-right: 8px;
   width: 16px;
+}
+
+/* Open menu items */
+
+.open-menu-item {
+  position: relative;
+  display: flex;
+  padding: 0;
+  font-size: 14px;
+  line-height: 20px;
+  min-height: 5px;
+  margin-left: 8px;
+  margin-right: 8px;
+  border-radius: 6px;
+  transition: background 33.333ms linear;
+  /* stylelint-disable custom-property-pattern */
+  color: var(--fgColor-default, var(--color-fg-default, #e6edf3));
+  /* stylelint-enable custom-property-pattern */
+  cursor: pointer;
+  appearance: none;
+  background: unset;
+  border: unset;
+  width: calc(100% - 16px);
+  font-family: unset;
+  text-align: unset;
+  margin-top: unset;
+  margin-bottom: unset;
+}
+
+.open-menu-item:hover {
+  /* stylelint-disable custom-property-pattern */
+  background-color: var(
+    --control-transparent-bgColor-hover,
+    var(--color-action-list-item-default-hover-bg, rgb(177 186 196 / 12%))
+  );
+  box-shadow: inset 0 0 0 max(1px, 0.0625rem)
+    var(
+      --control-transparent-borderColor-active,
+      var(--color-action-list-item-default-active-border, transparent)
+    );
+  /* stylelint-enable */
+}
+
+.open-menu-item-link {
+  padding: 6px 8px;
+  display: flex;
+  flex-grow: 1;
+  border-radius: 6px;
+  color: inherit;
+  text-decoration: none;
 }
