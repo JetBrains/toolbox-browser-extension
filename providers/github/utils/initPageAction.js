@@ -1,6 +1,6 @@
 import { callToolbox, getToolboxURN } from "../../../api/toolbox.js";
 
-export const initPageAction = (metadata, tools) => {
+export const initPageAction = async (metadata, tools) => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "get-tools":
@@ -15,7 +15,7 @@ export const initPageAction = (metadata, tools) => {
     return undefined;
   });
 
-  chrome.runtime.sendMessage({
+  await chrome.runtime.sendMessage({
     type: "enable-page-action",
     project: metadata.project,
     https: metadata.httpsCloneUrl,

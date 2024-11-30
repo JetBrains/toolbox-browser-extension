@@ -22,6 +22,8 @@ export const extendMainPage = (metadata, tools) => {
       protocol: isSsh ? CLONE_PROTOCOLS.SSH : CLONE_PROTOCOLS.HTTPS,
     });
   });
+
+  document.documentElement.setAttribute("data-js-toolboxified", "");
 };
 
 const createToolsList = (metadata, tools, isSsh) => {

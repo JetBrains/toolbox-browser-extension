@@ -12,7 +12,7 @@ export async function toolboxify(isEnterprise = false) {
 
   const tools = await fetchTools(metadata);
 
-  initPageAction(metadata, tools);
+  await initPageAction(metadata, tools);
 
   extendMainPage(metadata, tools);
 }
