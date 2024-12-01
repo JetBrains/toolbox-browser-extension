@@ -5,7 +5,7 @@ import { observeMainPage } from "./utils/observeMainPage.js";
 import { setTestData } from "./utils/set-test-data.js";
 import { observeBlobPage } from "./utils/observeBlobPage.js";
 
-export async function toolboxify(isEnterprise = false) {
+export default async function toolboxify(isEnterprise = false) {
   const metadata = fetchMetadata(isEnterprise);
 
   if (!metadata) {

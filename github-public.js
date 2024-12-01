@@ -1,4 +1,4 @@
-import { toolboxify } from "./providers/github/index.js";
+import toolboxify from "./providers/github/index.js";
 
 toolboxify(false)
   .then(() => {

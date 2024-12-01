@@ -1,4 +1,4 @@
-import toolboxifyGithub from "./github.js";
+import toolboxifyGithub from "./providers/github/index.js";
 import toolboxifyGitlab from "./gitlab.js";
 import toolboxifyBitbucket from "./bitbucket-server.js";
 
