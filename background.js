@@ -1,19 +1,10 @@
-import {
-  getProtocol,
-  saveProtocol,
-  getModifyPages,
-  saveModifyPages,
-} from "./api/storage.js";
-import { createExtensionMenu } from "./api/menu.js";
+import { getProtocol, saveProtocol, getModifyPages, saveModifyPages } from "./api/storage.js";
 
 const handleInstalled = () => {
   const manifest = chrome.runtime.getManifest();
-  const uninstallUrl = `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`;
-  chrome.runtime.setUninstallURL(uninstallUrl).catch((e) => {
-    console.error("Failed to set uninstall URL: %s", e.message);
-  });
-
-  createExtensionMenu();
+  void chrome.runtime.setUninstallURL(
+    `https://www.jetbrains.com/toolbox-app/uninstall/extension/?version=${manifest.version}`,
+  );
 };
 
 const handleMessage = (message, sender, sendResponse) => {
@@ -25,9 +16,7 @@ const handleMessage = (message, sender, sendResponse) => {
       });
 
       const { project, https, ssh } = message;
-      const url = encodeURI(
-        `popups/clone.html?project=${project}&https=${https}&ssh=${ssh}`,
-      );
+      const url = encodeURI(`popups/clone.html?project=${project}&https=${https}&ssh=${ssh}`);
       chrome.action.setPopup({
         tabId: sender.tab.id,
         popup: chrome.runtime.getURL(url),

@@ -44,10 +44,9 @@
     "https://github.com/*",
     "https://gitlab.com/*",
     "https://bitbucket.org/*",
-    "https://gitee.com/*",
-    "http://*/*",
-    "https://*/*"
+    "https://gitee.com/*"
   ],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
   "browser_specific_settings": {
     "gecko": {
       "id": "{bf9e77ee-c405-4dd7-9bed-2f55e448d19a}"

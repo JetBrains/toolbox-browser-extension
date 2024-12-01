@@ -6,14 +6,21 @@ import toolboxifyBitbucket from "./bitbucket-server.js";
   const nameMeta =
     document.querySelector('meta[property="og:site_name"]') ||
     document.querySelector('meta[name="application-name"]');
+
   if (nameMeta) {
-    const siteName = nameMeta.content;
-    if (siteName.startsWith("GitHub")) {
-      toolboxifyGithub();
-    } else if (siteName.startsWith("GitLab")) {
-      toolboxifyGitlab();
-    } else if (siteName.startsWith("Bitbucket")) {
-      toolboxifyBitbucket();
+    switch (nameMeta.content) {
+      case "GitHub":
+        toolboxifyGithub();
+        break;
+      case "GitLab":
+        toolboxifyGitlab();
+        break;
+      case "Bitbucket":
+        toolboxifyBitbucket();
+        break;
+      case "Gitee":
+        // toolboxifyGitee();
+        break;
     }
   }
 })();
