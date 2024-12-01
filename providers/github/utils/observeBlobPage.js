@@ -19,10 +19,16 @@ export const observeBlobPage = (metadata, tools) => {
   );
 
   highlightedLineMenuObserver.start((highlightedLineMenu) => {
-    const lastButOneMenuItem = highlightedLineMenu.lastElementChild.previousElementSibling;
+    const viewFileInDifferentBranchMenuItem = highlightedLineMenu.lastElementChild;
+    const viewFileInGitHubDevMenuItem = viewFileInDifferentBranchMenuItem.previousElementSibling;
+    const targetMenuItem =
+      // The text is "View file in GitHub.dev" if user is authenticated, otherwise the text is "View git blame"
+      viewFileInGitHubDevMenuItem.textContent.trim() === "View file in GitHub.dev"
+        ? viewFileInGitHubDevMenuItem
+        : viewFileInDifferentBranchMenuItem;
     const highlightedLineMenuItems = createHighlightedLineMenuItems(metadata, tools);
     highlightedLineMenuItems.forEach((highlightedLineMenuItem) => {
-      lastButOneMenuItem.insertAdjacentElement("beforebegin", highlightedLineMenuItem);
+      targetMenuItem.insertAdjacentElement("beforebegin", highlightedLineMenuItem);
     });
   });
 };
