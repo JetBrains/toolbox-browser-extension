@@ -30,7 +30,8 @@
 
 /* Open menu items */
 
-.open-menu-item {
+.open-menu-item,
+.highlighted-line-menu-item {
   position: relative;
   display: flex;
   padding: 0;
@@ -55,7 +56,8 @@
   margin-bottom: unset;
 }
 
-.open-menu-item:hover {
+.open-menu-item:hover,
+.highlighted-line-menu-item:hover {
   /* stylelint-disable custom-property-pattern */
   background-color: var(
     --control-transparent-bgColor-hover,
@@ -69,7 +71,8 @@
   /* stylelint-enable */
 }
 
-.open-menu-item-link {
+.open-menu-item-link,
+.highlighted-line-menu-item-link {
   padding: 6px 8px;
   display: flex;
   flex-grow: 1;

@@ -39,6 +39,7 @@ const createCloneMenu = (metadata, tools, isSsh) => {
 const createCloneMenuItem = (metadata, tool, isSsh) => {
   const menuItem = document.createElement("li");
   menuItem.classList.add("clone-menu-item");
+  menuItem.dataset.testid = "clone-menu-item";
 
   const iconContainer = document.createElement("span");
   iconContainer.classList.add("clone-menu-item-icon-container");
