@@ -9,9 +9,12 @@ import Language from "../../../repositories/language.js";
 export const fetchLanguages = async (metadata) => {
   try {
     const response = await fetch(metadata.languagesUrl);
-    const checkedResponse = validateHttpResponse(response);
-    const parsedResponse = await parseHttpResponse(checkedResponse);
-    return normalizeLanguages(parsedResponse);
+    if (validateHttpResponse(response)) {
+      const parsedResponse = await parseHttpResponse(response);
+      return normalizeLanguages(parsedResponse);
+    } else {
+      return extractLanguagesFromPage(metadata);
+    }
   } catch (error) {
     return extractLanguagesFromPage(metadata);
   }
@@ -38,7 +41,7 @@ const normalizeLanguages = (parsedResponse) => {
 };
 
 const extractLanguagesFromPage = async (metadata) => {
-  const defaultLanguageSet = new Language(DEFAULT_LANGUAGE, HUNDRED_PERCENT);
+  const defaultLanguageSet = [new Language(DEFAULT_LANGUAGE, HUNDRED_PERCENT)];
 
   try {
     // TBX-4762: private repos don't let use API, load root page and scrape languages off it
