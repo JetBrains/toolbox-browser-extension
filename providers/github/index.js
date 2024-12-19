@@ -1,9 +1,9 @@
-import { fetchMetadata } from "./utils/fetchMetadata.js";
-import { fetchTools } from "./utils/fetchTools.js";
-import { initAction } from "./utils/initAction.js";
-import { observeMainPage } from "./utils/observeMainPage.js";
+import { fetchMetadata } from "./utils/fetch-metadata.js";
+import { fetchTools } from "./utils/fetch-tools.js";
+import { initAction } from "./utils/init-action.js";
+import { observeIndexPage } from "./utils/observe-index-page.js";
 import { setTestData } from "./utils/set-test-data.js";
-import { observeBlobPage } from "./utils/observeBlobPage.js";
+import { observeBlobPage } from "./utils/observe-blob-page.js";
 
 export default async function toolboxify(isEnterprise = false) {
   const metadata = fetchMetadata(isEnterprise);
@@ -14,7 +14,7 @@ export default async function toolboxify(isEnterprise = false) {
 
   const tools = await fetchTools(metadata);
   await initAction(metadata, tools);
-  observeMainPage(metadata, tools);
+  observeIndexPage(metadata, tools);
   observeBlobPage(metadata, tools);
   setTestData();
 }

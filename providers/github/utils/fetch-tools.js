@@ -5,7 +5,7 @@ import {
   SUPPORTED_TOOLS,
   USAGE_THRESHOLD,
 } from "../../../constants.js";
-import { fetchLanguages } from "./fetchLanguages.js";
+import { fetchLanguages } from "./fetch-languages.js";
 
 export const fetchTools = async (metadata) => {
   const usageThresholdPercents = USAGE_THRESHOLD * HUNDRED_PERCENT;
