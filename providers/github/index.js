@@ -9,7 +9,7 @@ export default async function toolboxify(isEnterprise = false) {
   const metadata = fetchMetadata(isEnterprise);
 
   if (!metadata) {
-    return;
+    throw new Error("Failed to fetch metadata");
   }
 
   const tools = await fetchTools(metadata);

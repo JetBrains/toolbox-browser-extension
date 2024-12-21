@@ -1,4 +1,4 @@
-import AbstractMetadata from "../../../repositories/metadata.js";
+import AbstractMetadata from "../../repositories/metadata.js";
 
 export default class GitHubMetadata extends AbstractMetadata {
   constructor(metadata) {
