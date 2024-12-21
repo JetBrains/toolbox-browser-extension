@@ -1,15 +1,15 @@
 import { fetchMetadata } from "./utils/fetch-metadata.js";
 import { fetchTools } from "./utils/fetch-tools.js";
+import { setTestData } from "../utils/set-test-data.js";
 import { initAction } from "../utils/init-action.js";
 import { observeIndexPage } from "./utils/observe-index-page.js";
-import { setTestData } from "../utils/set-test-data.js";
 import { observeBlobPage } from "./utils/observe-blob-page.js";
 
 export default async function toolboxify(isEnterprise = false) {
-  const metadata = fetchMetadata(isEnterprise);
+  const metadata = await fetchMetadata(isEnterprise);
 
   if (!metadata) {
-    return;
+    throw new Error("Failed to fetch metadata");
   }
 
   const tools = await fetchTools(metadata);

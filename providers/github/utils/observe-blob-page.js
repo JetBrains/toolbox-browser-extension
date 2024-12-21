@@ -1,4 +1,4 @@
-import DomObserver from "../../../repositories/dom-observer.js";
+import DomObserver from "../../utils/dom-observer.js";
 import { callToolbox, getToolboxNavURN, parseLineNumber } from "../../../api/toolbox.js";
 
 export const observeBlobPage = (metadata, tools) => {

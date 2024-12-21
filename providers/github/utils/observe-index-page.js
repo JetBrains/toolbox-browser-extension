@@ -1,6 +1,6 @@
 import { CLONE_PROTOCOLS } from "../../../constants.js";
 import { callToolbox, getToolboxURN } from "../../../api/toolbox.js";
-import DomObserver from "../../../repositories/dom-observer.js";
+import DomObserver from "../../utils/dom-observer.js";
 
 export const observeIndexPage = (metadata, tools) => {
   const domObserver = new DomObserver("#clone-with-https, #clone-with-ssh");

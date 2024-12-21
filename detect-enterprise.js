@@ -1,5 +1,5 @@
 import toolboxifyGithub from "./providers/github/index.js";
-import toolboxifyGitlab from "./gitlab.js";
+import toolboxifyGitlab from "./providers/gitlab/index.js";
 import toolboxifyBitbucket from "./bitbucket-server.js";
 
 (function detectEnterprise() {

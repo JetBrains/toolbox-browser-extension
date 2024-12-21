@@ -1,7 +1,8 @@
-import toolboxify from "./gitlab.js";
+import toolboxify from "./providers/gitlab/index.js";
 
-if (!window.hasRun) {
-  window.hasRun = true;
-
-  toolboxify();
+try {
+  await toolboxify(false);
+  console.log("GitLab initialized");
+} catch (error) {
+  console.error("GitLab initialization failed", error);
 }
