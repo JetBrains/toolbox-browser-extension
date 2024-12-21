@@ -10,10 +10,16 @@ export const observeIndexPage = (metadata, tools) => {
     const cloneActionsContainer = parentListItem.nextElementSibling;
     const cloneActionsList = cloneActionsContainer.querySelector("ul");
 
-    const skipIntellijIdea = cloneActionsList.innerText.includes(SUPPORTED_TOOLS.idea.name);
+    let skipIntellijIdea = false;
+    cloneActionsList.querySelectorAll("[data-testid='disclosure-dropdown-item']").forEach((el) => {
+      if (el.textContent.includes(SUPPORTED_TOOLS.idea.name)) {
+        el.dataset.testid = "clone-menu-item";
+        skipIntellijIdea = true;
+      }
+    });
 
     tools
-      .filter((t) => (skipIntellijIdea ? t.tag !== "idea" : true))
+      .filter((t) => (skipIntellijIdea ? t.tag !== SUPPORTED_TOOLS.idea.tag : true))
       .forEach((tool) => {
         const sshItem = createCloneMenuItem(metadata, tool, true);
         cloneActionsList.appendChild(sshItem);
@@ -26,6 +32,7 @@ export const observeIndexPage = (metadata, tools) => {
 const createCloneMenuItem = (metadata, tool, isSsh) => {
   const li = document.createElement("li");
   li.classList.add("gl-new-dropdown-item");
+  li.dataset.testid = "clone-menu-item";
   li.tabIndex = 0;
 
   const a = document.createElement("a");
