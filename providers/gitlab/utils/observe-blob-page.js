@@ -40,6 +40,7 @@ const createOpenButton = (tool, metadata, filePath) => {
   button.setAttribute("type", "button");
   button.setAttribute("aria-label", `Open in ${tool.name}`);
   button.setAttribute("aria-describedby", createTooltip(tool).id);
+  button.dataset.testid = "toolbox-open-button";
   button.dataset.filePath = filePath;
 
   const buttonIcon = document.createElement("img");
@@ -59,6 +60,7 @@ const createTooltip = (tool) => {
   tooltip.id = `toolbox-tooltip-${tool.tag}`;
   tooltip.role = "tooltip";
   tooltip.tabIndex = -1;
+  tooltip.dataset.testid = "toolbox-open-button-tooltip";
   tooltip.setAttribute("class", "tooltip b-tooltip bs-tooltip-top gl-tooltip fade");
   tooltip.style.position = "absolute";
   tooltip.style.display = "none";
