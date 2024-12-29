@@ -1,14 +1,9 @@
-const convertNumberToIndex = (number) => number - 1;
+import { convertNumberToIndex } from "../utils/lineNumber.js";
 
-export const parseLineNumber = (lineNumber) => {
-  const parsedValue = parseInt(lineNumber, 10);
-  return isNaN(parsedValue) ? 1 : parsedValue;
-};
-
-export const getToolboxURN = (toolTag, cloneUrl) =>
+export const getToolboxCloneUrl = (toolTag, cloneUrl) =>
   `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
 
-export const getToolboxNavURN = (toolTag, project, filePath, lineNumber = null) => {
+export const getToolboxNavigateUrl = (toolTag, project, filePath, lineNumber = null) => {
   const lineIndex = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
   const columnIndex = convertNumberToIndex(1);
   const encodedToolTag = encodeURIComponent(toolTag);

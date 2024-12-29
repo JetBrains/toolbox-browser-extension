@@ -1,6 +1,6 @@
-import DomObserver from "../../utils/dom-observer.js";
-import { getToolboxURN } from "../../../api/toolbox.js";
-import { SUPPORTED_TOOLS } from "../../../constants.js";
+import DomObserver from "../../../src/services/DomObserver.js";
+import { getToolboxCloneUrl } from "../../../src/services/Toolbox.js";
+import { SUPPORTED_TOOLS } from "../../../src/models/Tool.js";
 
 export const observeIndexPage = (metadata, tools) => {
   const domObserver = new DomObserver("#copy-http-url-input");
@@ -39,7 +39,7 @@ const createCloneMenuItem = (metadata, tool, isSsh) => {
   a.classList.add("gl-new-dropdown-item-content");
   a.tabIndex = -1;
   a.target = "_self";
-  a.href = getToolboxURN(tool.tag, isSsh ? metadata.sshCloneUrl : metadata.httpsCloneUrl);
+  a.href = getToolboxCloneUrl(tool.tag, isSsh ? metadata.sshCloneUrl : metadata.httpsCloneUrl);
   li.appendChild(a);
 
   const span = document.createElement("span");

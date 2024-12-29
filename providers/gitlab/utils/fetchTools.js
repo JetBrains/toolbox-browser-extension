@@ -1,9 +1,9 @@
-import Language from "../../../repositories/language.js";
-import { selectTools } from "../../utils/select-tools.js";
+import Language from "../../../src/models/Language.js";
+import { getToolsForLanguages } from "../../../src/utils/getToolsForLanguages.js";
 
 export const fetchTools = async (metadata) => {
   const languages = await fetchLanguages(metadata);
-  return selectTools(languages);
+  return getToolsForLanguages(languages);
 };
 
 const fetchLanguages = async (metadata) => {

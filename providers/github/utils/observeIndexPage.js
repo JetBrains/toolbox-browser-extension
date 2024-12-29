@@ -1,6 +1,6 @@
-import { CLONE_PROTOCOLS } from "../../../constants.js";
-import { callToolbox, getToolboxURN } from "../../../api/toolbox.js";
-import DomObserver from "../../utils/dom-observer.js";
+import { callToolbox, getToolboxCloneUrl } from "../../../src/services/Toolbox.js";
+import DomObserver from "../../../src/services/DomObserver.js";
+import { PROTOCOLS } from "../../../src/constants/protocols.js";
 
 export const observeIndexPage = (metadata, tools) => {
   const domObserver = new DomObserver("#clone-with-https, #clone-with-ssh");
@@ -19,7 +19,7 @@ export const observeIndexPage = (metadata, tools) => {
 
     chrome.runtime.sendMessage({
       type: "save-protocol",
-      protocol: isSsh ? CLONE_PROTOCOLS.SSH : CLONE_PROTOCOLS.HTTPS,
+      protocol: isSsh ? PROTOCOLS.SSH : PROTOCOLS.HTTPS,
     });
   });
 };
@@ -59,7 +59,7 @@ const createCloneMenuItem = (metadata, tool, isSsh) => {
 
   menuItem.addEventListener("click", () => {
     const cloneUrl = isSsh ? metadata.sshCloneUrl : metadata.httpsCloneUrl;
-    const action = getToolboxURN(tool.tag, cloneUrl);
+    const action = getToolboxCloneUrl(tool.tag, cloneUrl);
     callToolbox(action);
   });
 

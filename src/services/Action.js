@@ -1,13 +1,13 @@
-import { callToolbox, getToolboxURN } from "../../api/toolbox.js";
+import { callToolbox, getToolboxCloneUrl } from "./Toolbox.js";
 
 export const initAction = async (metadata, tools) => {
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     switch (message.type) {
       case "get-tools":
-        sendResponse(tools);
+        sendResponse(tools.map((tool) => tool.toJSON()));
         return true;
       case "perform-action":
-        const toolboxAction = getToolboxURN(message.toolTag, message.cloneUrl);
+        const toolboxAction = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
         callToolbox(toolboxAction);
         break;
       // no default
@@ -17,7 +17,7 @@ export const initAction = async (metadata, tools) => {
 
   await chrome.runtime.sendMessage({
     type: "enable-page-action",
-    project: metadata.project,
+    project: metadata.repository,
     https: metadata.httpsCloneUrl,
     ssh: metadata.sshCloneUrl,
   });

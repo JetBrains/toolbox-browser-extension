@@ -1,4 +1,4 @@
-import { CLONE_PROTOCOLS } from "../constants.js";
+import { PROTOCOLS } from "../constants/protocols.js";
 
 const STORAGE_ITEMS = {
   PROTOCOL: "protocol",
@@ -7,7 +7,7 @@ const STORAGE_ITEMS = {
 };
 
 const DEFAULTS = {
-  PROTOCOL: CLONE_PROTOCOLS.HTTPS,
+  PROTOCOL: PROTOCOLS.HTTPS,
   MODIFY_PAGES: true,
   ACTIVE_TAB_ID: null,
 };

@@ -13,7 +13,7 @@ export default () => ({
     "github-public": "./github-public",
     "gitlab-public": "./gitlab-public",
     "bitbucket-public": "./bitbucket-public",
-    gitee: "./providers/gitee",
+    "gitee-public": "./gitee-public",
     background: "./background",
     "detect-enterprise": "./detect-enterprise",
   },

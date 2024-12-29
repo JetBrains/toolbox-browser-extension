@@ -1,11 +1,11 @@
-import GitlabMetadata from "../gitlab-metadata.js";
+import GitLabMetadata from "../GitLabMetadata.js";
 
 export const fetchMetadata = async (isEnterprise = false) => {
   const projectId = await getProjectId();
   const response = await fetch(`${location.origin}/api/v4/projects/${projectId}`);
   const rawMetadata = await response.json();
 
-  return new GitlabMetadata(rawMetadata);
+  return new GitLabMetadata(rawMetadata);
 };
 
 const getProjectId = async () => {

@@ -27,7 +27,7 @@
     },
     {
       "matches": ["https://gitee.com/*"],
-      "js": ["jetbrains-toolbox-gitee.js"]
+      "js": ["jetbrains-toolbox-gitee-public.js"]
     },
     {
       "world": "MAIN",

@@ -1,5 +1,6 @@
-import DomObserver from "../../utils/dom-observer.js";
-import { callToolbox, getToolboxNavURN, parseLineNumber } from "../../../api/toolbox.js";
+import DomObserver from "../../../src/services/DomObserver.js";
+import { callToolbox, getToolboxNavigateUrl } from "../../../src/services/Toolbox.js";
+import { parseLineNumber } from "../../../src/utils/lineNumber.js";
 
 export const observeBlobPage = (metadata, tools) => {
   const domObserver = new DomObserver("#fileHolder");
@@ -106,7 +107,7 @@ const addClickEventHandler = (button, tool, metadata) => {
 
     const parsedLineNumber = parseLineNumber(lineNumber);
 
-    callToolbox(getToolboxNavURN(tool.tag, metadata.project, filePath, parsedLineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.tag, metadata.repository, filePath, parsedLineNumber));
   });
 };
 

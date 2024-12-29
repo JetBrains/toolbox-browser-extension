@@ -12,7 +12,7 @@ export default class DomObserver {
     return this.#observer !== null;
   }
 
-  start(onAddElement, onRemoveElement) {
+  start(onAddElement, onRemoveElement, onInitializeElement) {
     if (this.isObserving) {
       return;
     }
@@ -20,6 +20,7 @@ export default class DomObserver {
     this.#observer = observe(this.#selector, {
       add: onAddElement,
       remove: onRemoveElement,
+      initialize: onInitializeElement,
     });
   }
 

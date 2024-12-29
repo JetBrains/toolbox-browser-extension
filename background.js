@@ -1,5 +1,10 @@
-import { getProtocol, saveProtocol, getModifyPages, saveModifyPages } from "./api/storage.js";
-import ActionMenu from "./api/action-menu.js";
+import {
+  getProtocol,
+  saveProtocol,
+  getModifyPages,
+  saveModifyPages,
+} from "./src/services/Storage.js";
+import ActionMenu from "./src/services/ActionMenu.js";
 import {
   isHostPermissionGrantedByManifest,
   isHostPermissionGrantedByUser,
@@ -7,7 +12,7 @@ import {
   requestHostPermission,
   revokeHostPermission,
   unregisterContentScript,
-} from "./api/permissions.js";
+} from "./src/services/Permissions.js";
 
 const actionMenu = new ActionMenu();
 

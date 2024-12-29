@@ -1,5 +1,6 @@
-import DomObserver from "../../utils/dom-observer.js";
-import { callToolbox, getToolboxNavURN, parseLineNumber } from "../../../api/toolbox.js";
+import DomObserver from "../../../src/services/DomObserver.js";
+import { callToolbox, getToolboxNavigateUrl } from "../../../src/services/Toolbox.js";
+import { parseLineNumber } from "../../../src/utils/lineNumber.js";
 
 export const observeBlobPage = (metadata, tools) => {
   const openWithMenuObserver = new DomObserver(
@@ -47,11 +48,14 @@ const createOpenMenuItem = (metadata, tool) => {
   menuItemLink.addEventListener("click", (event) => {
     event.preventDefault();
 
-    const { user, project, branch } = metadata;
+    const { user, repository, branch } = metadata;
     const normalizedBranch = branch.split("/").shift();
-    const filePath = location.pathname.replace(`/${user}/${project}/blob/${normalizedBranch}/`, "");
+    const filePath = location.pathname.replace(
+      `/${user}/${repository}/blob/${normalizedBranch}/`,
+      "",
+    );
 
-    callToolbox(getToolboxNavURN(tool.tag, project, filePath));
+    callToolbox(getToolboxNavigateUrl(tool.tag, repository, filePath));
   });
 
   const menuItemDiv = document.createElement("div");
@@ -83,12 +87,15 @@ const createHighlightedLineMenuItem = (metadata, tool) => {
   menuItemLink.addEventListener("click", (event) => {
     event.preventDefault();
 
-    const { user, project, branch } = metadata;
+    const { user, repository, branch } = metadata;
     const normalizedBranch = branch.split("/").shift();
-    const filePath = location.pathname.replace(`/${user}/${project}/blob/${normalizedBranch}/`, "");
+    const filePath = location.pathname.replace(
+      `/${user}/${repository}/blob/${normalizedBranch}/`,
+      "",
+    );
     const lineNumber = parseLineNumber(location.hash.replace("#L", ""));
 
-    callToolbox(getToolboxNavURN(tool.tag, project, filePath, lineNumber));
+    callToolbox(getToolboxNavigateUrl(tool.tag, repository, filePath, lineNumber));
   });
 
   menuItem.appendChild(menuItemLink);

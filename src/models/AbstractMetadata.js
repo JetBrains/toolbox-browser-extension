@@ -1,20 +1,20 @@
 export default class AbstractMetadata {
-  rawMetadata = null;
+  _rawMetadata = null;
 
-  constructor(metadata) {
+  constructor(rawMetadata) {
     if (new.target === AbstractMetadata) {
       throw new Error("Cannot instantiate an abstract class directly.");
     }
 
-    this.rawMetadata = metadata;
+    this._rawMetadata = rawMetadata;
   }
 
   get user() {
     throw new Error("Abstract property 'user' must be implemented in derived class.");
   }
 
-  get project() {
-    throw new Error("Abstract property 'project' must be implemented in derived class.");
+  get repository() {
+    throw new Error("Abstract property 'repository' must be implemented in derived class.");
   }
 
   get branch() {

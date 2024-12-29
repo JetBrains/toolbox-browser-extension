@@ -1,14 +1,12 @@
-import {
-  HUNDRED_PERCENT,
-  MAX_VALID_HTTP_STATUS,
-  MIN_VALID_HTTP_STATUS,
-} from "../../../constants.js";
-import Language from "../../../repositories/language.js";
-import { selectTools } from "../../utils/select-tools.js";
+import Language, { HUNDRED_PERCENT } from "../../../src/models/Language.js";
+import { getToolsForLanguages } from "../../../src/utils/getToolsForLanguages.js";
+
+const MIN_VALID_HTTP_STATUS = 200;
+const MAX_VALID_HTTP_STATUS = 299;
 
 export const fetchTools = async (metadata) => {
   const languages = await fetchLanguages(metadata);
-  return selectTools(languages);
+  return getToolsForLanguages(languages);
 };
 
 const fetchLanguages = async (metadata) => {

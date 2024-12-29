@@ -1,19 +1,10 @@
 import { observe } from "selector-observer";
 import bb from "bitbucket-url-to-object";
-
-import {
-  SUPPORTED_LANGUAGES,
-  SUPPORTED_TOOLS,
-  DEFAULT_LANGUAGE,
-  CLONE_PROTOCOLS,
-} from "./constants.js";
-
-import {
-  getToolboxURN,
-  getToolboxNavURN,
-  callToolbox,
-  parseLineNumber,
-} from "./api/toolbox.js";
+import { getToolboxCloneUrl, getToolboxNavigateUrl, callToolbox } from "./src/services/Toolbox.js";
+import { parseLineNumber } from "./src/utils/lineNumber.js";
+import { SUPPORTED_TOOLS } from "./src/models/Tool.js";
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from "./src/models/Language.js";
+import { PROTOCOLS } from "./src/constants/protocols.js";
 
 const CLONE_BUTTON_PAGE_HEADER_WRAPPER_SELECTOR =
   '[data-qa="page-header-wrapper"] > div > div > div > div > div > button:last-of-type';
@@ -72,35 +63,25 @@ const fetchLanguages = (bitbucketMetadata) =>
 
 const selectTools = (language) =>
   new Promise((resolve) => {
-    // All languages in Bitbucket match the common list with an exception of HTML
+    // All languages in Bitbucket match the common list with an exception to HTML
     const normalizedLanguage = language === "html/css" ? "html" : language;
 
-    const toolIds =
-      normalizedLanguage &&
-      SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
+    const toolIds = normalizedLanguage && SUPPORTED_LANGUAGES[normalizedLanguage.toLowerCase()];
     const normalizedToolIds =
-      toolIds && toolIds.length > 0
-        ? toolIds
-        : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
+      toolIds && toolIds.length > 0 ? toolIds : SUPPORTED_LANGUAGES[DEFAULT_LANGUAGE];
 
-    const tools = normalizedToolIds
-      .sort()
-      .map((toolId) => SUPPORTED_TOOLS[toolId]);
+    const tools = normalizedToolIds.sort().map((toolId) => SUPPORTED_TOOLS[toolId]);
 
     resolve(tools);
   });
 
-const fetchTools = (bitbucketMetadata) =>
-  fetchLanguages(bitbucketMetadata).then(selectTools);
+const fetchTools = (bitbucketMetadata) => fetchLanguages(bitbucketMetadata).then(selectTools);
 
 let onMessageHandler = null;
 
 const renderPageAction = (bitbucketMetadata) =>
   new Promise((resolve) => {
-    if (
-      onMessageHandler &&
-      chrome.runtime.onMessage.hasListener(onMessageHandler)
-    ) {
+    if (onMessageHandler && chrome.runtime.onMessage.hasListener(onMessageHandler)) {
       chrome.runtime.onMessage.removeListener(onMessageHandler);
     }
     onMessageHandler = (message, sender, sendResponse) => {
@@ -109,10 +90,7 @@ const renderPageAction = (bitbucketMetadata) =>
           fetchTools(bitbucketMetadata).then(sendResponse);
           return true;
         case "perform-action":
-          const toolboxAction = getToolboxURN(
-            message.toolTag,
-            message.cloneUrl,
-          );
+          const toolboxAction = getToolboxCloneUrl(message.toolTag, message.cloneUrl);
           callToolbox(toolboxAction);
           break;
         // no default
@@ -175,10 +153,7 @@ const createButtonTooltip = (button, text) => {
 
   const TOOLTIP_TIMEOUT = 450;
   button.addEventListener("mouseenter", () => {
-    button.setAttribute(
-      "style",
-      "cursor:pointer; background:rgba(9,30,66,0.08);",
-    );
+    button.setAttribute("style", "cursor:pointer; background:rgba(9,30,66,0.08);");
     setTimeout(() => {
       tooltip.style.display = "block";
     }, TOOLTIP_TIMEOUT);
@@ -203,10 +178,10 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
     const { toolTag } = e.currentTarget.dataset;
     chrome.runtime.sendMessage({ type: "get-protocol" }, ({ protocol }) => {
       const cloneUrl =
-        protocol === CLONE_PROTOCOLS.HTTPS
+        protocol === PROTOCOLS.HTTPS
           ? getHttpsCloneUrl(bitbucketMetadata.links)
           : getSshCloneUrl(bitbucketMetadata.links);
-      const action = getToolboxURN(toolTag, cloneUrl);
+      const action = getToolboxCloneUrl(toolTag, cloneUrl);
       callToolbox(action);
     });
   });
@@ -214,10 +189,7 @@ const addCloneButtonEventHandler = (btn, bitbucketMetadata) => {
 
 const createCloneButton = (tool, cloneButton, bitbucketMetadata) => {
   const button = document.createElement("a");
-  button.setAttribute(
-    "class",
-    `${cloneButton.className} jt-button ${CLONE_BUTTON_JS_CSS_CLASS}`,
-  );
+  button.setAttribute("class", `${cloneButton.className} jt-button ${CLONE_BUTTON_JS_CSS_CLASS}`);
   button.setAttribute("href", "#");
   button.dataset.toolTag = tool.tag;
 
@@ -277,15 +249,10 @@ const addOpenButtonEventHandler = (domElement, tool, bitbucketMetadata) => {
     e.preventDefault();
 
     const filePathIndex = 5;
-    const filePath = location.pathname
-      .split("/")
-      .splice(filePathIndex)
-      .join("/");
+    const filePath = location.pathname.split("/").splice(filePathIndex).join("/");
     const lineNumber = parseLineNumber(location.hash.replace("#lines-", ""));
 
-    callToolbox(
-      getToolboxNavURN(tool.tag, bitbucketMetadata.repo, filePath, lineNumber),
-    );
+    callToolbox(getToolboxNavigateUrl(tool.tag, bitbucketMetadata.repo, filePath, lineNumber));
   });
 };
 
@@ -311,10 +278,7 @@ const createOpenButton = (tool, sampleButton, bitbucketMetadata) => {
 
   addOpenButtonEventHandler(actionButton, tool, bitbucketMetadata);
 
-  const tooltip = createButtonTooltip(
-    actionButton,
-    `Open this file in ${tool.name}`,
-  );
+  const tooltip = createButtonTooltip(actionButton, `Open this file in ${tool.name}`);
   button.appendChild(tooltip);
 
   return button;
@@ -334,11 +298,7 @@ const renderOpenButtons = (tools, bitbucketMetadata) => {
 
   if (actionAnchorElement) {
     tools.forEach((tool) => {
-      const action = createOpenButton(
-        tool,
-        actionAnchorElement,
-        bitbucketMetadata,
-      );
+      const action = createOpenButton(tool, actionAnchorElement, bitbucketMetadata);
       actionAnchorElement.insertAdjacentElement("beforebegin", action);
     });
   }
