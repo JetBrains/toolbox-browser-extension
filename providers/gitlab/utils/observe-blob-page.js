@@ -49,7 +49,7 @@ const createOpenButton = (tool, metadata, filePath) => {
   buttonIcon.setAttribute("class", "gl-button-icon gl-icon s16 gl-fill-current");
   button.appendChild(buttonIcon);
 
-  addOpenButtonEventHandler(button, tool, metadata);
+  addClickEventHandler(button, tool, metadata);
   addHoverEventHandler(button);
 
   return button;
@@ -87,7 +87,7 @@ const createTooltip = (tool) => {
   return tooltip;
 };
 
-const addOpenButtonEventHandler = (button, tool, metadata) => {
+const addClickEventHandler = (button, tool, metadata) => {
   const mrPageHashPartsCount = 3;
 
   button.addEventListener("click", (e) => {
