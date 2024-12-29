@@ -5,10 +5,6 @@ export default class GitHubMetadata extends AbstractMetadata {
     super(metadata);
   }
 
-  get user() {
-    return this.rawMetadata.user;
-  }
-
   get project() {
     return this.rawMetadata.repo;
   }
@@ -30,6 +26,6 @@ export default class GitHubMetadata extends AbstractMetadata {
   }
 
   get sshCloneUrl() {
-    return `git@${this.rawMetadata.host}:${this.user}/${this.project}.git`;
+    return `git@${this.rawMetadata.host}:${this.rawMetadata.user}/${this.project}.git`;
   }
 }
