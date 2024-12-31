@@ -36,4 +36,8 @@ export default class AbstractMetadata {
   get sshCloneUrl() {
     throw new Error("Abstract property 'sshCloneUrl' must be implemented in derived class.");
   }
+
+  get repositoryDisplayName() {
+    return `${this.repository} • ${this.branch}`;
+  }
 }

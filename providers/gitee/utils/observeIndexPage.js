@@ -141,7 +141,7 @@ export const observeIndexPage = (metadata, tools) => {
       toolName.textContent = tool.name;
       const projectName = document.createElement("span");
       projectName.classList.add("tool-item-description");
-      projectName.textContent = `${metadata.repository} • ${metadata.branch}`;
+      projectName.textContent = metadata.repositoryDisplayName;
       toolDataContainer.append(toolName, projectName);
 
       toolItem.append(icon, toolDataContainer);

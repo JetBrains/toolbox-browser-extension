@@ -17,7 +17,7 @@ export const initAction = async (metadata, tools) => {
 
   await chrome.runtime.sendMessage({
     type: "enable-page-action",
-    project: metadata.repository,
+    project: metadata.repositoryDisplayName,
     https: metadata.httpsCloneUrl,
     ssh: metadata.sshCloneUrl,
   });
