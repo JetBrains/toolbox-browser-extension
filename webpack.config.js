@@ -10,15 +10,14 @@ const __dirname = path.dirname(__filename);
 
 export default () => ({
   entry: {
-    "github-public": "./github-public",
-    "gitlab-public": "./gitlab-public",
-    "bitbucket-public": "./bitbucket-public",
-    "gitee-public": "./gitee-public",
-    background: "./background",
-    "detect-enterprise": "./detect-enterprise",
+    background: "./src/background/background",
+    github: "./src/contentScripts/github",
+    gitlab: "./src/contentScripts/gitlab",
+    bitbucket: "./src/contentScripts/bitbucket",
+    gitee: "./src/contentScripts/gitee",
+    detectProvider: "./src/contentScripts/detectProvider",
   },
   output: {
-    filename: "jetbrains-toolbox-[name].js",
     path: path.resolve(__dirname, `dist/${process.env.BROWSER}`),
   },
   module: {
@@ -65,12 +64,12 @@ export default () => ({
     }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: "manifest.json", context: `manifests/${process.env.BROWSER}/` },
-        { from: "icons/*" },
-        { from: "pages/*" },
-        { from: "popups/*" },
-        { from: "providers/**/assets/*" },
-        { from: "styles/*" },
+        { from: "pages/*", context: "src/" },
+        { from: "popups/*", context: "src/" },
+        { from: "icons/*", context: "src/assets/" },
+        { from: "styles/*", context: "src/assets/" },
+        { from: "providers/**/assets/*", context: "src/content/" },
+        { from: "manifest.json", context: `src/manifests/${process.env.BROWSER}/` },
       ],
     }),
   ],

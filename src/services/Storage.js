@@ -1,16 +1,13 @@
-import { PROTOCOLS } from "../constants/protocols.js";
+import { PROTOCOLS } from "../content/constants/index.js";
 
-const STORAGE_ITEMS = {
-  PROTOCOL: "protocol",
-  MODIFY_PAGES: "modify-pages",
-  ACTIVE_TAB_ID: "active-tab-id",
-};
+export const getProtocol = () => getFromStorage(STORAGE_ITEMS.PROTOCOL, DEFAULTS.PROTOCOL);
 
-const DEFAULTS = {
-  PROTOCOL: PROTOCOLS.HTTPS,
-  MODIFY_PAGES: true,
-  ACTIVE_TAB_ID: null,
-};
+export const saveProtocol = (protocol) => saveToStorage(STORAGE_ITEMS.PROTOCOL, protocol);
+
+export const getModifyPages = () =>
+  getFromStorage(STORAGE_ITEMS.MODIFY_PAGES, DEFAULTS.MODIFY_PAGES);
+
+export const saveModifyPages = (allow) => saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow);
 
 const saveToStorage = async (key, value) => {
   try {
@@ -30,11 +27,14 @@ const getFromStorage = async (key, defaultValue) => {
   }
 };
 
-export const getProtocol = () => getFromStorage(STORAGE_ITEMS.PROTOCOL, DEFAULTS.PROTOCOL);
+const STORAGE_ITEMS = {
+  PROTOCOL: "protocol",
+  MODIFY_PAGES: "modify-pages",
+  ACTIVE_TAB_ID: "active-tab-id",
+};
 
-export const saveProtocol = (protocol) => saveToStorage(STORAGE_ITEMS.PROTOCOL, protocol);
-
-export const getModifyPages = () =>
-  getFromStorage(STORAGE_ITEMS.MODIFY_PAGES, DEFAULTS.MODIFY_PAGES);
-
-export const saveModifyPages = (allow) => saveToStorage(STORAGE_ITEMS.MODIFY_PAGES, allow);
+const DEFAULTS = {
+  PROTOCOL: PROTOCOLS.HTTPS,
+  MODIFY_PAGES: true,
+  ACTIVE_TAB_ID: null,
+};

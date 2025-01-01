@@ -24,7 +24,7 @@ export const registerContentScript = (url) => {
   const options = {
     id: domainMatch,
     matches: [domainMatch],
-    js: [DETECT_ENTERPRISE_CONTENT_SCRIPT],
+    js: [DETECT_PROVIDER_CONTENT_SCRIPT],
   };
   return chrome.scripting.registerContentScripts([options]);
 };
@@ -41,4 +41,4 @@ const getDomain = (url) => {
 
 const getDomainMatch = (url) => `${getDomain(url)}/*`;
 
-const DETECT_ENTERPRISE_CONTENT_SCRIPT = "jetbrains-toolbox-detect-enterprise.js";
+const DETECT_PROVIDER_CONTENT_SCRIPT = "detectProvider.js";
