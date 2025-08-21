@@ -52,14 +52,12 @@ const setToolActionClickHandler = (action) => {
   });
 };
 
-const query = decodeURI(location.search)
-  .substring(1)
-  .split("&")
-  .reduce((acc, paramString) => {
-    const [param, value] = paramString.split("=");
-    acc[param] = value;
-    return acc;
-  }, {});
+const searchParams = new URLSearchParams(window.location.search);
+const query = {
+  project: searchParams.get("project") ?? "",
+  https: searchParams.get("https") ?? "",
+  ssh: searchParams.get("ssh") ?? "",
+};
 
 const inputs = document.querySelectorAll('input[type="radio"][name="protocol"]');
 inputs.forEach((input) => {

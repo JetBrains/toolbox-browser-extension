@@ -71,7 +71,11 @@ const handleMessage = (message, sender, sendResponse) => {
       });
 
       const { project, https, ssh } = message;
-      const url = encodeURI(`popups/clone.html?project=${project}&https=${https}&ssh=${ssh}`);
+      const params = new URLSearchParams();
+      params.set("project", project);
+      params.set("https", https);
+      params.set("ssh", ssh);
+      const url = `popups/clone.html?${params.toString()}`;
       chrome.action.setPopup({
         tabId: sender.tab.id,
         popup: chrome.runtime.getURL(url),
