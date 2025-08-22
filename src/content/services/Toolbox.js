@@ -1,15 +1,23 @@
 import { convertNumberToIndex } from "../utils/index.js";
 
-export const getToolboxCloneUrl = (toolTag, cloneUrl) =>
-  `jetbrains://${toolTag}/checkout/git?checkout.repo=${cloneUrl}&idea.required.plugins.id=Git4Idea`;
+export const getToolboxCloneUrl = (toolTag, cloneUrl) => {
+  const encodedToolTag = encodeURIComponent(toolTag);
+  const params = new URLSearchParams();
+  params.set("checkout.repo", cloneUrl);
+  params.set("idea.required.plugins.id", "Git4Idea");
+  return `jetbrains://${encodedToolTag}/checkout/git?${params.toString()}`;
+};
 
 export const getToolboxNavigateUrl = (toolTag, project, filePath, lineNumber = null) => {
   const lineIndex = convertNumberToIndex(lineNumber == null ? 1 : lineNumber);
   const columnIndex = convertNumberToIndex(1);
   const encodedToolTag = encodeURIComponent(toolTag);
-  const encodedProject = encodeURIComponent(project);
 
-  return `jetbrains://${encodedToolTag}/navigate/reference?project=${encodedProject}&path=${filePath}:${lineIndex}:${columnIndex}`;
+  const params = new URLSearchParams();
+  params.set("project", project);
+  params.set("path", `${filePath}:${lineIndex}:${columnIndex}`);
+
+  return `jetbrains://${encodedToolTag}/navigate/reference?${params.toString()}`;
 };
 
 export const callToolbox = (action) => {
