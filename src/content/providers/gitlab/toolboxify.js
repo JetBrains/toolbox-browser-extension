@@ -11,7 +11,9 @@ export default async function toolboxify(isEnterprise = false) {
 
   const tools = await fetchTools(metadata);
   await initAction(metadata, tools);
-  observeIndexPage(metadata, tools);
+  chrome.runtime.sendMessage({ type: "get-modify-pages" }, (data) => {
+    observeIndexPage(metadata, tools, data.allow);
+  });
   observeBlobPage(metadata, tools);
   setPageTestId();
 }
