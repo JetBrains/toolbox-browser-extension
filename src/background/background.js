@@ -23,13 +23,15 @@ const handleInstalled = () => {
   actionMenu.create(handleMenuCheckedChanged);
 };
 
+const isInternalUrl = (url) =>
+  url.startsWith("chrome://") ||
+  url.startsWith("chrome-extension://") ||
+  url.startsWith("moz-extension://") ||
+  url.startsWith("about:") ||
+  url.startsWith("view-source:");
+
 const handleMenuCheckedChanged = async (checked, url) => {
-  if (
-    url.startsWith("chrome://") ||
-    url.startsWith("chrome-extension://") ||
-    url.startsWith("about:") ||
-    url.startsWith("view-source:")
-  ) {
+  if (isInternalUrl(url)) {
     // internal browser pages, do nothing
     actionMenu.update({ checked: !checked });
     return;
@@ -168,8 +170,8 @@ const handleTabActivated = async (activeInfo) => {
 };
 
 const updateActionMenu = async (url) => {
-  if (!url) {
-    // no permission granted, enable and uncheck the menu
+  if (!url || isInternalUrl(url)) {
+    // no permission granted or internal browser pages, enable and uncheck the menu
     actionMenu.update({ enabled: true, checked: false });
     return;
   }
