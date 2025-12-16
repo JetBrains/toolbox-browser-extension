@@ -66,6 +66,11 @@ const createUnifiedCloneButtonGroup = (metadata, tools) => {
   buttonGroup.classList.add("gl-button-group", "btn-group");
   buttonGroup.dataset.testid = "toolbox-clone-button-group";
 
+  let cloneUrl;
+  chrome.runtime.sendMessage({ type: "get-protocol" }, ({ protocol }) => {
+    cloneUrl = protocol === PROTOCOLS.HTTPS ? metadata.httpsCloneUrl : metadata.sshCloneUrl;
+  });
+
   // Add a button for each tool
   tools.forEach((tool) => {
     const button = document.createElement("button");
@@ -86,11 +91,8 @@ const createUnifiedCloneButtonGroup = (metadata, tools) => {
     // Click handler that respects user's protocol preference
     button.addEventListener("click", (e) => {
       e.preventDefault();
-      chrome.runtime.sendMessage({ type: "get-protocol" }, ({ protocol }) => {
-        const cloneUrl = protocol === PROTOCOLS.HTTPS ? metadata.httpsCloneUrl : metadata.sshCloneUrl;
-        const action = getToolboxCloneUrl(tool.tag, cloneUrl);
-        callToolbox(action);
-      });
+      const action = getToolboxCloneUrl(tool.tag, cloneUrl);
+      callToolbox(action);
     });
 
     buttonGroup.appendChild(button);
